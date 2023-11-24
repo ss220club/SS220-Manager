@@ -1,4 +1,3 @@
-import asyncio
 import discord
 from discord import app_commands
 from discord.ext import tasks
@@ -64,19 +63,16 @@ def run_bot():
     @tree.command(name="пинг", description="Проверить работоспособность бота.")
     async def ping(interaction: discord.Interaction):
         await interaction.response.defer()
-        asyncio.sleep()
         await interaction.followup.send("Понг!")
 
     @tree.command(name="онлайн", description="Показать онлайн серверов.")
     async def online(interaction: discord.Interaction):
         await interaction.response.defer()
-        asyncio.sleep()
         await interaction.followup.send(get_beautified_status(OUR_SERVERS))
 
     @tree.command(name="админы", description="Показать админов онлайн.")
     async def online(interaction: discord.Interaction):
         await interaction.response.defer()
-        asyncio.sleep()
         await interaction.followup.send(get_admins(OUR_SERVERS))
 
     @tree.command(name="кто", description="Показать игроков онлайн.")
@@ -84,7 +80,6 @@ def run_bot():
     @app_commands.choices(server=server_choices)
     async def who(interaction: discord.Interaction, server: app_commands.Choice[int]):
         await interaction.response.defer()
-        asyncio.sleep()
         await interaction.followup.send(get_players_online(OUR_SERVERS[server.value]))
 
     @tree.command(name="сообщение", description="Отправить ПМку игроку.")
@@ -95,7 +90,6 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def send_admin_pm(interaction: discord.Interaction, server: app_commands.Choice[int], ckey: str, msg: str):
         await interaction.response.defer()
-        asyncio.sleep()
         await interaction.followup.send(str(OUR_SERVERS[server.value].send_admin_msg(ckey,
                                                                                      msg,
                                                                                      interaction.user.name)))
@@ -107,7 +101,6 @@ def run_bot():
     @app_commands.checks.has_any_role(*HEAD_ADMIN_ROLES)
     async def make_host_announce(interaction: discord.Interaction, server: app_commands.Choice[int], msg: str):
         await interaction.response.defer()
-        asyncio.sleep()
         OUR_SERVERS[server.value].send_host_announce(msg)
         await interaction.followup.send("Анонс был совершен~~, наверное.~~")
 
@@ -115,7 +108,6 @@ def run_bot():
     @app_commands.checks.has_any_role(*HEAD_ADMIN_ROLES)
     async def debug(interaction: discord.Interaction):
         await interaction.response.defer()
-        asyncio.sleep()
         await interaction.followup.send("Дебаг данные:")
         for server in OUR_SERVERS:
             await interaction.channel.send(f"**{server.name}:**\n{server.get_server_status().raw_data}")
@@ -139,7 +131,6 @@ def run_bot():
     @tree.command(name="я", description="Посмотреть информацию о себе.")
     async def me(interaction: discord.Interaction):
         await interaction.response.defer()
-        asyncio.sleep()
         player_info, discord_link_info = DB.get_player_by_discord(interaction.user.id)
         chars = []
         if player_info and discord_link_info:
@@ -152,7 +143,6 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def player_by_discord(interaction: discord.Interaction, discord_id: discord.Member):
         await interaction.response.defer()
-        asyncio.sleep()
         player_info, discord_link_info = DB.get_player_by_discord(discord_id.id)
         chars = []
         if player_info and discord_link_info:
@@ -165,7 +155,6 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def player(interaction: discord.Interaction, ckey: str):
         await interaction.response.defer()
-        asyncio.sleep()
         player_info, discord_link_info = DB.get_player(ckey)
         chars = []
         if player_info and discord_link_info:
@@ -178,7 +167,6 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def char(interaction: discord.Interaction, name: str):
         await interaction.response.defer()
-        asyncio.sleep()
         embed_msg = Embed(
             title=f"Персонажи по запросу {name}",
             color=Color.blue())
@@ -193,7 +181,6 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def bans(interaction: discord.Interaction, ckey: str, num: int):
         await interaction.response.defer()
-        asyncio.sleep()
         embeds = get_nice_bans(DB.get_bans(ckey))[:num]
         if not embeds:
             embeds = [Embed(title="**Отсутствуют баны, связанные с эти игроком.**",
@@ -219,7 +206,6 @@ def run_bot():
     @app_commands.describe(token="Код, который вы получили в игре.")
     async def link_account(interaction: discord.Interaction, token: str):
         await interaction.response.defer()
-        asyncio.sleep()
         result = DB.link_account(interaction.user.id, token)
         embed = Embed()
 
@@ -251,7 +237,6 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def show_notes(interaction: discord.Interaction, ckey: str, num: int):
         await interaction.response.defer()
-        asyncio.sleep()
         notes = DB.get_notes(ckey, num)
         embeds = embed_notes(notes)
         if not embeds:
@@ -268,7 +253,6 @@ def run_bot():
     @app_commands.describe(action="Действие.")
     async def roll(interaction: discord.Interaction, d: int, action: str):
         await interaction.response.defer()
-        asyncio.sleep()
         if d < 1:
             await interaction.followup.send("<:facepalm:1098305470017589309>")
             return
