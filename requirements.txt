@@ -1,0 +1,6 @@
+discord
+requests
+python-dotenv
+sqlalchemy
+github_bot_api
+mariadb
