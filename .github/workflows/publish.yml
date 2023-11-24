@@ -31,4 +31,4 @@ jobs:
           context: .
           file: Dockerfile
           push: true
-          tags: ghcr.io/furrior/ss220-manager/latest
+          tags: ghcr.io/legendaxe/ss220-manager/latest
