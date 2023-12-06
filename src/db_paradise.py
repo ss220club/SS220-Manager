@@ -66,6 +66,7 @@ class Paradise(DBSchema):
         computerid: Mapped[str] = mapped_column(String(32))
         lastadminrank: Mapped[str] = mapped_column(String(32))
         exp: Mapped[str] = mapped_column(String())
+        species_whitelist: Mapped[str] = mapped_column(String())
 
         def __repr__(self) -> str:
             return f"Player(id={self.id!r}, \
@@ -234,7 +235,29 @@ class Paradise(DBSchema):
                 result.valid = 1
         return result
 
+    def get_player_species_whitelist(self, ckey: str) -> Player.species_whitelist:
+        ckey = sanitize_ckey(ckey)
+        species_whitelist_req = select(self.Player.species_whitelist).where(
+            self.Player.ckey == ckey)
+        species_whitelist = self.execute_req(species_whitelist_req)
+        return species_whitelist
 
+    def set_player_species_whitelist(self, ckey: str, species_whitelist: Player.species_whitelist) -> Player:
+        ckey = sanitize_ckey(ckey)
+        
+        req = select(self.Player).where(
+            self.Player.ckey == ckey)
+    
+        with self.Session() as session:
+            session.expire_on_commit = False
+            with session.begin():
+                result = session.scalars(req).one_or_none()
+                if not result:
+                    return ERRORS.ERR_404
+                result.species_whitelist = species_whitelist
+        
+        return result
+        
 def main():
     pass
 

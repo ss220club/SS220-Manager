@@ -1,5 +1,6 @@
 import types
 import string
+from typing import Literal
 
 DEPARTMENT_TRANSLATIONS = {"├Призраком": "Ghost",
                       "└Живым": "Living",
@@ -21,6 +22,12 @@ SERVERS_NICE = {"136.243.82.223:4002": ["Main", "https://cdn.discordapp.com/emoj
                 "135.125.189.154:4001": ["Prime", "https://cdn.discordapp.com/emojis/1100109697744371852.webp?size=64"],
                 "135.125.189.154:4000": ["Black", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"]
                 }  # TODO: To config
+
+ALL_PLAYABLE_SPECIES = Literal["Human", "Diona", "Drask",
+                                "Grey", "Kidan", "Machine", 
+                                "Nian", "Plasmaman", "Skrell",
+                                "Slime People", "Tajaran", 
+                                "Unathi", "Vox", "Vulpkanin"]
 
 
 def gender_to_emoji(gender: str) -> str:
