@@ -12,6 +12,7 @@ env:
 jobs:
   deploy-container:
     runs-on: ubuntu-latest
+    needs: [syntax-check, run-tests]
     permissions:
       contents: read
       packages: write
