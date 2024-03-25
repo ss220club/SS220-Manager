@@ -1,5 +1,6 @@
 import types
-import string
+import re
+import copy
 from typing import Literal
 
 DEPARTMENT_TRANSLATIONS = {"├Призраком": "Ghost",
@@ -28,6 +29,94 @@ ALL_PLAYABLE_SPECIES = Literal["Human", "Diona", "Drask",
                                 "Nian", "Plasmaman", "Skrell",
                                 "Slime People", "Tajaran", 
                                 "Unathi", "Vox", "Vulpkanin"]
+
+CL_BODY = re.compile(r"(:cl:|🆑)[ \t]*(?P<author>.+?)?\s*\n(?P<content>(.|\n)*?)\n/(:cl:|🆑)", re.MULTILINE)
+CL_SPLIT = re.compile(r"\s*((?P<tag>\w+)\s*:)?\s*(?P<message>.*)")
+
+CL_NORMALIZED_TAG = {
+    "fix": "fix",
+    "fixes": "fix",
+    "bugfix": "fix",
+    "wip": "wip",
+    "tweak": "tweak",
+    "tweaks": "tweak",
+    "rsctweak": "tweak",
+    "soundadd": "soundadd",
+    "sounddel": "sounddel",
+    "imageadd": "imageadd",
+    "imagedel": "imagedel",
+    "add": "codeadd",
+    "adds": "codeadd",
+    "rscadd": "codeadd",
+    "codeadd": "codeadd",
+    "del": "codedel",
+    "dels": "codedel",
+    "rscdel": "codedel",
+    "codedel": "codedel",
+    "typo": "spellcheck",
+    "spellcheck": "spellcheck",
+    "experimental": "experiment",
+    "experiment": "experiment"
+}
+DISCORD_TAG_EMOJI = {
+    "soundadd": ":notes:",
+    "sounddel": ":mute:",
+    "imageadd": ":frame_photo:",
+    "imagedel": ":scissors:",
+    "codeadd": ":sparkles:",
+    "codedel": ":wastebasket:",
+    "tweak": ":screwdriver:",
+    "fix": ":tools:",
+    "wip": ":construction_site:",
+    "spellcheck": ":pencil:",
+    "experiment": ":microscope:"
+}
+
+
+def parse_changelog(message: str) -> dict:
+    cl_parse_result = CL_BODY.search(message)
+    if cl_parse_result is None:
+        raise Exception("Failed to parse the changelog. Check changelog format.")
+    cl_changes = []
+    for cl_line in cl_parse_result.group("content").splitlines():
+        if not cl_line:
+            continue
+        change_parse_result = CL_SPLIT.search(cl_line)
+        if not change_parse_result:
+            raise Exception(f"Invalid change: '{cl_line}'")
+        tag = change_parse_result["tag"]
+        message = change_parse_result["message"]
+        if not message:
+            raise Exception(f"No message for change: '{cl_line}'")
+        if tag:
+            if tag in CL_NORMALIZED_TAG:
+                cl_changes.append({
+                    "tag": CL_NORMALIZED_TAG[change_parse_result.group("tag")],
+                    "message": change_parse_result.group("message")
+                })
+            else:
+                raise Exception(f"Invalid tag: '{cl_line}'")
+        # Append line without tag to the previous change
+        else:
+            if len(cl_changes):
+                prev_change = cl_changes[-1]
+                prev_change["message"] += f" {change_parse_result["message"]}"
+            else:
+                raise Exception(f"Change with no tag: {cl_line}")
+
+    if len(cl_changes) == 0:
+        raise Exception("No changes found in the changelog. Use special label if changelog is not expected.")
+    return {"author": cl_parse_result.group("author"), "changes": cl_changes}
+
+
+def emojify_changelog(changelog: dict):
+    changelog_copy = copy.deepcopy(changelog)
+    for change in changelog_copy["changes"]:
+        if change["tag"] in DISCORD_TAG_EMOJI:
+            change["tag"] = DISCORD_TAG_EMOJI[change["tag"]]
+        else:
+            raise Exception(f"Invalid tag for emoji: {change}")
+    return changelog_copy
 
 
 def gender_to_emoji(gender: str) -> str:

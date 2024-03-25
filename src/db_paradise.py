@@ -244,10 +244,10 @@ class Paradise(DBSchema):
 
     def set_player_species_whitelist(self, ckey: str, species_whitelist: Player.species_whitelist) -> Player:
         ckey = sanitize_ckey(ckey)
-        
+
         req = select(self.Player).where(
             self.Player.ckey == ckey)
-    
+
         with self.Session() as session:
             session.expire_on_commit = False
             with session.begin():
@@ -255,9 +255,10 @@ class Paradise(DBSchema):
                 if not result:
                     return ERRORS.ERR_404
                 result.species_whitelist = species_whitelist
-        
+
         return result
-        
+
+
 def main():
     pass
 
