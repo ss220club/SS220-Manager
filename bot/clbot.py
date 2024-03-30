@@ -33,7 +33,7 @@ def send_message(cl: dict, number: int):
     embed = {"color": 16777215, "description": ""}
     cl_emoji = emojify_changelog(cl)
     for change in cl_emoji["changes"]:
-        embed["description"] += f"{change["tag"]} {change["message"]}\n"
+        embed["description"] += f"{change["tag"]} {change['message']}\n"
     footer = {"text": f"#{number} - {cl["author"]} - {datetime.datetime.now()}"}
     embed["footer"] = footer
     data["embeds"].append(embed)
