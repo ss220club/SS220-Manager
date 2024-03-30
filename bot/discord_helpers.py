@@ -16,14 +16,13 @@ def embed_player_info(player: Paradise.Player, discord_link: Paradise.DiscordLin
             color=Color.red())
     embed = Embed(
         title=f"Информация об игроке {player.ckey}",
-        description=
-        f"**Дискорд:** <@{discord_link.discord_id}>\
+        description=f"**Дискорд:** <@{discord_link.discord_id}>\
         \n**Ранг:** {player.lastadminrank}\
         \n**Стаж:** {player.lastseen - player.firstseen}\
         \n**Первое появление:** {player.firstseen}\
         \n**Последнее появление: **{player.lastseen}",
         color=Color.blue()
-        )
+    )
 
     # TODO
     # if player.mutual_ips or player.mutual_cids:
@@ -99,18 +98,18 @@ def get_nice_bans(bans: Sequence[Paradise.Ban]) -> list[Embed]:
         if ban.unbanned or (ban.duration > 0 and ban.expiration_time < datetime.now()):
             ban_color = Color.green()
         embed = (Embed(title=f"**{ban.bantype} {ban.id}**",
-                       description=
-                       f"**Игрок:** {ban.ckey}\
+                       description=f"**Игрок:** {ban.ckey}\
                        \n**Админ:** {ban.a_ckey}\
                        \n**Длительность:** {str(ban.duration // 60)} ч. до {str(ban.expiration_time) if ban.duration > 0 else 'Навсегда'}\
                        \n**Причина:** {ban.reason}\
                        \n {'**Роль:**' + ban.job if ban.job else ''}",
                        color=ban_color
                        )
-                )
+                 )
         embed.set_footer(
             text=f"{SERVERS_NICE[ban.serverip][0]} - {ban.expiration_time - timedelta(minutes=ban.duration)}",
-            icon_url=SERVERS_NICE[ban.serverip][1])
+            icon_url=SERVERS_NICE[ban.serverip][1]
+        )
         embeds.append(embed)
     return embeds
 

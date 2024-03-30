@@ -206,14 +206,14 @@ class Paradise(DBSchema):
 
     def get_bans(self, ckey: str) -> Sequence[Ban]:
         ckey = sanitize_ckey(ckey)
-        req = select(self.Ban).where((self.Ban.ckey == ckey) |
-                                     (self.Ban.a_ckey == ckey)).order_by(self.Ban.id.desc())
+        req = select(self.Ban).where((self.Ban.ckey == ckey)
+                                     | (self.Ban.a_ckey == ckey)).order_by(self.Ban.id.desc())
         return self.execute_req(req)
 
     def get_notes(self, ckey: str, amount: int) -> Sequence[Note]:
         ckey = sanitize_ckey(ckey)
-        req = select(self.Note).where((self.Note.ckey == ckey) |
-                                      (self.Note.adminckey == ckey)).order_by(self.Note.id.desc()).limit(amount)
+        req = select(self.Note).where((self.Note.ckey == ckey)
+                                      | (self.Note.adminckey == ckey)).order_by(self.Note.id.desc()).limit(amount)
         return self.execute_req(req)
 
     def link_account(self, discord_id: int, token: str) -> DiscordLink:

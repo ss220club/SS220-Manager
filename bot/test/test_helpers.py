@@ -1,5 +1,5 @@
 import unittest
-from ..helpers import parse_changelog, emojify_changelog
+from bot.helpers import parse_changelog, emojify_changelog
 
 VALID_TAGS = {
     "fix", "wip", "tweak",
@@ -119,11 +119,12 @@ added: Added new things
             parse_changelog(message)
 
     def test_empty_message(self):
-        message = """
-:cl:
-add: 
-/:cl:
-"""
+        message = (
+            "\n:cl:\n"
+            "\nadd: \n"
+            "\n/:cl:"
+            "\n"
+        )
         with self.assertRaises(Exception):
             parse_changelog(message)
 

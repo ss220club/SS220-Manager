@@ -268,13 +268,13 @@ def run_bot():
     @app_commands.describe(ckey="Сикей.")
     @app_commands.describe(specie="Ксенораса.")
     @app_commands.checks.has_any_role(*XENOMOD_ROLES)
-    async def add_specie_to_whitelist(interaction: discord.Interaction, ckey:str, specie: ALL_PLAYABLE_SPECIES):
+    async def add_specie_to_whitelist(interaction: discord.Interaction, ckey: str, specie: ALL_PLAYABLE_SPECIES):
         await interaction.response.defer()
         result = ""
         species_whitelist_response = DB.get_player_species_whitelist(ckey)
         if not species_whitelist_response:
             result = f"Не найден игрок с сикеем {ckey}"
-        else:    
+        else:
             species_whitelist = json.loads(species_whitelist_response[0])
 
             if specie not in species_whitelist:
@@ -287,18 +287,18 @@ def run_bot():
                 result = f"У игрока {ckey} уже есть вайтлист на расу {specie}"
 
         await interaction.followup.send(result)
-    
+
     @tree.command(name="убрать_вайтлист_на_ксенорасу", description="Отобрать у игрока вайтлист к указанной ксенорасе")
     @app_commands.describe(ckey="Сикей.")
     @app_commands.describe(specie="Ксенораса.")
     @app_commands.checks.has_any_role(*XENOMOD_ROLES)
-    async def remove_specie_from_whitelist(interaction: discord.Interaction, ckey:str, specie: ALL_PLAYABLE_SPECIES):
+    async def remove_specie_from_whitelist(interaction: discord.Interaction, ckey: str, specie: ALL_PLAYABLE_SPECIES):
         await interaction.response.defer()
         result = ""
         species_whitelist_response = DB.get_player_species_whitelist(ckey)
         if not species_whitelist_response:
             result = f"Не найден игрок с сикеем {ckey}"
-        else:    
+        else:
             species_whitelist = json.loads(species_whitelist_response[0])
 
             if specie in species_whitelist:
@@ -315,13 +315,13 @@ def run_bot():
     @tree.command(name="очистить_вайтлист", description="Отобрать у игрока все вайтлисты на расы")
     @app_commands.describe(ckey="Сикей.")
     @app_commands.checks.has_any_role(*XENOMOD_ROLES)
-    async def remove_all_species_from_whitelist(interaction: discord.Interaction, ckey:str):
+    async def remove_all_species_from_whitelist(interaction: discord.Interaction, ckey: str):
         await interaction.response.defer()
         result = ""
         species_whitelist_response = DB.get_player_species_whitelist(ckey)
         if not species_whitelist_response:
             result = f"Не найден игрок с сикеем {ckey}"
-        else:    
+        else:
             result = f"Игрок {ckey} потерял вайтлист на все расы, кроме человека"
             match DB.set_player_species_whitelist(ckey, "[\"Human\"]"):
                 case ERRORS.ERR_404:
@@ -332,13 +332,13 @@ def run_bot():
     @tree.command(name="дать_вайтлист_на_все_расы", description="Дать игроку вайтлист на все расы")
     @app_commands.describe(ckey="Сикей.")
     @app_commands.checks.has_any_role(*XENOMOD_ROLES)
-    async def grant_all_species_to_player(interaction: discord.Interaction, ckey:str):
+    async def grant_all_species_to_player(interaction: discord.Interaction, ckey: str):
         await interaction.response.defer()
         result = ""
         species_whitelist_response = DB.get_player_species_whitelist(ckey)
         if not species_whitelist_response:
             result = f"Не найден игрок с сикеем {ckey}"
-        else:    
+        else:
             result = f"Игрок {ckey} получил вайтлист на все расы"
             all_species = ", ".join(f'"{specie}"' for specie in get_args(ALL_PLAYABLE_SPECIES))
             match DB.set_player_species_whitelist(ckey, f"[{all_species}]"):
