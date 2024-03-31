@@ -104,7 +104,7 @@ def parse_changelog(message: str) -> dict:
         else:
             if len(cl_changes):
                 prev_change = cl_changes[-1]
-                prev_change["message"] += f" {change_parse_result["message"]}"
+                prev_change["message"] += f" {change_parse_result['message']}"
             else:
                 raise Exception(f"Change with no tag: {cl_line}")
 
