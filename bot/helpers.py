@@ -116,7 +116,10 @@ def parse_changelog(message: str) -> dict:
 
     if len(cl_changes) == 0:
         raise Exception("No changes found in the changelog. Use special label if changelog is not expected.")
-    return {"author": cl_parse_result.group("author"), "changes": cl_changes}
+    return {
+        "author": str.strip(cl_parse_result.group("author") or "") or None,  # I want this to be None, not empty
+        "changes": cl_changes
+    }
 
 
 def emojify_changelog(changelog: dict):

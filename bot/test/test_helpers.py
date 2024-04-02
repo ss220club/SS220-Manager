@@ -237,6 +237,18 @@ add: Added new things.
         changelog = build_changelog(pr)
         self.assertEqual("TestAuthor", changelog["author"])
 
+    def test_build_caret_return(self):
+        pr = {
+            "user": {"login": "GitHubUser"},
+            "body": """
+:cl: \r
+add: Added new things.
+/:cl:
+"""
+        }
+        changelog = build_changelog(pr)
+        self.assertEqual("GitHubUser", changelog["author"])
+
     @staticmethod
     def isBlank(value: str):
         return not (value and value.strip())
