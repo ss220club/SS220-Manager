@@ -48,7 +48,7 @@ def send_message(cl: dict, number: int):
 
 def load_to_db(cl: dict, number: int):
     with DB.Session() as session:
-        for change in cl:
+        for change in cl["changes"]:
             change_db = Paradise.Changelog(
                 pr_number=number,
                 author=cl["author"],
