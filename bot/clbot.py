@@ -6,7 +6,7 @@ import os
 import requests
 import datetime
 from db_paradise import Paradise
-from helpers import parse_changelog, emojify_changelog
+from helpers import build_changelog, emojify_changelog
 import tomllib
 
 logging.basicConfig(level=logging.INFO, filename="logs/clbot.log", filemode="a+",
@@ -83,11 +83,8 @@ def on_pr_event(event: Event):
             print("CL ignore")
             return
 
-    message = pr["body"]
-    author = pr["user"]["login"]
     try:
-        changelog = parse_changelog(message)
-        changelog["author"] = changelog["author"] or author
+        changelog = build_changelog(pr)
         logging.info(changelog)
     except Exception as e:
         logging.error("CL parsing error", e)

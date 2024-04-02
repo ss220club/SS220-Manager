@@ -1,5 +1,5 @@
 import unittest
-from bot.helpers import parse_changelog, emojify_changelog
+from bot.helpers import build_changelog, parse_changelog, emojify_changelog
 
 VALID_TAGS = {
     "fix", "wip", "tweak",
@@ -75,6 +75,24 @@ experimental: Added an experimental thingy
 :cl:
 add: Added new things
 /:cl:
+"""
+        changelog = parse_changelog(message)
+        self.assertIsNone(changelog["author"])
+
+    def test_unicode(self):
+        message = """
+🆑 TestAuthor
+add: Added new things
+/🆑
+"""
+        changelog = parse_changelog(message)
+        self.assertEqual("TestAuthor", changelog["author"])
+
+    def test_unicode_no_author(self):
+        message = """
+🆑
+add: Added new things
+/🆑
 """
         changelog = parse_changelog(message)
         self.assertIsNone(changelog["author"])
@@ -194,6 +212,30 @@ add: Added new things.
         }
         with self.assertRaises(Exception):
             emojify_changelog(changelog)
+
+    def test_build_pr_author(self):
+        pr = {
+            "user": {"login": "GitHubUser"},
+            "body": """
+:cl:
+add: Added new things.
+/:cl:
+"""
+        }
+        changelog = build_changelog(pr)
+        self.assertEqual("GitHubUser", changelog["author"])
+
+    def test_build_cl_author(self):
+        pr = {
+            "user": {"login": "GitHubUser"},
+            "body": """
+:cl: TestAuthor
+add: Added new things.
+/:cl:
+"""
+        }
+        changelog = build_changelog(pr)
+        self.assertEqual("TestAuthor", changelog["author"])
 
     @staticmethod
     def isBlank(value: str):

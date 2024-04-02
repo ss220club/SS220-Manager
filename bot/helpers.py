@@ -77,6 +77,12 @@ DISCORD_TAG_EMOJI = {
 }
 
 
+def build_changelog(pr: dict) -> dict:
+    changelog = parse_changelog(pr["body"])
+    changelog["author"] = changelog["author"] or pr["user"]["login"]
+    return changelog
+
+
 def parse_changelog(message: str) -> dict:
     cl_parse_result = CL_BODY.search(message)
     if cl_parse_result is None:
