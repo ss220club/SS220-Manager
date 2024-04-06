@@ -1,19 +1,20 @@
+import os
+import random
 import discord
 from discord import app_commands
 from discord.ext import tasks
-
-import random
+from typing import get_args
 
 # Includes a lot of other internal libs
-from discord_helpers import *
-from helpers import *
-
-from typing import get_args
+from common.discord_helpers import *
+from common.helpers import *
+from db.connect import connect_database
 
 # Setting up config
 with open("config.toml", "rb") as file:
     config = tomllib.load(file)
 
+os.makedirs("logs", exist_ok=True)
 logging.basicConfig(level=config["log_level"], filename="logs/ss220.log", filemode="a+",
                     format="%(asctime)s %(levelname)s %(message)s", force=True)
 
@@ -37,14 +38,7 @@ NO_MENTIONS = discord.AllowedMentions(roles=False, users=False, everyone=False)
 last_status_sever = 0
 
 # Setting up db connection
-DB = Paradise(
-    engine=config["db"]["SS13"]["type"],
-    user=config["db"]["SS13"]["user"],
-    password=config["db"]["SS13"]["password"],
-    ip=config["db"]["SS13"]["ip"],
-    port=config["db"]["SS13"]["port"],
-    dbname=config["db"]["SS13"]["name"]
-)
+DB = connect_database("paradise", config["db"]["paradise"])
 
 
 def run_bot():

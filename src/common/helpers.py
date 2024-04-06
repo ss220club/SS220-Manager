@@ -1,30 +1,6 @@
 import types
 import re
-import copy
 from typing import Literal
-
-DEPARTMENT_TRANSLATIONS = {
-    "├Призраком": "Ghost",
-    "└Живым": "Living",
-    " ├Спец роли": "Special",
-    " └Экипаж": "Crew",
-    "ᅟ├Команд.": "Command",
-    "ᅟ├Инженеры": "Engineering",
-    "ᅟ├Медики": "Medical",
-    "ᅟ├Учёные": "Science",
-    "ᅟ├Снабжение": "Supply",
-    "ᅟ├СБ": "Security",
-    "ᅟ├Сервис": "Service",
-    # "ᅟ├ВЛ": "Whitelist",
-    "ᅟ└Синты": "Silicon",
-}
-
-SERVERS_NICE = {
-    "136.243.82.223:4002": ["Main", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"],
-    "141.95.72.94:4002": ["Green", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"],
-    "135.125.189.154:4001": ["Prime", "https://cdn.discordapp.com/emojis/1100109697744371852.webp?size=64"],
-    "135.125.189.154:4000": ["Black", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"]
-}  # TODO: To config
 
 ALL_PLAYABLE_SPECIES = Literal[
     "Human", "Diona", "Drask",
@@ -61,19 +37,6 @@ CL_NORMALIZED_TAG = {
     "spellcheck": "spellcheck",
     "experimental": "experiment",
     "experiment": "experiment"
-}
-DISCORD_TAG_EMOJI = {
-    "soundadd": ":notes:",
-    "sounddel": ":mute:",
-    "imageadd": ":frame_photo:",
-    "imagedel": ":scissors:",
-    "codeadd": ":sparkles:",
-    "codedel": ":wastebasket:",
-    "tweak": ":screwdriver:",
-    "fix": ":tools:",
-    "wip": ":construction_site:",
-    "spellcheck": ":pencil:",
-    "experiment": ":microscope:"
 }
 
 
@@ -120,28 +83,6 @@ def parse_changelog(message: str) -> dict:
         "author": str.strip(cl_parse_result.group("author") or "") or None,  # I want this to be None, not empty
         "changes": cl_changes
     }
-
-
-def emojify_changelog(changelog: dict):
-    changelog_copy = copy.deepcopy(changelog)
-    for change in changelog_copy["changes"]:
-        if change["tag"] in DISCORD_TAG_EMOJI:
-            change["tag"] = DISCORD_TAG_EMOJI[change["tag"]]
-        else:
-            raise Exception(f"Invalid tag for emoji: {change}")
-    return changelog_copy
-
-
-def gender_to_emoji(gender: str) -> str:
-    match gender:
-        case "male":
-            return ":male_sign:"
-        case "female":
-            return ":female_sign:"
-        case "plural":
-            return ":regional_indicator_p:"
-        case _:
-            return ":helicopter:"
 
 
 def sanitize_ckey(ckey: str) -> str:

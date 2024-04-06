@@ -3,7 +3,7 @@ import logging
 import enum
 from datetime import datetime
 from typing import Sequence
-from sqlalchemy import String
+from sqlalchemy import String, Text, func
 from sqlalchemy import Integer
 from sqlalchemy import DateTime
 from sqlalchemy import Enum
@@ -16,7 +16,8 @@ from sqlalchemy.orm import Mapped
 from sqlalchemy.orm import mapped_column
 from sqlalchemy.orm import sessionmaker
 
-from helpers import *
+from common.helpers import *
+from db.db_base import SSDatabase
 
 logging.debug("STARTED UP")
 
@@ -49,13 +50,14 @@ class DBSchema:
             pool_pre_ping=True,
         )
         self.Session = sessionmaker(self.engine)
+        # Base.metadata.create_all(self.engine)
 
     def execute_req(self, req: Select) -> Sequence:
         with self.Session() as session:
             return session.scalars(req).all()
 
 
-class Paradise(DBSchema):
+class Paradise(DBSchema, SSDatabase):
     class Player(Base):
         __tablename__ = "player"
         id: Mapped[int] = mapped_column(primary_key=True)
@@ -65,8 +67,8 @@ class Paradise(DBSchema):
         ip: Mapped[str] = mapped_column(String(18))
         computerid: Mapped[str] = mapped_column(String(32))
         lastadminrank: Mapped[str] = mapped_column(String(32))
-        exp: Mapped[str] = mapped_column(String())
-        species_whitelist: Mapped[str] = mapped_column(String())
+        exp: Mapped[str] = mapped_column(Text)
+        species_whitelist: Mapped[str] = mapped_column(Text)
 
         def __repr__(self) -> str:
             return f"Player(id={self.id!r}, \
@@ -91,10 +93,10 @@ class Paradise(DBSchema):
         __tablename__ = "changelog"
         id: Mapped[int] = mapped_column(primary_key=True)
         pr_number: Mapped[int] = mapped_column(Integer())
-        date_merged: Mapped[DateTime] = mapped_column(DateTime)
+        date_merged: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
         author: Mapped[str] = mapped_column(String(32))
         cl_type: Mapped[ChangelogTypes] = mapped_column(Enum(ChangelogTypes))
-        cl_entry: Mapped[str] = mapped_column(String())
+        cl_entry: Mapped[str] = mapped_column(Text)
 
     class Ban(Base):
         __tablename__ = "ban"
@@ -104,7 +106,7 @@ class Paradise(DBSchema):
         serverip: Mapped[str] = mapped_column(String(32))
         server_id: Mapped[str] = mapped_column(String(50))
         bantype: Mapped[str] = mapped_column(String(32))
-        reason: Mapped[str] = mapped_column(String())
+        reason: Mapped[str] = mapped_column(Text)
         job: Mapped[str] = mapped_column(String(32))
         duration: Mapped[int] = mapped_column(Integer())
         rounds: Mapped[int] = mapped_column(Integer())
@@ -127,7 +129,7 @@ class Paradise(DBSchema):
         __tablename__ = "notes"
         id: Mapped[int] = mapped_column(primary_key=True)
         ckey: Mapped[str] = mapped_column(String(32))
-        notetext: Mapped[str] = mapped_column(String())
+        notetext: Mapped[str] = mapped_column(Text)
         timestamp: Mapped[DateTime] = mapped_column(DateTime)
         round_id: Mapped[int] = mapped_column(Integer())
         adminckey: Mapped[str] = mapped_column(String(32))
@@ -141,8 +143,8 @@ class Paradise(DBSchema):
 
     class Watch(Base):
         __tablename__ = "watch"
-        ckey: Mapped[str] = mapped_column(primary_key=True)
-        reason: Mapped[str] = mapped_column(String())
+        ckey: Mapped[str] = mapped_column(String(32), primary_key=True)
+        reason: Mapped[str] = mapped_column(Text)
         timestamp: Mapped[DateTime] = mapped_column(DateTime)
         adminckey: Mapped[str] = mapped_column(String(32))
 
@@ -154,7 +156,7 @@ class Paradise(DBSchema):
     class DiscordLink(Base):
         __tablename__ = "discord_links"
         id: Mapped[int] = mapped_column(primary_key=True)
-        ckey: Mapped[int] = mapped_column(Integer())
+        ckey: Mapped[str] = mapped_column(String(32))
         discord_id: Mapped[int] = mapped_column(Integer())
         timestamp: Mapped[DateTime] = mapped_column(DateTime)
         one_time_token: Mapped[str] = mapped_column(String(100))
@@ -258,10 +260,14 @@ class Paradise(DBSchema):
 
         return result
 
-
-def main():
-    pass
-
-
-if __name__ == "__main__":
-    main()
+    def push_changelog(self, cl: dict, number: int):
+        with self.Session() as session:
+            for change in cl["changes"]:
+                change_db = Paradise.Changelog(
+                    pr_number=number,
+                    author=cl["author"],
+                    cl_type=change["tag"],
+                    cl_entry=change["message"]
+                )
+                session.add(change_db)
+            session.commit()

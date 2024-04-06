@@ -1,5 +1,7 @@
 import unittest
-from bot.helpers import build_changelog, parse_changelog, emojify_changelog
+
+from common.helpers import build_changelog, parse_changelog
+from common.discord_helpers import emojify_changelog
 
 VALID_TAGS = {
     "fix", "wip", "tweak",

@@ -1,12 +1,50 @@
+import copy
 from discord import Embed
 from discord import Colour as Color
 from datetime import timedelta
 
-from db_paradise import *
-from API import *
+from db.db_paradise import *
+from api import *
 
 BYOND_ICON = "<:byond:1109845921904205874>"
 SS14_ICON = "<:ss14:1109845956561735730>"
+
+DEPARTMENT_TRANSLATIONS = {
+    "├Призраком": "Ghost",
+    "└Живым": "Living",
+    " ├Спец роли": "Special",
+    " └Экипаж": "Crew",
+    "ᅟ├Команд.": "Command",
+    "ᅟ├Инженеры": "Engineering",
+    "ᅟ├Медики": "Medical",
+    "ᅟ├Учёные": "Science",
+    "ᅟ├Снабжение": "Supply",
+    "ᅟ├СБ": "Security",
+    "ᅟ├Сервис": "Service",
+    # "ᅟ├ВЛ": "Whitelist",
+    "ᅟ└Синты": "Silicon",
+}
+
+DISCORD_TAG_EMOJI = {
+    "soundadd": ":notes:",
+    "sounddel": ":mute:",
+    "imageadd": ":frame_photo:",
+    "imagedel": ":scissors:",
+    "codeadd": ":sparkles:",
+    "codedel": ":wastebasket:",
+    "tweak": ":screwdriver:",
+    "fix": ":tools:",
+    "wip": ":construction_site:",
+    "spellcheck": ":pencil:",
+    "experiment": ":microscope:"
+}
+
+SERVERS_NICE = {
+    "136.243.82.223:4002": ["Main", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"],
+    "141.95.72.94:4002": ["Green", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"],
+    "135.125.189.154:4001": ["Prime", "https://cdn.discordapp.com/emojis/1100109697744371852.webp?size=64"],
+    "135.125.189.154:4000": ["Black", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"]
+}  # TODO: To config
 
 
 def embed_player_info(player: Paradise.Player, discord_link: Paradise.DiscordLink, chars: Sequence[Paradise.Character]):
@@ -70,6 +108,28 @@ def get_nice_exp(exp: dict):
     for departament in DEPARTMENT_TRANSLATIONS:
         res += f"{departament}: {round(int(exp[DEPARTMENT_TRANSLATIONS[departament]]) / 60, 2)} ч.\n"
     return res
+
+
+def emojify_changelog(changelog: dict):
+    changelog_copy = copy.deepcopy(changelog)
+    for change in changelog_copy["changes"]:
+        if change["tag"] in DISCORD_TAG_EMOJI:
+            change["tag"] = DISCORD_TAG_EMOJI[change["tag"]]
+        else:
+            raise Exception(f"Invalid tag for emoji: {change}")
+    return changelog_copy
+
+
+def gender_to_emoji(gender: str) -> str:
+    match gender:
+        case "male":
+            return ":male_sign:"
+        case "female":
+            return ":female_sign:"
+        case "plural":
+            return ":regional_indicator_p:"
+        case _:
+            return ":helicopter:"
 
 
 def get_nice_bans(bans: Sequence[Paradise.Ban]) -> list[Embed]:

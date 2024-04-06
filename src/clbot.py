@@ -5,31 +5,32 @@ from github_bot_api.flask import create_flask_app
 import os
 import requests
 import datetime
-from db_paradise import Paradise
-from helpers import build_changelog, emojify_changelog
 import tomllib
 
+from db.db_base import SSDatabase
+from db.connect import connect_database
+from common.helpers import build_changelog
+from common.discord_helpers import emojify_changelog
+
+os.makedirs("logs", exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename="logs/clbot.log", filemode="a+",
                     format="%(asctime)s %(levelname)s %(message)s")
-
-WEBHOOK = "https://discord.com/api/webhooks/1129222640092057661/n0R0wwsAwf3aUkzt3v_T5408XLQjD7qRmNyQKtecRPExgjbwMb_4k9R87-Z3alZXAkZa"
 
 config = {}
 with open("config.toml", "rb") as file:
     config.update(tomllib.load(file))
 
-DB = Paradise(
-    engine=config["db"]["SS13"]["type"],
-    user=config["db"]["SS13"]["user"],
-    password=config["db"]["SS13"]["password"],
-    ip=config["db"]["SS13"]["ip"],
-    port=config["db"]["SS13"]["port"],
-    dbname=config["db"]["SS13"]["name"]
-)
+databases: dict[int, SSDatabase] = {
+    build["repo_id"]: connect_database(build["build"], config["db"][build["build"]]) for build in config["changelog"]
+}
+discord_senders = {
+    build["repo_id"]: lambda cl, number: send_message(build, cl, number)
+    for build in config["changelog"]
+}
 
 
-def send_message(cl: dict, number: int):
-    data = {"username": "Paradise Changelog", "embeds": []}
+def send_message(cl_config: dict, cl: dict, number: int):
+    data = {"username": f"{cl_config['build'].capitalize()} Changelog", "embeds": []}
     embed = {"color": 16777215, "description": ""}
     cl_emoji = emojify_changelog(cl)
     for change in cl_emoji["changes"]:
@@ -37,26 +38,13 @@ def send_message(cl: dict, number: int):
     footer = {"text": f"#{number} - {cl['author']} - {datetime.datetime.now()}"}
     embed["footer"] = footer
     data["embeds"].append(embed)
-    result = requests.post(WEBHOOK, json=data, headers={"Content-Type": "application/json"})
+    result = requests.post(cl_config["discord_webhook"], json=data, headers={"Content-Type": "application/json"})
     try:
         result.raise_for_status()
     except requests.exceptions.HTTPError as err:
         logging.error(err)
     else:
         logging.info(f"Payload delivered successfully, code {result.status_code}.")
-
-
-def load_to_db(cl: dict, number: int):
-    with DB.Session() as session:
-        for change in cl["changes"]:
-            change_db = Paradise.Changelog(
-                pr_number=number,
-                author=cl["author"],
-                cl_type=change["tag"],
-                cl_entry=change["message"]
-            )
-            session.add(change_db)
-        session.commit()
 
 
 def on_any_event(event: Event) -> bool:
@@ -72,6 +60,7 @@ def on_pr_event(event: Event):
         return True
     number = data["number"]
     pr = data["pull_request"]
+    repo = data["repository"]
     if pr["base"]["ref"] != "master":
         print("not master")
         return
@@ -83,19 +72,30 @@ def on_pr_event(event: Event):
             print("CL ignore")
             return
 
+    repo_id = repo["id"]
     try:
         changelog = build_changelog(pr)
         logging.info(changelog)
     except Exception as e:
         logging.error("CL parsing error", e)
         return False
+
     try:
-        send_message(changelog, number)
+        if repo_id not in discord_senders or not discord_senders[repo_id]:
+            logging.error(f"No discord sender provided for repo - id: {repo_id}, url: {repo['html_url']}")
+            return False
+        discord_sender = discord_senders[repo_id]
+        discord_sender(changelog, number)
     except Exception as e:
         logging.error("Discord error", e)
         return False
+
     try:
-        load_to_db(changelog, number)
+        if repo_id not in databases or not databases[repo_id]:
+            logging.error(f"No database provided for repo - id: {repo_id}, url: {repo['html_url']}")
+            return False
+        db = databases[repo_id]
+        db.push_changelog(changelog, number)
     except Exception as e:
         logging.error("Database error", e)
         return False
