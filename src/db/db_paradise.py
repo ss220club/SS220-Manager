@@ -71,8 +71,7 @@ class Paradise(DBSchema, SSDatabase):
         species_whitelist: Mapped[str] = mapped_column(Text)
 
         def __repr__(self) -> str:
-            return f"Player(id={self.id!r}, \
-            ckey={self.ckey!r})"
+            return f"Player(id={self.id!r}, ckey={self.ckey!r})"
 
     class Character(Base):
         __tablename__ = "characters"
@@ -85,9 +84,11 @@ class Paradise(DBSchema, SSDatabase):
         species: Mapped[str] = mapped_column(String(45))
 
         def __repr__(self) -> str:
-            return f"Character(id={self.id!r}, \
-            ckey={self.ckey!r}, \
-            real_name={self.real_name!r})"
+            return (
+                f"Character(id={self.id!r},"
+                f" ckey={self.ckey!r},"
+                f" real_name={self.real_name!r})"
+            )
 
     class Changelog(Base):
         __tablename__ = "changelog"
@@ -120,10 +121,12 @@ class Paradise(DBSchema, SSDatabase):
         exportable: Mapped[int] = mapped_column(Integer())
 
         def __repr__(self) -> str:
-            return f"Ban(id={self.id!r}, \
-            ckey={self.ckey!r}, \
-            reason={self.reason!r}, \
-            a_ckey={self.a_ckey!r})"
+            return (
+                f"Ban(id={self.id!r},"
+                f" ckey={self.ckey!r},"
+                f" reason={self.reason!r},"
+                f" a_ckey={self.a_ckey!r})"
+            )
 
     class Note(Base):
         __tablename__ = "notes"
@@ -136,10 +139,12 @@ class Paradise(DBSchema, SSDatabase):
         server: Mapped[str] = mapped_column(String(50))
 
         def __repr__(self) -> str:
-            return f"Note(id={self.id!r}, \
-            ckey={self.ckey!r}, \
-            reason={self.notetext!r}, \
-            a_ckey={self.adminckey!r})"
+            return (
+                f"Note(id={self.id!r},"
+                f" ckey={self.ckey!r},"
+                f" reason={self.notetext!r},"
+                f" a_ckey={self.adminckey!r})"
+            )
 
     class Watch(Base):
         __tablename__ = "watch"
@@ -149,9 +154,11 @@ class Paradise(DBSchema, SSDatabase):
         adminckey: Mapped[str] = mapped_column(String(32))
 
         def __repr__(self) -> str:
-            return f"Watch(ckey={self.ckey!r}, \
-            reason={self.reason!r}, \
-            a_ckey={self.adminckey!r})"
+            return (
+                f"Watch(ckey={self.ckey!r},"
+                f" reason={self.reason!r},"
+                f" a_ckey={self.adminckey!r})"
+            )
 
     class DiscordLink(Base):
         __tablename__ = "discord_links"
@@ -163,10 +170,12 @@ class Paradise(DBSchema, SSDatabase):
         valid: Mapped[int] = mapped_column(Integer())
 
         def __repr__(self) -> str:
-            return f"Discord_Link(id={self.id!r}, \
-            ckey={self.ckey!r}, \
-            reason={self.discord_id!r}, \
-            a_ckey={self.valid!r})"
+            return (
+                f"Discord_Link(id={self.id!r},"
+                f" ckey={self.ckey!r},"
+                f" reason={self.discord_id!r},"
+                f" a_ckey={self.valid!r})"
+            )
 
     def get_player(self, ckey: str) -> tuple[Player, DiscordLink]:
         ckey = sanitize_ckey(ckey)

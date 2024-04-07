@@ -54,11 +54,13 @@ def embed_player_info(player: Paradise.Player, discord_link: Paradise.DiscordLin
             color=Color.red())
     embed = Embed(
         title=f"Информация об игроке {player.ckey}",
-        description=f"**Дискорд:** <@{discord_link.discord_id}>\
-        \n**Ранг:** {player.lastadminrank}\
-        \n**Стаж:** {player.lastseen - player.firstseen}\
-        \n**Первое появление:** {player.firstseen}\
-        \n**Последнее появление: **{player.lastseen}",
+        description=(
+            f"**Дискорд:** <@{discord_link.discord_id}>\n"
+            f"**Ранг:** {player.lastadminrank}\n"
+            f"**Стаж:** {player.lastseen - player.firstseen}\n"
+            f"**Первое появление:** {player.firstseen}\n"
+            f"**Последнее появление: **{player.lastseen}"
+        ),
         color=Color.blue()
     )
 
@@ -89,7 +91,10 @@ def embed_player_info(player: Paradise.Player, discord_link: Paradise.DiscordLin
 def get_nice_player_chars(chars: Sequence[Paradise.Character]):
     res = ''
     for char in chars:
-        res += f"`{char.slot}:` **{char.real_name}**\n{gender_to_emoji(char.gender)} {char.species} {char.age} лет\n"
+        res += (
+            f"`{char.slot}:` **{char.real_name}**\n"
+            f"{gender_to_emoji(char.gender)} {char.species} {char.age} лет\n"
+        )
     return res
 
 
@@ -158,11 +163,13 @@ def get_nice_bans(bans: Sequence[Paradise.Ban]) -> list[Embed]:
         if ban.unbanned or (ban.duration > 0 and ban.expiration_time < datetime.now()):
             ban_color = Color.green()
         embed = (Embed(title=f"**{ban.bantype} {ban.id}**",
-                       description=f"**Игрок:** {ban.ckey}\
-                       \n**Админ:** {ban.a_ckey}\
-                       \n**Длительность:** {str(ban.duration // 60)} ч. до {str(ban.expiration_time) if ban.duration > 0 else 'Навсегда'}\
-                       \n**Причина:** {ban.reason}\
-                       \n {'**Роль:**' + ban.job if ban.job else ''}",
+                       description=(
+                           f"**Игрок:** {ban.ckey}\n"
+                           f"**Админ:** {ban.a_ckey}\n"
+                           f"**Длительность:** {str(ban.duration // 60)} ч. до {str(ban.expiration_time) if ban.duration > 0 else 'Навсегда'}\n"
+                           f"**Причина:** {ban.reason}\n"
+                           f"{'**Роль:** ' + ban.job if ban.job else ''}"
+                       ),
                        color=ban_color
                        )
                  )
@@ -193,7 +200,11 @@ def embed_notes(notes: Sequence[Paradise.Note]):
     embeds = []
     for note in notes:
         embed = Embed(title="Нотес",
-                      description=f"**Игрок:** {note.ckey}\n**Админ:** {note.adminckey}\n**Текст:** {note.notetext}",
+                      description=(
+                          f"**Игрок:** {note.ckey}\n"
+                          f"**Админ:** {note.adminckey}\n"
+                          f"**Текст:** {note.notetext}"
+                      ),
                       color=Color.light_embed())
         embed.set_footer(text=f"{note.server} - {note.timestamp}")
         embeds.append(embed)
@@ -204,8 +215,10 @@ def get_beautified_status(servers: list[Server]) -> str:
     res = ''
     for server in servers:
         server_info = server.get_server_status()
-        res += f'{BYOND_ICON if server.build == "paradise" else SS14_ICON} \
-        **{server.name}**: {server_info.players_num} [{server_info.round_duration}]  {server_info.admins_num} A/M\n'
+        res += (
+            f"{BYOND_ICON if server.build == 'paradise' else SS14_ICON} "
+            f"**{server.name}**: {server_info.players_num} [{server_info.round_duration}] {server_info.admins_num} A/M\n"
+        )
     return res
 
 

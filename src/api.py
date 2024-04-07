@@ -32,11 +32,12 @@ class Status(Info):
         self.round_id = data.get("round_id")
 
     def __str__(self) -> str:
-        return f"\
-        Server rev: {self.version}\n\
-        Is online: {self.is_online}\n\
-        Players: {self.players_num}\n\
-        Admins: {self.admins_num}"
+        return (
+            f"Server rev: {self.version}\n"
+            f"Is online: {self.is_online}\n"
+            f"Players: {self.players_num}\n"
+            f"Admins: {self.admins_num}"
+        )
 
 
 class Revision(Info):

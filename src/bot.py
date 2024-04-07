@@ -253,9 +253,10 @@ def run_bot():
         if d < 1:
             await interaction.followup.send("<:facepalm:1098305470017589309>")
             return
-        result = f"{interaction.user.display_name} \
-        бросает {d} гранную кость на {action} \
-        и выпадает {random.randint(1, d)}!"
+        result = (
+            f"@{interaction.user.display_name} бросает {d}-гранную кость на '{action}',"
+            f" и выпадает {random.randint(1, d)}!"
+        )
         await interaction.followup.send(result)
 
     @tree.command(name="добавить_вайтлист_на_ксенорасу", description="Разрешить игроку играть на указанной ксенорасе")
