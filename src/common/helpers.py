@@ -7,7 +7,8 @@ ALL_PLAYABLE_SPECIES = Literal[
     "Grey", "Kidan", "Machine",
     "Nian", "Plasmaman", "Skrell",
     "Slime People", "Tajaran",
-    "Unathi", "Vox", "Vulpkanin"
+    "Unathi", "Vox", "Vulpkanin",
+    "Nucleation"
 ]
 
 CL_BODY = re.compile(r"(:cl:|🆑)[ \t]*(?P<author>.+?)?\s*\n(?P<content>(.|\n)*?)\n/(:cl:|🆑)", re.MULTILINE)
