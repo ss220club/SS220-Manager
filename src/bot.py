@@ -1,14 +1,16 @@
 import os
 import random
+from typing import get_args
+import asyncio
+
 import discord
 from discord import app_commands
 from discord.ext import tasks
-from typing import get_args
-
 # Includes a lot of other internal libs
 from common.discord_helpers import *
-from common.helpers import *
 from db.connect import connect_database
+
+from redis import asyncio as aioredis
 
 # Setting up config
 with open("config.toml", "rb") as file:
@@ -27,7 +29,7 @@ MISC_ROLES = config["discord"]["roles"]["servers"]
 
 CODER_ID = config["discord"]["coder"]
 
-global BAN_CHANNEL
+CHANNEL_CACHE: list[discord.TextChannel] = {}
 
 OUR_SERVERS = load_servers_config(config)
 
@@ -39,7 +41,8 @@ last_status_sever = 0
 
 # Setting up db connection
 DB = connect_database("paradise", config["db"]["paradise"])
-
+REDIS = aioredis.from_url(config["redis"]["connection_string"])
+REDIS_SUB = REDIS.pubsub(ignore_subscribe_messages=True)
 
 def run_bot():
     intents = discord.Intents.default()
@@ -68,7 +71,7 @@ def run_bot():
         await interaction.followup.send(get_beautified_status(OUR_SERVERS))
 
     @tree.command(name="админы", description="Показать админов онлайн.")
-    async def online(interaction: discord.Interaction):
+    async def admins(interaction: discord.Interaction):
         await interaction.response.defer()
         await interaction.followup.send(get_admins(OUR_SERVERS))
 
@@ -114,7 +117,8 @@ def run_bot():
         try:
             global last_status_sever
             server_info = OUR_SERVERS[last_status_sever].get_server_status()
-            pres = f'{OUR_SERVERS[last_status_sever].name}: {server_info.players_num} [{server_info.round_duration}]'
+            pres = f'{OUR_SERVERS[last_status_sever].name}: {
+                server_info.players_num} [{server_info.round_duration}]'
             await client.change_presence(activity=discord.Game(name=pres))
             last_status_sever += 1
             if last_status_sever > len(OUR_SERVERS) - 1:
@@ -122,13 +126,16 @@ def run_bot():
 
         except Exception as error:
             logging.error(error)
+        return
+        await REDIS_SUB.get_message(timeout=1)
 
     # DATABASE
 
     @tree.command(name="я", description="Посмотреть информацию о себе.")
     async def me(interaction: discord.Interaction):
         await interaction.response.defer()
-        player_info, discord_link_info = DB.get_player_by_discord(interaction.user.id)
+        player_info, discord_link_info = DB.get_player_by_discord(
+            interaction.user.id)
         chars = []
         if player_info and discord_link_info:
             chars = DB.get_characters(player_info.ckey)
@@ -140,7 +147,8 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def player_by_discord(interaction: discord.Interaction, discord_id: discord.Member):
         await interaction.response.defer()
-        player_info, discord_link_info = DB.get_player_by_discord(discord_id.id)
+        player_info, discord_link_info = DB.get_player_by_discord(
+            discord_id.id)
         chars = []
         if player_info and discord_link_info:
             chars = DB.get_characters(player_info.ckey)
@@ -195,7 +203,7 @@ def run_bot():
             return
         logging.debug(f"Sending {len(embeds)} bans to banned.")
         for embed in embeds:
-            await BAN_CHANNEL.send(embed=embed)
+            await CHANNEL_CACHE.get("ban").send(embed=embed)
         logging.info(f"Sent {len(embeds)} bans to discord.")
 
     # noinspection PyDunderSlots
@@ -274,7 +282,8 @@ def run_bot():
 
             if specie not in species_whitelist:
                 species_whitelist.append(specie)
-                result = f"Игрок с сикеем {ckey} получил вайтлист на расу {specie}"
+                result = f"Игрок с сикеем {
+                    ckey} получил вайтлист на расу {specie}"
                 match DB.set_player_species_whitelist(ckey, json.dumps(species_whitelist)):
                     case ERRORS.ERR_404:
                         result = "Что-то пошло не так"
@@ -298,7 +307,8 @@ def run_bot():
 
             if specie in species_whitelist:
                 species_whitelist.remove(specie)
-                result = f"Игрок с сикеем {ckey} потерял вайтлист на расу {specie}"
+                result = f"Игрок с сикеем {
+                    ckey} потерял вайтлист на расу {specie}"
                 match DB.set_player_species_whitelist(ckey, json.dumps(species_whitelist)):
                     case ERRORS.ERR_404:
                         result = "Что-то пошло не так"
@@ -317,7 +327,8 @@ def run_bot():
         if not species_whitelist_response:
             result = f"Не найден игрок с сикеем {ckey}"
         else:
-            result = f"Игрок {ckey} потерял вайтлист на все расы, кроме человека"
+            result = f"Игрок {
+                ckey} потерял вайтлист на все расы, кроме человека"
             match DB.set_player_species_whitelist(ckey, "[\"Human\"]"):
                 case ERRORS.ERR_404:
                     result = "Что-то пошло не так"
@@ -335,26 +346,46 @@ def run_bot():
             result = f"Не найден игрок с сикеем {ckey}"
         else:
             result = f"Игрок {ckey} получил вайтлист на все расы"
-            all_species = ", ".join(f'"{specie}"' for specie in get_args(ALL_PLAYABLE_SPECIES))
+            all_species = ", ".join(
+                f'"{specie}"' for specie in get_args(ALL_PLAYABLE_SPECIES))
             match DB.set_player_species_whitelist(ckey, f"[{all_species}]"):
                 case ERRORS.ERR_404:
                     result = "Что-то пошло не так"
 
         await interaction.followup.send(result)
 
+    async def publish_news(entry: dict[bytes]):
+        logging.info("Got news from redis")
+        await asyncio.sleep(config["discord"]["news_delay"])
+        article = json.loads(entry["data"].decode())
+        embed = Embed(title=article["channel_name"], color=Color.random())
+        embed.add_field(name = article["title"], value=article["body"])
+        embed.set_footer(text = f"{article["author"]}({article["author_ckey"]})")
+        img_file = None
+        if article["img"]:
+            img_b64 = article["img"]
+            img_file = base64_to_discord_image(img_b64)
+        channel = CHANNEL_CACHE.get("news")
+        await channel.send(embed=embed, file = img_file)
+
+
     @client.event
     async def on_ready():
         await tree.sync()
         await client.change_presence(activity=discord.Game(name="Поднятие TTS с нуля"))
-        global BAN_CHANNEL
-        BAN_CHANNEL = client.get_partial_messageable(
-            config["discord"]["channels"]["ban"])
+        for channel in config["discord"]["channels"]:
+            CHANNEL_CACHE[channel] = client.get_partial_messageable(config["discord"]["channels"][channel])
+        await REDIS_SUB.subscribe(**{'byond.news': publish_news})
+
         announce_loop.start()
         announceloop_long.start()
         logging.info("Set up SS220 Manager")
 
-    client.run(config["token"])
+        while True:
+            await REDIS_SUB.get_message()
+            await asyncio.sleep(1)
 
+    client.run(config["token"])
 
 if __name__ == '__main__':
     run_bot()

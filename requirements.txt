@@ -4,3 +4,5 @@ python-dotenv
 sqlalchemy
 github_bot_api
 mariadb
+redis
+pillow

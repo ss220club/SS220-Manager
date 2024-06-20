@@ -1,11 +1,12 @@
 import copy
+import discord
 from discord import Embed
 from discord import Colour as Color
 from datetime import timedelta
 
 from db.db_paradise import *
 from api import *
-
+from common.helpers import *
 BYOND_ICON = "<:byond:1109845921904205874>"
 SS14_ICON = "<:ss14:1109845956561735730>"
 
@@ -242,3 +243,13 @@ def get_players_online(server: Server) -> str:
     players_list = players_list.players
     res = f"**{server.name}:** {', '.join(players_list)}"
     return res
+
+
+def base64_to_discord_image(img_b64: str) -> discord.File:
+    img_bytes = base64_to_image(img_b64)
+    img = create_image_from_bytes(img_bytes)
+    arr = BytesIO()
+    img.save(arr, format='PNG')
+    arr.seek(0)
+    img_file = discord.File(fp=arr, filename="articl_photo.png")
+    return img_file
