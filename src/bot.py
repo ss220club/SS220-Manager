@@ -126,8 +126,8 @@ def run_bot():
 
         except Exception as error:
             logging.error(error)
-        return
-        await REDIS_SUB.get_message(timeout=1)
+
+        await REDIS_SUB.get_message(timeout=1.0)
 
     # DATABASE
 
@@ -366,7 +366,7 @@ def run_bot():
             img_b64 = article["img"]
             img_file = base64_to_discord_image(img_b64)
         channel = CHANNEL_CACHE.get("news")
-        await channel.send(embed=embed, file = img_file)
+        await channel.send(embed = embed, file = img_file)
 
 
     @client.event
@@ -380,10 +380,6 @@ def run_bot():
         announce_loop.start()
         announceloop_long.start()
         logging.info("Set up SS220 Manager")
-
-        while True:
-            await REDIS_SUB.get_message()
-            await asyncio.sleep(1)
 
     client.run(config["token"])
 
