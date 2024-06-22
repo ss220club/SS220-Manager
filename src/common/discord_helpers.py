@@ -248,6 +248,9 @@ def get_players_online(server: Server) -> str:
 def base64_to_discord_image(img_b64: str) -> discord.File:
     img_bytes = base64_to_image(img_b64)
     img = create_image_from_bytes(img_bytes)
+
+    img = img.resize((img.size[0]*2, img.size[1]*2))
+
     arr = BytesIO()
     img.save(arr, format='PNG')
     arr.seek(0)
