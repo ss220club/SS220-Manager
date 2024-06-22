@@ -358,9 +358,14 @@ def run_bot():
         logging.info("Got news from redis")
         await asyncio.sleep(config["discord"]["news_delay"])
         article = json.loads(entry["data"].decode())
-        embed = Embed(title=article["channel_name"], color=Color.random())
-        embed.add_field(name = article["title"], value=article["body"])
-        embed.set_footer(text = f"{article["author"]}({article["author_ckey"]})")
+        embed = Embed(title=article["title"], color=Color.random())
+        embed.add_field(name = f"{article['channel_name']} сообщает", value=article["body"])
+        embed.set_footer(text =
+        f"{article['author']}\n"
+        f"Код - {article['security_level']}, {article['publish_time']} с начала смены\n"
+        "\n"
+        f"{SERVERS_NICE[article['server']][0]} - {article['round_id']} - {article['author_ckey']}"
+        )
         img_file = None
         if article["img"]:
             img_b64 = article["img"]
