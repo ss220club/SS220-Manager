@@ -356,7 +356,7 @@ def run_bot():
 
     async def publish_news(entry: dict[bytes]):
         logging.info("Got news from redis")
-        await asyncio.sleep(config["discord"]["news_delay"])
+        await asyncio.sleep(config["discord"]["redis"]["news_delay"])
         article = json.loads(entry["data"].decode())
         embed = Embed(title=article["title"], color=Color.random())
         embed.add_field(name = f"{article['channel_name']} сообщает", value=article["body"])
