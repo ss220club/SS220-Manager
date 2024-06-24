@@ -117,8 +117,7 @@ def run_bot():
         try:
             global last_status_sever
             server_info = OUR_SERVERS[last_status_sever].get_server_status()
-            pres = f'{OUR_SERVERS[last_status_sever].name}: {
-                server_info.players_num} [{server_info.round_duration}]'
+            pres = f"{OUR_SERVERS[last_status_sever].name}: {server_info.players_num} [{server_info.round_duration}]"
             await client.change_presence(activity=discord.Game(name=pres))
             last_status_sever += 1
             if last_status_sever > len(OUR_SERVERS) - 1:
@@ -282,8 +281,7 @@ def run_bot():
 
             if specie not in species_whitelist:
                 species_whitelist.append(specie)
-                result = f"Игрок с сикеем {
-                    ckey} получил вайтлист на расу {specie}"
+                result = f"Игрок с сикеем {ckey} получил вайтлист на расу {specie}"
                 match DB.set_player_species_whitelist(ckey, json.dumps(species_whitelist)):
                     case ERRORS.ERR_404:
                         result = "Что-то пошло не так"
@@ -307,8 +305,7 @@ def run_bot():
 
             if specie in species_whitelist:
                 species_whitelist.remove(specie)
-                result = f"Игрок с сикеем {
-                    ckey} потерял вайтлист на расу {specie}"
+                result = f"Игрок с сикеем {ckey} потерял вайтлист на расу {specie}"
                 match DB.set_player_species_whitelist(ckey, json.dumps(species_whitelist)):
                     case ERRORS.ERR_404:
                         result = "Что-то пошло не так"
@@ -327,8 +324,7 @@ def run_bot():
         if not species_whitelist_response:
             result = f"Не найден игрок с сикеем {ckey}"
         else:
-            result = f"Игрок {
-                ckey} потерял вайтлист на все расы, кроме человека"
+            result = f"Игрок {ckey} потерял вайтлист на все расы, кроме человека"
             match DB.set_player_species_whitelist(ckey, "[\"Human\"]"):
                 case ERRORS.ERR_404:
                     result = "Что-то пошло не так"
