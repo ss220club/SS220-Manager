@@ -43,6 +43,7 @@ last_status_sever = 0
 DB = connect_database("paradise", config["db"]["paradise"])
 REDIS = aioredis.from_url(config["redis"]["connection_string"])
 REDIS_SUB = REDIS.pubsub(ignore_subscribe_messages=True)
+REDIS_SUB_BINDINGS = {}
 
 def run_bot():
     intents = discord.Intents.default()
@@ -126,7 +127,16 @@ def run_bot():
         except Exception as error:
             logging.error(error)
 
-        await REDIS_SUB.get_message(timeout=1.0)
+        while True:
+            message: dict[bytes] = await REDIS_SUB.get_message(timeout=1.0)
+            if not message:
+                break
+            message_channel = message["channel"].decode()
+            if message_channel not in REDIS_SUB_BINDINGS:
+                logging.warning("Got redis event from a channel without handler: %s", message_channel)
+                continue
+            asyncio.create_task(REDIS_SUB_BINDINGS[message_channel](message))
+
 
     # DATABASE
 
@@ -360,7 +370,7 @@ def run_bot():
         f"{article['author']}\n"
         f"Код - {article['security_level']}, {article['publish_time']} с начала смены\n"
         "\n"
-        f"{SERVERS_NICE[article['server']][0]} - {article['round_id']} - {article['author_ckey']}"
+        f"placeholder - {article['round_id']} - {article['author_ckey']}"
         )
         img_file = None
         if article["img"]:
@@ -376,8 +386,8 @@ def run_bot():
         await client.change_presence(activity=discord.Game(name="Поднятие TTS с нуля"))
         for channel in config["discord"]["channels"]:
             CHANNEL_CACHE[channel] = client.get_partial_messageable(config["discord"]["channels"][channel])
-        await REDIS_SUB.subscribe(**{'byond.news': publish_news})
-
+        await REDIS_SUB.subscribe("byond.news")
+        REDIS_SUB_BINDINGS["byond.news"] = publish_news
         announce_loop.start()
         announceloop_long.start()
         logging.info("Set up SS220 Manager")
