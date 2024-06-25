@@ -370,7 +370,7 @@ def run_bot():
         f"{article['author']}\n"
         f"Код - {article['security_level']}, {article['publish_time']} с начала смены\n"
         "\n"
-        f"placeholder - {article['round_id']} - {article['author_ckey']}"
+        f"{SERVERS_NICE[article['server']][0]} - {article['round_id']} - {article['author_ckey']}"
         )
         img_file = None
         if article["img"]:
