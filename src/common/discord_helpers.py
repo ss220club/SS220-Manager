@@ -254,5 +254,5 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
     arr = BytesIO()
     img.save(arr, format='PNG')
     arr.seek(0)
-    img_file = discord.File(fp=arr, filename="articl_photo.png")
+    img_file = discord.File(fp=arr, filename="article_photo.png")
     return img_file
