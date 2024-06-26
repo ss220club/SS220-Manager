@@ -378,7 +378,7 @@ def run_bot():
             img_file = base64_to_discord_image(img_b64)
             embed.set_image(url="attachment://article_photo.png")
         channel = CHANNEL_CACHE.get("news")
-        await channel.send(embed = embed, file = img_file, allowed_mentions=NO_MENTIONS)
+        await channel.send(embed = embed, allowed_mentions=NO_MENTIONS)
 
 
     @client.event
