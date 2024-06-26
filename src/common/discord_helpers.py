@@ -3,6 +3,7 @@ import discord
 from discord import Embed
 from discord import Colour as Color
 from datetime import timedelta
+from PIL.Image import Resampling
 
 from db.db_paradise import *
 from api import *
@@ -249,7 +250,7 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
     img_bytes = base64_to_image(img_b64)
     img = create_image_from_bytes(img_bytes)
 
-    img = img.resize((img.size[0]*2, img.size[1]*2))
+    img = img.resize((img.size[0]*2, img.size[1]*2), resample=Resampling.NEAREST)
 
     arr = BytesIO()
     img.save(arr, format='PNG')
