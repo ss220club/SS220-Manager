@@ -372,12 +372,13 @@ def run_bot():
         "\n"
         f"{SERVERS_NICE[article['server']][0]} - {article['round_id']} - {article['author_ckey']}"
         )
+        img_file = None
         if article["img"]:
             img_b64 = article["img"]
-            _ = base64_to_discord_image(img_b64)
+            img_file = base64_to_discord_image(img_b64)
             embed.set_image(url="attachment://article_photo.png")
         channel = CHANNEL_CACHE.get("news")
-        await channel.send(embed = embed, allowed_mentions=NO_MENTIONS)
+        await channel.send(embed=embed, file=img_file, allowed_mentions=NO_MENTIONS)
 
 
     @client.event
