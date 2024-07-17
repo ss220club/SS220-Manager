@@ -155,7 +155,7 @@ class Server13(Server):
 
     def __do_command(self, cmd: str) -> dict:
         if self.key:
-            cmd = cmd + f"&key={self.key}"
+            cmd = cmd + f"&key={self.key} + &format=json"
         logging.debug(f"Used command {cmd} at server {self.ip}:{self.port}.")
         return self.__decode_byond(self.__send_receive_data(cmd))
 
