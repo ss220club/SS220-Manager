@@ -24,18 +24,18 @@ databases: dict[int, SSDatabase] = {
     build["repo_id"]: connect_database(build["build"], config["db"][build["build"]]) for build in config["changelog"]
 }
 discord_senders = {
-    build["repo_id"]: lambda cl, number: send_message(build, cl, number)
+    build["repo_id"]: lambda cl, number, repo_url: send_message(build, cl, number, repo_url)
     for build in config["changelog"]
 }
 
 
-def send_message(cl_config: dict, cl: dict, number: int):
+def send_message(cl_config: dict, cl: dict, number: int, repo_url: str):
     data = {"username": f"{cl_config['build'].capitalize()} Changelog", "embeds": []}
     embed = {"color": 16777215, "description": ""}
     cl_emoji = emojify_changelog(cl)
     for change in cl_emoji["changes"]:
         embed["description"] += f"{change['tag']} {change['message']}\n"
-    footer = {"text": f"#{number} - {cl['author']} - {datetime.datetime.now()}"}
+    footer = {"text": f"[#{number}]({repo_url}/pull/{number}) - {cl['author']} - {datetime.datetime.now()}"}
     embed["footer"] = footer
     data["embeds"].append(embed)
     result = requests.post(cl_config["discord_webhook"], json=data, headers={"Content-Type": "application/json"})
@@ -85,7 +85,7 @@ def on_pr_event(event: Event):
             logging.error(f"No discord sender provided for repo - id: {repo_id}, url: {repo['html_url']}")
             return False
         discord_sender = discord_senders[repo_id]
-        discord_sender(changelog, number)
+        discord_sender(changelog, number, repo["html_url"])
     except Exception as e:
         logging.error("Discord error", e)
         return False
