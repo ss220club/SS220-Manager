@@ -35,7 +35,7 @@ def send_message(cl_config: dict, cl: dict, number: int, repo_url: str):
     cl_emoji = emojify_changelog(cl)
     for change in cl_emoji["changes"]:
         embed["description"] += f"{change['tag']} {change['message']}\n"
-    footer = {"text": f"{cl['author']} - {datetime.datetime.now().strftime("%H:%M %d.%m.%Y")}"}
+    footer = {"text": f"{cl['author']} - {datetime.datetime.now().strftime('%H:%M %d.%m.%Y')}"}
     embed["footer"] = footer
     embed["url"] = f"{repo_url}/pull/{number}"
     data["embeds"].append(embed)
