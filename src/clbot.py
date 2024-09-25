@@ -31,12 +31,13 @@ discord_senders = {
 
 def send_message(cl_config: dict, cl: dict, number: int, repo_url: str):
     data = {"username": f"{cl_config['build'].capitalize()} Changelog", "embeds": []}
-    embed = {"color": 16777215, "description": ""}
+    embed = {"color": 16777215, "title": f"#{number}", "description": ""}
     cl_emoji = emojify_changelog(cl)
     for change in cl_emoji["changes"]:
         embed["description"] += f"{change['tag']} {change['message']}\n"
-    footer = {"text": f"[#{number}]({repo_url}/pull/{number}) - {cl['author']} - {datetime.datetime.now()}"}
+    footer = {"text": f"{cl['author']} - {datetime.datetime.now().strftime("%H:%M %d.%m.%Y")}"}
     embed["footer"] = footer
+    embed["url"] = f"{repo_url}/pull/{number}"
     data["embeds"].append(embed)
     result = requests.post(cl_config["discord_webhook"], json=data, headers={"Content-Type": "application/json"})
     try:
