@@ -173,6 +173,23 @@ fix: Fixed a few things
         self.assertEqual("fix", changelog["changes"][1]["tag"])
         self.assertEqual("Added new things. Some more text.", changelog["changes"][0]["message"])
 
+    def test_multiline_comment(self):
+        message = """
+:cl:
+add: Added new things.
+<!-- Comment. -->
+fix: Fixed a few things.
+<!-- Comment. -->
+Not a comment.
+/:cl:
+"""
+        changelog = parse_changelog(message)
+        self.assertEqual(2, len(changelog["changes"]))
+        self.assertEqual("codeadd", changelog["changes"][0]["tag"])
+        self.assertEqual("fix", changelog["changes"][1]["tag"])
+        self.assertEqual("Added new things.", changelog["changes"][0]["message"])
+        self.assertEqual("Fixed a few things. Not a comment.", changelog["changes"][1]["message"])
+
     def test_multiline_invalid(self):
         message = """
 :cl:

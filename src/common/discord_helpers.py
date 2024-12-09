@@ -250,7 +250,7 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
     img_bytes = base64_to_image(img_b64)
     img = create_image_from_bytes(img_bytes)
 
-    img = img.resize((img.size[0]*4, img.size[1]*4), resample=Resampling.NEAREST)
+    img = img.resize((img.size[0] * 4, img.size[1] * 4), resample=Resampling.NEAREST)
 
     arr = BytesIO()
     img.save(arr, format='PNG')

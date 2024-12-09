@@ -45,6 +45,7 @@ REDIS = aioredis.from_url(config["redis"]["connection_string"])
 REDIS_SUB = REDIS.pubsub(ignore_subscribe_messages=True)
 REDIS_SUB_BINDINGS = {}
 
+
 def run_bot():
     intents = discord.Intents.default()
     client = discord.Client(intents=intents)
@@ -137,7 +138,6 @@ def run_bot():
                 continue
             asyncio.create_task(REDIS_SUB_BINDINGS[message_channel](message))
 
-
     # DATABASE
 
     @tree.command(name="я", description="Посмотреть информацию о себе.")
@@ -156,8 +156,7 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def player_by_discord(interaction: discord.Interaction, discord_id: discord.Member):
         await interaction.response.defer()
-        player_info, discord_link_info = DB.get_player_by_discord(
-            discord_id.id)
+        player_info, discord_link_info = DB.get_player_by_discord(discord_id.id)
         chars = []
         if player_info and discord_link_info:
             chars = DB.get_characters(player_info.ckey)
@@ -365,12 +364,14 @@ def run_bot():
         await asyncio.sleep(config["discord"]["redis"]["news_delay"])
         article = json.loads(entry["data"].decode())
         embed = Embed(title=article["title"], color=Color.random())
-        embed.add_field(name = f"{article['channel_name']} сообщает", value=article["body"])
-        embed.set_footer(text =
-        f"{article['author']}\n"
-        f"Код - {article['security_level']}, {article['publish_time']} с начала смены\n"
-        "\n"
-        f"{SERVERS_NICE[article['server']][0]} - {article['round_id']} - {article['author_ckey']}"
+        embed.add_field(name=f"{article['channel_name']} сообщает", value=article["body"])
+        embed.set_footer(
+            text=(
+                f"{article['author']}\n"
+                f"Код - {article['security_level']}, {article['publish_time']} с начала смены\n"
+                "\n"
+                f"{SERVERS_NICE[article['server']][0]} - {article['round_id']} - {article['author_ckey']}"
+            )
         )
         img_file = None
         if article["img"]:
@@ -379,7 +380,6 @@ def run_bot():
             embed.set_image(url="attachment://article_photo.png")
         channel = CHANNEL_CACHE.get("news")
         await channel.send(embed=embed, file=img_file, allowed_mentions=NO_MENTIONS)
-
 
     @client.event
     async def on_ready():
@@ -394,6 +394,7 @@ def run_bot():
         logging.info("Set up SS220 Manager")
 
     client.run(config["token"])
+
 
 if __name__ == '__main__':
     run_bot()
