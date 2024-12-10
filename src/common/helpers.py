@@ -15,7 +15,7 @@ ALL_PLAYABLE_SPECIES = Literal[
 ]
 
 CL_BODY = re.compile(r"(:cl:|🆑)[ \t]*(?P<author>.+?)?\s*\n(?P<content>(.|\n)*?)\n/(:cl:|🆑)", re.MULTILINE)
-CL_SPLIT = re.compile(r"\s*(?:<!--.*-->)?((?P<tag>\w+)\s*:)?\s*(?P<message>.*)")
+CL_SPLIT = re.compile(r"\s*(?:(?P<tag>\w+)\s*:)?\s*(?P<message>.*)")
 
 CL_NORMALIZED_TAG = {
     "fix": "fix",
@@ -50,8 +50,9 @@ def build_changelog(pr: dict) -> dict:
     return changelog
 
 
-def parse_changelog(message: str) -> dict:
-    cl_parse_result = CL_BODY.search(message)
+def parse_changelog(pr_body: str) -> dict:
+    clean_pr_body = re.sub(r"<!--.*?-->", "", pr_body, flags=re.DOTALL)
+    cl_parse_result = CL_BODY.search(clean_pr_body)
     if cl_parse_result is None:
         raise Exception("Failed to parse the changelog. Check changelog format.")
     cl_changes = []
@@ -63,10 +64,14 @@ def parse_changelog(message: str) -> dict:
             raise Exception(f"Invalid change: '{cl_line}'")
         tag = change_parse_result.group("tag")
         message = change_parse_result.group("message")
+
         if not tag and not message:
             continue
         if not message:
             raise Exception(f"No message for change: '{cl_line}'")
+
+        message = message.strip()
+
         if tag:
             if tag in CL_NORMALIZED_TAG:
                 cl_changes.append({

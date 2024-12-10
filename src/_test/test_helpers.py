@@ -159,6 +159,17 @@ add: Added new things ([details](https://example.com)).
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
         self.assertEqual("Added new things ([details](https://example.com)).", changelog["changes"][0]["message"])
 
+    def test_comment(self):
+        message = """
+:cl:
+add: Added new things. <!-- Comment. -->
+/:cl:
+"""
+        changelog = parse_changelog(message)
+        self.assertEqual(1, len(changelog["changes"]))
+        self.assertEqual("codeadd", changelog["changes"][0]["tag"])
+        self.assertEqual("Added new things.", changelog["changes"][0]["message"])
+
     def test_multiline(self):
         message = """
 :cl:
@@ -181,6 +192,9 @@ add: Added new things.
 fix: Fixed a few things.
 <!-- Comment. -->
 Not a comment.
+<!--
+fix: Commented change.
+-->
 /:cl:
 """
         changelog = parse_changelog(message)
