@@ -374,19 +374,19 @@ def run_bot():
             merge_workflow = repo.get_workflow(workflow_config["merge_upstream"])
             if merge_workflow.create_dispatch(workflow_config["ref"]):
                 result = (
-                    "Инициирован мерж апстрима :opachki:"
+                    f"Инициирован мерж апстрима {CHECKMARK_ICON}"
                     f"\n-# {build}"
                 )
             else:
                 result = (
-                    "Что-то пошло не так :mistake:"
-                    f"\n-# {build}"
+                    f"Что-то пошло не так {MISTAKE_ICON}"
+                    f"\n-# {build} - status code error"
                 )
         except Exception as e:
             logging.debug(e)
             result = (
-                "Что-то пошло не так :mistake:"
-                f"\n-# {build}"
+                f"Что-то пошло не так {MISTAKE_ICON}"
+                f"\n-# {build} - exception occurred"
             )
 
         await interaction.followup.send(result)

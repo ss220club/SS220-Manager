@@ -8,8 +8,11 @@ from PIL.Image import Resampling
 from db.db_paradise import *
 from api import *
 from common.helpers import *
+
 BYOND_ICON = "<:byond:1109845921904205874>"
 SS14_ICON = "<:ss14:1109845956561735730>"
+MISTAKE_ICON = "<:mistake:1283074454565556378>"
+CHECKMARK_ICON = ":white_check_mark:"
 
 DEPARTMENT_TRANSLATIONS = {
     "├Призраком": "Ghost",
