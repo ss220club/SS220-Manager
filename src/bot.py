@@ -386,7 +386,7 @@ def run_bot():
                     f"\n-# {build} - status code error"
                 )
         except Exception as e:
-            logging.info(e)
+            logging.error(e)
             result = (
                 f"Что-то пошло не так {MISTAKE_ICON}"
                 f"\n-# {build} - exception occurred"
