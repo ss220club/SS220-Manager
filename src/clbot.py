@@ -21,16 +21,17 @@ with open("config.toml", "rb") as file:
     config.update(tomllib.load(file))
 
 databases: dict[int, SSDatabase] = {
-    build["repo_id"]: connect_database(build["build"], config["db"][build["build"]]) for build in config["changelog"]
+    cl_config["repo_id"]: connect_database(build, config["db"][build])
+    for build, cl_config in config["changelog"].items()
 }
 discord_senders = {
-    build["repo_id"]: lambda cl, number, repo_url: send_message(build, cl, number, repo_url)
-    for build in config["changelog"]
+    cl_config["repo_id"]: lambda cl, number, repo_url: send_message(build, cl_config, cl, number, repo_url)
+    for build, cl_config in config["changelog"].items()
 }
 
 
-def send_message(cl_config: dict, cl: dict, number: int, repo_url: str):
-    data = {"username": f"{cl_config['build'].capitalize()} Changelog", "embeds": []}
+def send_message(build: str, cl_config: dict, cl: dict, number: int, repo_url: str):
+    data = {"username": f"{build.capitalize()} Changelog", "embeds": []}
     embed = {"color": 16777215, "title": f"#{number}", "description": ""}
     cl_emoji = emojify_changelog(cl)
     for change in cl_emoji["changes"]:

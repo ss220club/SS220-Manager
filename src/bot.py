@@ -11,6 +11,7 @@ from common.discord_helpers import *
 from db.connect import connect_database
 
 from redis import asyncio as aioredis
+from github import Github
 
 # Setting up config
 with open("config.toml", "rb") as file:
@@ -356,6 +357,37 @@ def run_bot():
             match DB.set_player_species_whitelist(ckey, f"[{all_species}]"):
                 case ERRORS.ERR_404:
                     result = "Что-то пошло не так"
+
+        await interaction.followup.send(result)
+
+    @tree.command(name="мерж", description="Инициировать мерж апстрима")
+    @app_commands.describe(build="Билд")
+    @app_commands.choices(build=[app_commands.Choice(name=build, value=build) for build in config["workflow"].keys()])
+    @app_commands.checks.has_any_role(*HEAD_ADMIN_ROLES)
+    async def merge_upstream(interaction: discord.Interaction, build: str):
+        await interaction.response.defer()
+        workflow_config = config["workflow"][build]
+
+        try:
+            github = Github(workflow_config["token"])
+            repo = github.get_repo(workflow_config["repo_id"])
+            merge_workflow = repo.get_workflow(workflow_config["merge_upstream"])
+            if merge_workflow.create_dispatch(workflow_config["ref"]):
+                result = (
+                    "Инициирован мерж апстрима :opachki:"
+                    f"\n-# {build}"
+                )
+            else:
+                result = (
+                    "Что-то пошло не так :mistake:"
+                    f"\n-# {build}"
+                )
+        except Exception as e:
+            logging.debug(e)
+            result = (
+                "Что-то пошло не так :mistake:"
+                f"\n-# {build}"
+            )
 
         await interaction.followup.send(result)
 

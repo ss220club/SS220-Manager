@@ -6,3 +6,4 @@ github_bot_api
 mariadb
 redis
 pillow
+PyGithub
