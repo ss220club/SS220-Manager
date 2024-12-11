@@ -11,7 +11,7 @@ from common.discord_helpers import *
 from db.connect import connect_database
 
 from redis import asyncio as aioredis
-from github import Github
+from github import Github, GithubIntegration
 
 # Setting up config
 with open("config.toml", "rb") as file:
@@ -369,7 +369,10 @@ def run_bot():
         workflow_config = config["workflow"][build]
 
         try:
-            github = Github(workflow_config["token"])
+            with open(workflow_config["private_key_source"], "r") as key_file:
+                integration = GithubIntegration(workflow_config["app_id"], key_file.read())
+                token = integration.get_access_token(workflow_config["installation_id"]).token
+                github = Github(token)
             repo = github.get_repo(workflow_config["repo_id"])
             merge_workflow = repo.get_workflow(workflow_config["merge_upstream"])
             if merge_workflow.create_dispatch(workflow_config["ref"]):
@@ -383,7 +386,7 @@ def run_bot():
                     f"\n-# {build} - status code error"
                 )
         except Exception as e:
-            logging.debug(e)
+            logging.error(e)
             result = (
                 f"Что-то пошло не так {MISTAKE_ICON}"
                 f"\n-# {build} - exception occurred"
