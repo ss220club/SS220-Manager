@@ -28,7 +28,7 @@ XENOMOD_ROLES = config["discord"]["roles"]["xenomod"]
 DEV_ROLES = config["discord"]["roles"]["devs"]
 MISC_ROLES = config["discord"]["roles"]["servers"]
 
-CODER_ID = config["discord"]["coder"]
+CODER_ID = config["discord"]["mentions"]["coder"]
 
 CHANNEL_CACHE: dict[str, discord.TextChannel] = {}
 

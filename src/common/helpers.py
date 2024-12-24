@@ -47,6 +47,7 @@ CL_NORMALIZED_TAG = {
 def build_changelog(pr: dict) -> dict:
     changelog = parse_changelog(pr["body"])
     changelog["author"] = changelog["author"] or pr["user"]["login"]
+    changelog["labels"] = [label["name"] for label in pr["labels"]]
     return changelog
 
 

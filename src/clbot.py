@@ -1,11 +1,13 @@
 #  smee -u https://smee.io/oVNJrsT2LnrjP6ys -P /event-handler -p 5000
 import logging
-from github_bot_api import Event, Webhook
-from github_bot_api.flask import create_flask_app
 import os
 import requests
 import datetime
 import tomllib
+
+from discord import Color
+from github_bot_api import Event, Webhook
+from github_bot_api.flask import create_flask_app
 
 from db.db_base import SSDatabase
 from db.connect import connect_database
@@ -20,6 +22,10 @@ config = {}
 with open("config.toml", "rb") as file:
     config.update(tomllib.load(file))
 
+WIKI_IDS = config["discord"]["mentions"]["wiki"]
+CL_EMBED_COLOR = Color.from_str("#48739e")
+WIKI_LABEL = ":page_with_curl: Требуется изменение WIKI"
+
 databases: dict[int, SSDatabase] = {
     cl_config["repo_id"]: connect_database(build, config["db"][build])
     for build, cl_config in config["changelog"].items()
@@ -31,14 +37,21 @@ discord_senders = {
 
 
 def send_message(build: str, cl_config: dict, cl: dict, number: int, repo_url: str):
-    data = {"username": f"{build.capitalize()} Changelog", "embeds": []}
-    embed = {"color": 16777215, "title": f"#{number}", "description": ""}
     cl_emoji = emojify_changelog(cl)
-    for change in cl_emoji["changes"]:
-        embed["description"] += f"{change['tag']} {change['message']}\n"
-    footer = {"text": f"{cl['author']} - {datetime.datetime.now().strftime('%H:%M %d.%m.%Y')}"}
-    embed["footer"] = footer
-    embed["url"] = f"{repo_url}/pull/{number}"
+    requires_wiki_update = WIKI_LABEL in cl["labels"]
+    data = {
+        "username": f"{build.capitalize()} Changelog",
+        "content": " ".join([f"<@&{role}>" for role in WIKI_IDS]) if requires_wiki_update else "",
+        "allowed_mentions": {"parse": ["roles"] if requires_wiki_update else []},
+        "embeds": [],
+    }
+    embed = {
+        "title": f"#{number}",
+        "url": f"{repo_url}/pull/{number}",
+        "color": CL_EMBED_COLOR.value,
+        "description": "\n".join([f"{change['tag']} {change['message']}" for change in cl_emoji["changes"]]),
+        "footer": {"text": f"{cl['author']} - {datetime.datetime.now().strftime('%H:%M %d.%m.%Y')}"},
+    }
     data["embeds"].append(embed)
     result = requests.post(cl_config["discord_webhook"], json=data, headers={"Content-Type": "application/json"})
     try:

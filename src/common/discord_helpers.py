@@ -1,7 +1,7 @@
 import copy
 import discord
 from discord import Embed
-from discord import Colour as Color
+from discord import Color
 from datetime import timedelta
 from PIL.Image import Resampling
 

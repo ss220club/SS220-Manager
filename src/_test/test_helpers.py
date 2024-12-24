@@ -246,9 +246,24 @@ add: Added new things.
         with self.assertRaises(Exception):
             emojify_changelog(changelog)
 
+    def test_build_pr_labels(self):
+        pr = {
+            "user": {"login": "GitHubUser"},
+            "labels": [{"name": ":page_with_curl: Требуется изменение WIKI"}],
+            "body": """
+:cl:
+add: Added new things.
+/:cl:
+"""
+        }
+        changelog = build_changelog(pr)
+        self.assertEqual(1, len(changelog["labels"]))
+        self.assertEqual(":page_with_curl: Требуется изменение WIKI", changelog["labels"][0])
+
     def test_build_pr_author(self):
         pr = {
             "user": {"login": "GitHubUser"},
+            "labels": [],
             "body": """
 :cl:
 add: Added new things.
@@ -261,6 +276,7 @@ add: Added new things.
     def test_build_cl_author(self):
         pr = {
             "user": {"login": "GitHubUser"},
+            "labels": [],
             "body": """
 :cl: TestAuthor
 add: Added new things.
@@ -273,6 +289,7 @@ add: Added new things.
     def test_build_caret_return(self):
         pr = {
             "user": {"login": "GitHubUser"},
+            "labels": [],
             "body": """
 :cl: \r
 add: Added new things.
