@@ -1,6 +1,7 @@
 #  smee -u https://smee.io/oVNJrsT2LnrjP6ys -P /event-handler -p 5000
 import logging
 import os
+import time
 import requests
 import datetime
 import tomllib
@@ -26,6 +27,8 @@ WIKI_IDS = config["discord"]["mentions"]["wiki"]
 CL_EMBED_COLOR = Color.from_str("#48739e")
 WIKI_LABEL = ":page_with_curl: Требуется изменение WIKI"
 
+MAX_DESCRIPTION_LENGTH = 4096
+
 databases: dict[int, SSDatabase] = {
     cl_config["repo_id"]: connect_database(build, config["db"][build])
     for build, cl_config in config["changelog"].items()
@@ -39,27 +42,53 @@ discord_senders = {
 def send_message(build: str, cl_config: dict, cl: dict, number: int, repo_url: str):
     cl_emoji = emojify_changelog(cl)
     requires_wiki_update = WIKI_LABEL in cl["labels"]
-    data = {
-        "username": f"{build.capitalize()} Changelog",
-        "content": " ".join([f"<@&{role}>" for role in WIKI_IDS]) if requires_wiki_update else "",
-        "allowed_mentions": {"parse": ["roles"] if requires_wiki_update else []},
-        "embeds": [],
-    }
-    embed = {
-        "title": f"#{number}",
-        "url": f"{repo_url}/pull/{number}",
-        "color": CL_EMBED_COLOR.value,
-        "description": "\n".join([f"{change['tag']} {change['message']}" for change in cl_emoji["changes"]]),
-        "footer": {"text": f"{cl['author']} - {datetime.datetime.now().strftime('%H:%M %d.%m.%Y')}"},
-    }
-    data["embeds"].append(embed)
-    result = requests.post(cl_config["discord_webhook"], json=data, headers={"Content-Type": "application/json"})
-    try:
-        result.raise_for_status()
-    except requests.exceptions.HTTPError as err:
-        logging.error(err)
-    else:
-        logging.info(f"Payload delivered successfully, code {result.status_code}.")
+
+    cl_fragments = []
+    cl_fragment_builder = []
+    current_length = 0
+
+    for change in cl_emoji["changes"]:
+        change_text = f"{change['tag']} {change['message']}"
+        if current_length + len(change_text) + 1 > MAX_DESCRIPTION_LENGTH:
+            cl_fragments.append("\n".join(cl_fragment_builder))
+            cl_fragment_builder = []
+            current_length = 0
+        cl_fragment_builder.append(change_text)
+        current_length += len(change_text) + 1
+
+    if cl_fragment_builder:
+        cl_fragments.append("\n".join(cl_fragment_builder))
+
+    footer_text = f"{cl['author']} - {datetime.datetime.now().strftime('%H:%M %d.%m.%Y')}"
+    headers = {"Content-Type": "application/json"}
+    base_message_content = " ".join([f"<@&{role}>" for role in WIKI_IDS]) if requires_wiki_update else ""
+
+    for i, cl_fragment in enumerate(cl_fragments):
+        data = {
+            "username": f"{build.capitalize()} Changelog",
+            "content": base_message_content if i == 0 else "",
+            "allowed_mentions": {"parse": ["roles"]} if requires_wiki_update and i == 0 else {},
+            "embeds": [
+                {
+                    "title": f"#{number}" if i == 0 else None,
+                    "url": f"{repo_url}/pull/{number}" if i == 0 else None,
+                    "color": CL_EMBED_COLOR.value,
+                    "description": cl_fragment,
+                    "footer": {"text": footer_text} if i == len(cl_fragments) - 1 else None,
+                }
+            ],
+        }
+
+        try:
+            result = requests.post(cl_config["discord_webhook"], json=data, headers=headers)
+            result.raise_for_status()
+            logging.info("Message %d/%d sent successfully, code %d.", i + 1, len(cl_fragments), result.status_code)
+        except requests.exceptions.HTTPError as err:
+            logging.error("Error sending message %d: %s\n%s", i + 1, err, err.response.text)
+            break
+
+        # Add a delay between messages to ensure proper ordering and avoid rate limits
+        time.sleep(2)
 
 
 def on_any_event(event: Event) -> bool:
