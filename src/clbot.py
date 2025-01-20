@@ -16,6 +16,13 @@ from db.connect import connect_database
 from common.helpers import build_changelog
 from common.discord_helpers import emojify_changelog
 
+
+def create_discord_sender(build: str, cl_config: dict):
+    def sender(cl, number, repo_url):
+        return send_message(build, cl_config, cl, number, repo_url)
+    return sender
+
+
 os.makedirs("logs", exist_ok=True)
 logging.basicConfig(level=logging.INFO, filename="logs/clbot.log", filemode="a+",
                     format="%(asctime)s %(levelname)s %(message)s")
@@ -39,7 +46,7 @@ cl_configs = {
     for _, cl_config in config["changelog"].items()
 }
 discord_senders = {
-    cl_config["repo_id"]: lambda cl, number, repo_url: send_message(build, cl_config, cl, number, repo_url)
+    cl_config["repo_id"]: create_discord_sender(build, cl_config)
     for build, cl_config in config["changelog"].items()
 }
 

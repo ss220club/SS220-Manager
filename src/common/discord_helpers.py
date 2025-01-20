@@ -113,7 +113,7 @@ def emojify_changelog(changelog: dict, emojified_tags: dict[str, str]):
         if change["tag"] in emojified_tags:
             change["tag"] = emojified_tags[change["tag"]]
         else:
-            raise Exception(f"Invalid tag for emoji: {change}")
+            raise Exception(f"Invalid tag for emoji: {change}. Valid tags: {emojified_tags.keys()}")
     return changelog_copy
 
 
