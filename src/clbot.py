@@ -2,6 +2,7 @@
 import logging
 import os
 import time
+
 import requests
 import datetime
 import tomllib
@@ -29,9 +30,13 @@ WIKI_LABEL = ":page_with_curl: Требуется изменение WIKI"
 
 MAX_DESCRIPTION_LENGTH = 4096
 
-databases: dict[int, SSDatabase] = {
-    cl_config["repo_id"]: connect_database(build, config["db"][build])
+databases: dict[int, SSDatabase | None] = {
+    cl_config["repo_id"]: connect_database(build, config["db"][build]) if build in config["db"] else None
     for build, cl_config in config["changelog"].items()
+}
+cl_configs = {
+    cl_config["repo_id"]: cl_config
+    for _, cl_config in config["changelog"].items()
 }
 discord_senders = {
     cl_config["repo_id"]: lambda cl, number, repo_url: send_message(build, cl_config, cl, number, repo_url)
@@ -40,7 +45,7 @@ discord_senders = {
 
 
 def send_message(build: str, cl_config: dict, cl: dict, number: int, repo_url: str):
-    cl_emoji = emojify_changelog(cl)
+    cl_emoji = emojify_changelog(cl, cl_config["emojified_tags"])
     requires_wiki_update = WIKI_LABEL in cl["labels"]
 
     cl_fragments = []
@@ -117,8 +122,11 @@ def on_pr_event(event: Event):
             return
 
     repo_id = repo["id"]
+    if repo_id not in cl_configs or not cl_configs[repo_id]:
+        logging.error("No changelog config provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
+        return False
     try:
-        changelog = build_changelog(pr)
+        changelog = build_changelog(pr, cl_configs[repo_id]["valid_tags"])
         logging.info(changelog)
     except Exception as e:
         logging.error("CL parsing error", e)
@@ -126,7 +134,7 @@ def on_pr_event(event: Event):
 
     try:
         if repo_id not in discord_senders or not discord_senders[repo_id]:
-            logging.error(f"No discord sender provided for repo - id: {repo_id}, url: {repo['html_url']}")
+            logging.error("No discord sender provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
             return False
         discord_sender = discord_senders[repo_id]
         discord_sender(changelog, number, repo["html_url"])
@@ -136,7 +144,7 @@ def on_pr_event(event: Event):
 
     try:
         if repo_id not in databases or not databases[repo_id]:
-            logging.error(f"No database provided for repo - id: {repo_id}, url: {repo['html_url']}")
+            logging.warning("No database provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
             return False
         db = databases[repo_id]
         db.push_changelog(changelog, number)

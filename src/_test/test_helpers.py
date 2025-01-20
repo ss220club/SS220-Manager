@@ -4,11 +4,43 @@ from common.helpers import build_changelog, parse_changelog
 from common.discord_helpers import emojify_changelog
 
 VALID_TAGS = {
-    "fix", "wip", "tweak",
-    "codeadd", "codedel",
-    "imageadd", "imagedel",
-    "soundadd", "sounddel",
-    "spellcheck", "experiment"
+    "fix": "fix",
+    "fixes": "fix",
+    "bugfix": "fix",
+    "wip": "wip",
+    "tweak": "tweak",
+    "tweaks": "tweak",
+    "rsctweak": "tweak",
+    "soundadd": "soundadd",
+    "sounddel": "sounddel",
+    "imageadd": "imageadd",
+    "imagedel": "imagedel",
+    "add": "codeadd",
+    "adds": "codeadd",
+    "rscadd": "codeadd",
+    "codeadd": "codeadd",
+    "del": "codedel",
+    "dels": "codedel",
+    "rscdel": "codedel",
+    "codedel": "codedel",
+    "typo": "spellcheck",
+    "spellcheck": "spellcheck",
+    "experimental": "experiment",
+    "experiment": "experiment"
+}
+
+EMOJIFIED_TAGS = {
+    "soundadd": ":notes:",
+    "sounddel": ":mute:",
+    "imageadd": ":frame_photo:",
+    "imagedel": ":scissors:",
+    "codeadd": ":sparkles:",
+    "codedel": ":wastebasket:",
+    "tweak": ":screwdriver:",
+    "fix": ":tools:",
+    "wip": ":construction_site:",
+    "spellcheck": ":pencil:",
+    "experiment": ":microscope:"
 }
 
 
@@ -30,7 +62,7 @@ spellcheck: Fixed a few typos
 experiment: Added an experimental thingy
 /:cl:
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual(changelog["author"], "TestAuthor")
         self.assertIsNotNone(changelog["changes"])
         self.assertEqual(len(changelog["changes"]), 11)
@@ -65,7 +97,7 @@ experiment: Added an experimental thingy
 experimental: Added an experimental thingy
 /:cl:
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual("TestAuthor1, TestAuthor2", changelog["author"])
         self.assertIsNotNone(changelog["changes"])
         self.assertEqual(23, len(changelog["changes"]))
@@ -78,7 +110,7 @@ experimental: Added an experimental thingy
 add: Added new things
 /:cl:
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertIsNone(changelog["author"])
 
     def test_unicode(self):
@@ -87,7 +119,7 @@ add: Added new things
 add: Added new things
 /🆑
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual("TestAuthor", changelog["author"])
 
     def test_unicode_no_author(self):
@@ -96,7 +128,7 @@ add: Added new things
 add: Added new things
 /🆑
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertIsNone(changelog["author"])
 
     def test_indented_change(self):
@@ -105,7 +137,7 @@ add: Added new things
     add: Added new things
 /:cl:
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertIsNone(changelog["author"])
         self.assertIsNotNone(changelog["changes"])
         self.assertEqual(1, len(changelog["changes"]))
@@ -118,7 +150,7 @@ add: Added new things
 added: Added new things
 """
         with self.assertRaises(Exception):
-            parse_changelog(message)
+            parse_changelog(message, VALID_TAGS)
 
     def test_no_changes(self):
         message = """
@@ -127,7 +159,7 @@ added: Added new things
 /:cl:
 """
         with self.assertRaises(Exception):
-            parse_changelog(message)
+            parse_changelog(message, VALID_TAGS)
 
     def test_invalid_tag(self):
         message = """
@@ -136,7 +168,7 @@ added: Added new things
 /:cl:
 """
         with self.assertRaises(Exception):
-            parse_changelog(message)
+            parse_changelog(message, VALID_TAGS)
 
     def test_empty_message(self):
         message = (
@@ -146,7 +178,7 @@ added: Added new things
             "\n"
         )
         with self.assertRaises(Exception):
-            parse_changelog(message)
+            parse_changelog(message, VALID_TAGS)
 
     def test_link(self):
         message = """
@@ -154,7 +186,7 @@ added: Added new things
 add: Added new things ([details](https://example.com)).
 /:cl:
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual(1, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
         self.assertEqual("Added new things ([details](https://example.com)).", changelog["changes"][0]["message"])
@@ -165,7 +197,7 @@ add: Added new things ([details](https://example.com)).
 add: Added new things. <!-- Comment. -->
 /:cl:
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual(1, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
         self.assertEqual("Added new things.", changelog["changes"][0]["message"])
@@ -178,7 +210,7 @@ Some more text.
 fix: Fixed a few things
 /:cl:
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual(2, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
         self.assertEqual("fix", changelog["changes"][1]["tag"])
@@ -197,7 +229,7 @@ fix: Commented change.
 -->
 /:cl:
 """
-        changelog = parse_changelog(message)
+        changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual(2, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
         self.assertEqual("fix", changelog["changes"][1]["tag"])
@@ -212,7 +244,7 @@ add: Added new things.
 /:cl:
 """
         with self.assertRaises(Exception):
-            parse_changelog(message)
+            parse_changelog(message, VALID_TAGS)
 
     def test_emojify(self):
         changelog = {
@@ -235,7 +267,7 @@ add: Added new things.
             ":sparkles:", ":wastebasket:", ":frame_photo:", ":scissors:", ":notes:", ":mute:",
             ":screwdriver:", ":tools:", ":construction_site:", ":pencil:", ":microscope:"
         ]
-        modified_changelog = emojify_changelog(changelog)
+        modified_changelog = emojify_changelog(changelog, EMOJIFIED_TAGS)
         self.assertEqual(expected_emoji, list(map(lambda change: change["tag"], modified_changelog["changes"])))
 
     def test_emojify_invalid_tag(self):
@@ -244,7 +276,7 @@ add: Added new things.
             "changes": [{"tag": "add", "message": "Test message"}]
         }
         with self.assertRaises(Exception):
-            emojify_changelog(changelog)
+            emojify_changelog(changelog, EMOJIFIED_TAGS)
 
     def test_build_pr_labels(self):
         pr = {
@@ -256,7 +288,7 @@ add: Added new things.
 /:cl:
 """
         }
-        changelog = build_changelog(pr)
+        changelog = build_changelog(pr, VALID_TAGS)
         self.assertEqual(1, len(changelog["labels"]))
         self.assertEqual(":page_with_curl: Требуется изменение WIKI", changelog["labels"][0])
 
@@ -270,7 +302,7 @@ add: Added new things.
 /:cl:
 """
         }
-        changelog = build_changelog(pr)
+        changelog = build_changelog(pr, VALID_TAGS)
         self.assertEqual("GitHubUser", changelog["author"])
 
     def test_build_cl_author(self):
@@ -283,7 +315,7 @@ add: Added new things.
 /:cl:
 """
         }
-        changelog = build_changelog(pr)
+        changelog = build_changelog(pr, VALID_TAGS)
         self.assertEqual("TestAuthor", changelog["author"])
 
     def test_build_caret_return(self):
@@ -296,7 +328,7 @@ add: Added new things.
 /:cl:
 """
         }
-        changelog = build_changelog(pr)
+        changelog = build_changelog(pr, VALID_TAGS)
         self.assertEqual("GitHubUser", changelog["author"])
 
     @staticmethod

@@ -30,20 +30,6 @@ DEPARTMENT_TRANSLATIONS = {
     "ᅟ└Синты": "Silicon",
 }
 
-DISCORD_TAG_EMOJI = {
-    "soundadd": ":notes:",
-    "sounddel": ":mute:",
-    "imageadd": ":frame_photo:",
-    "imagedel": ":scissors:",
-    "codeadd": ":sparkles:",
-    "codedel": ":wastebasket:",
-    "tweak": ":screwdriver:",
-    "fix": ":tools:",
-    "wip": ":construction_site:",
-    "spellcheck": ":pencil:",
-    "experiment": ":microscope:"
-}
-
 SERVERS_NICE = {
     "136.243.82.223:4002": ["Main", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"],
     "141.95.72.94:4002": ["Green", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"],
@@ -120,11 +106,12 @@ def get_nice_exp(exp: dict):
     return res
 
 
-def emojify_changelog(changelog: dict):
+def emojify_changelog(changelog: dict, emojified_tags: dict[str, str]):
     changelog_copy = copy.deepcopy(changelog)
+    print(emojified_tags)
     for change in changelog_copy["changes"]:
-        if change["tag"] in DISCORD_TAG_EMOJI:
-            change["tag"] = DISCORD_TAG_EMOJI[change["tag"]]
+        if change["tag"] in emojified_tags:
+            change["tag"] = emojified_tags[change["tag"]]
         else:
             raise Exception(f"Invalid tag for emoji: {change}")
     return changelog_copy
