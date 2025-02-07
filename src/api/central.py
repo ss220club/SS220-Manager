@@ -9,11 +9,11 @@ class Player(BaseModel):
 
 class Whitelist(BaseModel):
     id: int
-    ckey: str
+    player_id: int
     wl_type: str
     admin_id: int
     issue_time: datetime
-    expire_time: str
+    expiration_time: datetime
     valid: bool
 
 class Central:
@@ -34,7 +34,7 @@ class Central:
                     return None
                 elif response.status != 200:
                     raise Exception(f"Failed to get player: {response.status} - {await response.text()}")
-                return Player.model_validate_json(await response.read())
+                return Player.model_validate(await response.json())
 
     async def get_player_by_ckey(self, ckey: str) -> Player:
         return await self.get_player(ckey=ckey)
@@ -50,9 +50,10 @@ class Central:
             params["discord_id"] = discord_id
         if wl_type:
             params["wl_type"] = wl_type
-        endpoint = f"{self.endpoint}/v1/player/whitelists"
+        endpoint = f"{self.endpoint}/v1/whitelists"
         async with ClientSession() as session:
             async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                 if response.status != 200:
                     raise Exception(f"Failed to get player whitelists: {response.status} - {await response.text()}")
-                return [Whitelist.model_validate_json(whitelist) for whitelist in await response.json()]
+                whitelists = (await response.json())["items"]
+                return [Whitelist.model_validate(whitelist) for whitelist in whitelists]

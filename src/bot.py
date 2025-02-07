@@ -370,9 +370,12 @@ def run_bot():
 
     @tree.command(name="вайтлисты")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, discord_id: int | None = None, wl_type: str | None = None):
+    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, discord_user: discord.Member | None = None, wl_type: str | None = None):
         await interaction.response.defer()
-        whitelists = CENTRAL.get_player_whitelists(ckey=ckey, discord_id=discord_id, wl_type=wl_type)
+        if not (ckey or discord_user or wl_type):
+            await interaction.followup.send("Нужно указать хотя бы один параметр")
+            return
+        whitelists = await CENTRAL.get_player_whitelists(ckey=ckey, discord_id=discord_user.id if discord_user else None, wl_type=wl_type)
 
         await interaction.followup.send(str(whitelists))
 
