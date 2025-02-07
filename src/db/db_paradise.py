@@ -160,39 +160,12 @@ class Paradise(DBSchema, SSDatabase):
                 f" a_ckey={self.adminckey!r})"
             )
 
-    class DiscordLink(Base):
-        __tablename__ = "discord_links"
-        id: Mapped[int] = mapped_column(primary_key=True)
-        ckey: Mapped[str] = mapped_column(String(32))
-        discord_id: Mapped[int] = mapped_column(Integer())
-        timestamp: Mapped[DateTime] = mapped_column(DateTime)
-        one_time_token: Mapped[str] = mapped_column(String(100))
-        valid: Mapped[int] = mapped_column(Integer())
-
-        def __repr__(self) -> str:
-            return (
-                f"Discord_Link(id={self.id!r},"
-                f" ckey={self.ckey!r},"
-                f" reason={self.discord_id!r},"
-                f" a_ckey={self.valid!r})"
-            )
-
-    def get_player(self, ckey: str) -> tuple[Player, DiscordLink]:
+    def get_player(self, ckey: str) -> Player:
         ckey = sanitize_ckey(ckey)
         with self.Session() as session:
-            result = session.query(self.Player, self.DiscordLink).join(
-                self.Player, self.Player.ckey == self.DiscordLink.ckey
-            ).where(self.Player.ckey == ckey).first()
-            player, discord_link = result if result else (False, False)
-            return player, discord_link
-
-    def get_player_by_discord(self, discord_id: int) -> tuple[Player, DiscordLink]:
-        with self.Session() as session:
-            result = session.query(self.Player, self.DiscordLink).join(
-                self.Player, self.Player.ckey == self.DiscordLink.ckey
-            ).where(self.DiscordLink.discord_id == discord_id).first()
-            player, discord_link = result if result else (False, False)
-            return player, discord_link
+            result = session.query(self.Player).where(self.Player.ckey == ckey).first()
+            player = result if result else False
+            return player
 
     def get_characters(self, ckey: str) -> Sequence[Character]:
         ckey = sanitize_ckey(ckey)
@@ -227,33 +200,14 @@ class Paradise(DBSchema, SSDatabase):
                                       | (self.Note.adminckey == ckey)).order_by(self.Note.id.desc()).limit(amount)
         return self.execute_req(req)
 
-    def link_account(self, discord_id: int, token: str) -> DiscordLink:
-        collisions_req = select(self.DiscordLink).where(
-            self.DiscordLink.discord_id == discord_id)
-        coll = self.execute_req(collisions_req)
-        if coll:
-            return ERRORS.ERR_BOUND
-
-        req = select(self.DiscordLink).where(
-            self.DiscordLink.one_time_token == token)
-        with self.Session() as session:
-            session.expire_on_commit = False
-            with session.begin():
-                result = session.scalars(req).one_or_none()
-                if not result:
-                    return ERRORS.ERR_404
-                result.discord_id = discord_id
-                result.valid = 1
-        return result
-
-    def get_player_species_whitelist(self, ckey: str) -> Player.species_whitelist:
+    def get_player_species_whitelist(self, ckey: str) -> str:
         ckey = sanitize_ckey(ckey)
         species_whitelist_req = select(self.Player.species_whitelist).where(
             self.Player.ckey == ckey)
         species_whitelist = self.execute_req(species_whitelist_req)
         return species_whitelist
 
-    def set_player_species_whitelist(self, ckey: str, species_whitelist: Player.species_whitelist) -> Player:
+    def set_player_species_whitelist(self, ckey: str, species_whitelist: str) -> Player:
         ckey = sanitize_ckey(ckey)
 
         req = select(self.Player).where(

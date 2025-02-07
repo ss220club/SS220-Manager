@@ -7,6 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import tasks
 # Includes a lot of other internal libs
+from api.central import Central
 from common.discord_helpers import *
 from db.connect import connect_database
 
@@ -22,10 +23,11 @@ logging.basicConfig(level=config["log_level"], filename="logs/ss220.log", filemo
                     format="%(asctime)s %(levelname)s %(message)s", force=True)
 
 HEAD_ADMIN_ROLES = config["discord"]["roles"]["heads"]
+PRIME_ADMIN_ROLES = [*HEAD_ADMIN_ROLES] + config["discord"]["roles"]["prime_admins"]
 ADMIN_ROLES = [*HEAD_ADMIN_ROLES] + config["discord"]["roles"]["admins"]
 MENTOR_ROLES = [*ADMIN_ROLES] + config["discord"]["roles"]["mentors"]
-XENOMOD_ROLES = config["discord"]["roles"]["xenomod"]
-DEV_ROLES = config["discord"]["roles"]["devs"]
+XENOMOD_ROLES = [*HEAD_ADMIN_ROLES] + config["discord"]["roles"]["xenomod"]
+DEV_ROLES = [*HEAD_ADMIN_ROLES] + config["discord"]["roles"]["devs"]
 MISC_ROLES = config["discord"]["roles"]["servers"]
 
 CODER_ID = config["discord"]["mentions"]["coder"]
@@ -41,11 +43,11 @@ NO_MENTIONS = discord.AllowedMentions(roles=False, users=False, everyone=False)
 last_status_sever = 0
 
 # Setting up db connection
-DB = connect_database("paradise", config["db"]["paradise"])
+DB: Paradise = connect_database("paradise", config["db"]["paradise"])
 REDIS = aioredis.from_url(config["redis"]["connection_string"])
 REDIS_SUB = REDIS.pubsub(ignore_subscribe_messages=True)
 REDIS_SUB_BINDINGS = {}
-
+CENTRAL = Central(config["central"]["endpoint"], config["central"]["bearer_token"])
 
 def run_bot():
     intents = discord.Intents.default()
@@ -152,16 +154,17 @@ def run_bot():
         embed_msg = embed_player_info(player_info, discord_link_info, chars)
         await interaction.followup.send(embed=embed_msg)
 
-    @tree.command(name="дискорд", description="Узнать дискорд айди игрока.")
-    @app_commands.describe(discord_id="Дискорд айди игрока.")
+    @tree.command(name="дискорд", description="Посмотреть информацию об игроке по дискорду.")
+    @app_commands.describe(discord_user="Игрок в дискорде.")
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
-    async def player_by_discord(interaction: discord.Interaction, discord_id: discord.Member):
+    async def player_by_discord(interaction: discord.Interaction, discord_user: discord.Member):
         await interaction.response.defer()
-        player_info, discord_link_info = DB.get_player_by_discord(discord_id.id)
+        player_links_info = await CENTRAL.get_player_by_discord(discord_user.id)
+        ckey = player_links_info.ckey
+        player_info = DB.get_player(ckey)
         chars = []
-        if player_info and discord_link_info:
-            chars = DB.get_characters(player_info.ckey)
-        embed_msg = embed_player_info(player_info, discord_link_info, chars)
+        chars = DB.get_characters(ckey)
+        embed_msg = embed_player_info(player_info, player_links_info, chars)
         await interaction.followup.send(embed=embed_msg, allowed_mentions=NO_MENTIONS)
 
     @tree.command(name="игрок", description="Посмотреть информацию об игроке.")
@@ -169,11 +172,10 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def player(interaction: discord.Interaction, ckey: str):
         await interaction.response.defer()
-        player_info, discord_link_info = DB.get_player(ckey)
-        chars = []
-        if player_info and discord_link_info:
-            chars = DB.get_characters(ckey)
-        embed_msg = embed_player_info(player_info, discord_link_info, chars)
+        player_info = DB.get_player(ckey)
+        player_links_info = await CENTRAL.get_player_by_ckey(ckey)
+        chars = DB.get_characters(ckey)
+        embed_msg = embed_player_info(player_info, player_links_info, chars)
         await interaction.followup.send(embed=embed_msg, allowed_mentions=NO_MENTIONS)
 
     @tree.command(name="персонаж", description="Узнать сикей по персонажу.")
@@ -215,35 +217,6 @@ def run_bot():
             await CHANNEL_CACHE.get("ban").send(embed=embed)
         logging.info(f"Sent {len(embeds)} bans to discord.")
 
-    # noinspection PyDunderSlots
-    @tree.command(name="привязать", description="Привязка аккаунта.")
-    @app_commands.describe(token="Код, который вы получили в игре.")
-    async def link_account(interaction: discord.Interaction, token: str):
-        await interaction.response.defer()
-        result = DB.link_account(interaction.user.id, token)
-        embed = Embed()
-
-        if isinstance(result, Paradise.DiscordLink):
-            embed.title = "**Аккаунт успешно привязан.**"
-            embed.add_field(name=result.ckey, value=result.discord_id)
-            embed.color = Color.green()
-
-        else:
-            match result:
-                case ERRORS.ERR_BOUND:
-                    embed.title = "**Аккаунт уже привязан!**"
-                    embed.color = Color.red()
-                case ERRORS.ERR_404:
-                    embed.title = "**Токен не найден. Попробуйте сгенерировать новый.**"
-                    embed.color = Color.red()
-                    embed.set_footer(
-                        text="Если совсем не получается, обратитесь в help чат.")
-
-        if embed:
-            await interaction.followup.send(embed=embed)
-        else:
-            logging.error("Account linkage error.", result)
-            await interaction.followup.send("Что то пошло не так.")
 
     @tree.command(name="нотесы", description="Нотесы по сикею.")
     @app_commands.describe(ckey="Сикей игрока.")
@@ -393,6 +366,27 @@ def run_bot():
             )
 
         await interaction.followup.send(result)
+
+
+    @tree.command(name="вайтлисты")
+    @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
+    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, discord_id: int | None = None, wl_type: str | None = None):
+        await interaction.response.defer()
+        whitelists = CENTRAL.get_player_whitelists(ckey=ckey, discord_id=discord_id, wl_type=wl_type)
+
+        await interaction.followup.send(str(whitelists))
+
+    # @tree.command(name="вайтлист_добавить")
+    # @app_commands.describe(player="Игрок.")
+    # @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
+    # async def add_player_to_whitelist(interaction: discord.Interaction, player: discord.Member):
+    #     await interaction.response.defer()
+    #     discord_id = player.id
+
+    #     player_info = await CENTRAL.get_player_by_discord(discord_id=discord_id)
+
+    #     central_id = player_info.id
+    #     await interaction.followup.send(f"Игрок {central_id} добавлен в вайтлист")
 
     async def publish_news(entry: dict[bytes]):
         logging.info("Got news from redis")

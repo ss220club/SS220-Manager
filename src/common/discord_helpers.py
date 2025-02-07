@@ -6,7 +6,8 @@ from datetime import timedelta
 from PIL.Image import Resampling
 
 from db.db_paradise import *
-from api import *
+from api.game import *
+from api.central import Player as CentralPlayer
 from common.helpers import *
 
 BYOND_ICON = "<:byond:1109845921904205874>"
@@ -38,43 +39,41 @@ SERVERS_NICE = {
 }  # TODO: To config
 
 
-def embed_player_info(player: Paradise.Player, discord_link: Paradise.DiscordLink, chars: Sequence[Paradise.Character]):
-    if not player:
+def embed_player_info(player: Paradise.Player, player_links: CentralPlayer, chars: Sequence[Paradise.Character]):
+    if not player_links:
         return Embed(
             title=f"Дискорд игрока не привязан к игре.",
             color=Color.red())
     embed = Embed(
-        title=f"Информация об игроке {player.ckey}",
+        title=f"Информация об игроке {player_links.ckey}",
         description=(
-            f"**Дискорд:** <@{discord_link.discord_id}>\n"
+            f"**Дискорд:** <@{player_links.discord_id}>\n"
+        ),
+        color=Color.blue()
+    )
+    if player:
+        embed.description += (
+            f"\n"
             f"**Ранг:** {player.lastadminrank}\n"
             f"**Стаж:** {player.lastseen - player.firstseen}\n"
             f"**Первое появление:** {player.firstseen}\n"
             f"**Последнее появление: **{player.lastseen}"
-        ),
-        color=Color.blue()
-    )
-
-    # TODO
-    # if player.mutual_ips or player.mutual_cids:
-    #     embed.add_field(name="**Совпадения:**",
-    #                     value=f"\
-    #                     **IP:** {', '.join(player.mutual_ips)}\n\
-    #                     **CID:** {', '.join(player.mutual_cids)}",
-    #                     inline=False)
-    #     embed.color = Color.dark_orange()
-
-    if player.exp:
-        exp = parse_player_exp(player)
-        embed.add_field(
-            name=f"Время игры: {round((int(exp['Living']) + int(exp['Ghost'])) / 60, 2)} ч.",
-            value=get_nice_exp(exp),
-            inline=True)
+        )
+        if player.exp:
+            exp = parse_player_exp(player)
+            embed.add_field(
+                name=f"Время игры: {round((int(exp['Living']) + int(exp['Ghost'])) / 60, 2)} ч.",
+                value=get_nice_exp(exp),
+                inline=True)
     if chars:
         embed.add_field(name="Персонажи",
                         value=get_nice_player_chars(chars), inline=True)
     embed.set_footer(
-        text=f"Новый смешной футер для новой крутой версии бота. Все еще могут быть косяки.")
+        text=(
+            f"Внутренний идентификатор игрока: {player_links.id}\n"
+            "Тут был Фуриор"
+        )
+    )
 
     return embed
 

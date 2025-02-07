@@ -7,3 +7,5 @@ mariadb
 redis
 pillow
 PyGithub
+mysql
+pydantic
