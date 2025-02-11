@@ -39,7 +39,7 @@ SERVERS_NICE = {
 }  # TODO: To config
 
 
-def embed_player_info(player: Paradise.Player, player_links: CentralPlayer, chars: Sequence[Paradise.Character]):
+def embed_player_info(ingame_player_infp: Paradise.Player, player_links: CentralPlayer, chars: Sequence[Paradise.Character]):
     if not player_links:
         return Embed(
             title=f"Дискорд игрока не привязан к игре.",
@@ -51,21 +51,21 @@ def embed_player_info(player: Paradise.Player, player_links: CentralPlayer, char
         ),
         color=Color.blue()
     )
-    if player:
+    if ingame_player_infp:
         embed.description += (
             f"\n"
-            f"**Ранг:** {player.lastadminrank}\n"
-            f"**Стаж:** {player.lastseen - player.firstseen}\n"
-            f"**Первое появление:** {player.firstseen}\n"
-            f"**Последнее появление: **{player.lastseen}"
+            f"**Ранг:** {ingame_player_infp.lastadminrank}\n"
+            f"**Стаж:** {ingame_player_infp.lastseen - ingame_player_infp.firstseen}\n"
+            f"**Первое появление:** {ingame_player_infp.firstseen}\n"
+            f"**Последнее появление: **{ingame_player_infp.lastseen}"
         )
-        if player.exp:
-            exp = parse_player_exp(player)
+        if ingame_player_infp.exp:
+            exp = parse_player_exp(ingame_player_infp)
             embed.add_field(
                 name=f"Время игры: {round((int(exp['Living']) + int(exp['Ghost'])) / 60, 2)} ч.",
                 value=get_nice_exp(exp),
                 inline=True)
-    if chars:
+    if len(chars):
         embed.add_field(name="Персонажи",
                         value=get_nice_player_chars(chars), inline=True)
     embed.set_footer(
@@ -246,3 +246,10 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
     arr.seek(0)
     img_file = discord.File(fp=arr, filename="article_photo.png")
     return img_file
+
+def get_player_info_embed(player_links_info):
+    ckey = player_links_info.ckey if player_links_info else None
+    player_info = DB.get_player(ckey)
+    chars = DB.get_characters(player_info.ckey)
+    embed_msg = embed_player_info(player_info, player_links_info, chars)
+    return embed_msg

@@ -21,15 +21,11 @@ class Central:
         self.endpoint = endpoint
         self.bearer_token = bearer_token
 
-    async def get_player(self, discord_id: int | None = None, ckey: str | None = None) -> Player | None:
-        params = {}
-        if discord_id:
-            params["discord_id"] = discord_id
-        if ckey:
-            params["ckey"] = ckey
-        endpoint = f"{self.endpoint}/v1/player"
+    async def get_player(self, param: str, param_value: str) -> Player | None:
+        endpoint = f"{self.endpoint}/v1/players/{param}/{param_value}"
+        
         async with ClientSession() as session:
-            async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+            async with session.get(endpoint, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                 if response.status == 404:
                     return None
                 elif response.status != 200:
@@ -37,10 +33,10 @@ class Central:
                 return Player.model_validate(await response.json())
 
     async def get_player_by_ckey(self, ckey: str) -> Player:
-        return await self.get_player(ckey=ckey)
+        return await self.get_player(param="ckey", param_value=ckey)
     
     async def get_player_by_discord(self, discord_id: int) -> Player:
-        return await self.get_player(discord_id=discord_id)
+        return await self.get_player(param="discord", param_value=discord_id)
 
     async def get_player_whitelists(self, ckey: str | None = None, discord_id: int | None = None, wl_type: str | None = None) -> list[Player]:
         params = {}

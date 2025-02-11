@@ -7,7 +7,7 @@ import discord
 from discord import app_commands
 from discord.ext import tasks
 # Includes a lot of other internal libs
-from api.central import Central
+from api.central import Central, Player
 from common.discord_helpers import *
 from db.connect import connect_database
 
@@ -69,6 +69,8 @@ def run_bot():
     async def ping(interaction: discord.Interaction):
         await interaction.response.defer()
         await interaction.followup.send("Понг!")
+
+    # region BYOND
 
     @tree.command(name="онлайн", description="Показать онлайн серверов.")
     async def online(interaction: discord.Interaction):
@@ -141,17 +143,22 @@ def run_bot():
                 continue
             asyncio.create_task(REDIS_SUB_BINDINGS[message_channel](message))
 
-    # DATABASE
+    # endregion
+    # region API & DB
+
+    def get_player_info_embed(player_links_info: Player):
+        if not player_links_info:
+            return embed_player_info(None, None, [])
+        ingame_player_info = DB.get_player(player_links_info.ckey)
+        chars = DB.get_characters(player_links_info.ckey)
+        embed_msg = embed_player_info(ingame_player_info, player_links_info, chars)
+        return embed_msg
 
     @tree.command(name="я", description="Посмотреть информацию о себе.")
     async def me(interaction: discord.Interaction):
         await interaction.response.defer()
-        player_info, discord_link_info = DB.get_player_by_discord(
-            interaction.user.id)
-        chars = []
-        if player_info and discord_link_info:
-            chars = DB.get_characters(player_info.ckey)
-        embed_msg = embed_player_info(player_info, discord_link_info, chars)
+        player_links_info = await CENTRAL.get_player_by_discord(interaction.user.id)
+        embed_msg = get_player_info_embed(player_links_info)
         await interaction.followup.send(embed=embed_msg)
 
     @tree.command(name="дискорд", description="Посмотреть информацию об игроке по дискорду.")
@@ -160,23 +167,17 @@ def run_bot():
     async def player_by_discord(interaction: discord.Interaction, discord_user: discord.Member):
         await interaction.response.defer()
         player_links_info = await CENTRAL.get_player_by_discord(discord_user.id)
-        ckey = player_links_info.ckey
-        player_info = DB.get_player(ckey)
-        chars = []
-        chars = DB.get_characters(ckey)
-        embed_msg = embed_player_info(player_info, player_links_info, chars)
-        await interaction.followup.send(embed=embed_msg, allowed_mentions=NO_MENTIONS)
+        embed_msg = get_player_info_embed(player_links_info)
+        await interaction.followup.send(embed=embed_msg)
 
     @tree.command(name="игрок", description="Посмотреть информацию об игроке.")
     @app_commands.describe(ckey="Сикей.")
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def player(interaction: discord.Interaction, ckey: str):
         await interaction.response.defer()
-        player_info = DB.get_player(ckey)
         player_links_info = await CENTRAL.get_player_by_ckey(ckey)
-        chars = DB.get_characters(ckey)
-        embed_msg = embed_player_info(player_info, player_links_info, chars)
-        await interaction.followup.send(embed=embed_msg, allowed_mentions=NO_MENTIONS)
+        embed_msg = get_player_info_embed(player_links_info)
+        await interaction.followup.send(embed=embed_msg)
 
     @tree.command(name="персонаж", description="Узнать сикей по персонажу.")
     @app_commands.describe(name="Имя.")
@@ -233,21 +234,16 @@ def run_bot():
         for embed in embeds:
             await interaction.channel.send(embed=embed)
 
-    # MISC
-
-    @tree.command(name="ролл", description="Бросить кость.")
-    @app_commands.describe(d="Количество граней.")
-    @app_commands.describe(action="Действие.")
-    async def roll(interaction: discord.Interaction, d: int, action: str):
+    @tree.command(name="вайтлисты")
+    @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
+    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, discord_user: discord.Member | None = None, wl_type: str | None = None):
         await interaction.response.defer()
-        if d < 1:
-            await interaction.followup.send("<:facepalm:1098305470017589309>")
+        if not (ckey or discord_user or wl_type):
+            await interaction.followup.send("Нужно указать хотя бы один параметр")
             return
-        result = (
-            f"@{interaction.user.display_name} бросает {d}-гранную кость на '{action}',"
-            f" и выпадает {random.randint(1, d)}!"
-        )
-        await interaction.followup.send(result)
+        whitelists = await CENTRAL.get_player_whitelists(ckey=ckey, discord_id=discord_user.id if discord_user else None, wl_type=wl_type)
+
+        await interaction.followup.send(str(whitelists))
 
     @tree.command(name="добавить_вайтлист_на_ксенорасу", description="Разрешить игроку играть на указанной ксенорасе")
     @app_commands.describe(ckey="Сикей.")
@@ -333,6 +329,23 @@ def run_bot():
 
         await interaction.followup.send(result)
 
+    # endregion
+    # region MISC
+
+    @tree.command(name="ролл", description="Бросить кость.")
+    @app_commands.describe(d="Количество граней.")
+    @app_commands.describe(action="Действие.")
+    async def roll(interaction: discord.Interaction, d: int, action: str):
+        await interaction.response.defer()
+        if d < 1:
+            await interaction.followup.send("<:facepalm:1098305470017589309>")
+            return
+        result = (
+            f"@{interaction.user.display_name} бросает {d}-гранную кость на '{action}',"
+            f" и выпадает {random.randint(1, d)}!"
+        )
+        await interaction.followup.send(result)
+
     @tree.command(name="мерж", description="Инициировать мерж апстрима")
     @app_commands.describe(build="Билд")
     @app_commands.choices(build=[app_commands.Choice(name=build, value=build) for build in config["workflow"].keys()])
@@ -366,30 +379,6 @@ def run_bot():
             )
 
         await interaction.followup.send(result)
-
-
-    @tree.command(name="вайтлисты")
-    @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, discord_user: discord.Member | None = None, wl_type: str | None = None):
-        await interaction.response.defer()
-        if not (ckey or discord_user or wl_type):
-            await interaction.followup.send("Нужно указать хотя бы один параметр")
-            return
-        whitelists = await CENTRAL.get_player_whitelists(ckey=ckey, discord_id=discord_user.id if discord_user else None, wl_type=wl_type)
-
-        await interaction.followup.send(str(whitelists))
-
-    # @tree.command(name="вайтлист_добавить")
-    # @app_commands.describe(player="Игрок.")
-    # @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    # async def add_player_to_whitelist(interaction: discord.Interaction, player: discord.Member):
-    #     await interaction.response.defer()
-    #     discord_id = player.id
-
-    #     player_info = await CENTRAL.get_player_by_discord(discord_id=discord_id)
-
-    #     central_id = player_info.id
-    #     await interaction.followup.send(f"Игрок {central_id} добавлен в вайтлист")
 
     async def publish_news(entry: dict[bytes]):
         logging.info("Got news from redis")
