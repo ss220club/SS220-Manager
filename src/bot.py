@@ -1,5 +1,6 @@
 import os
 import random
+from datetime import UTC, datetime, timedelta
 from typing import get_args
 import asyncio
 
@@ -220,8 +221,17 @@ def run_bot():
     @app_commands.describe(token="Код, который вы получили в игре.")
     async def link_account(interaction: discord.Interaction, token: str):
         await interaction.response.defer()
-        result = DB.link_account(interaction.user.id, token)
+
+        min_discord_age = timedelta(days=7)
         embed = Embed()
+
+        if datetime.now(UTC) - interaction.user.created_at < min_discord_age:
+            embed.title = "**Ваш дискорд аккаунт создан слишком недавно. Попробуйте позже.**"
+            embed.color = Color.red()
+            await interaction.followup.send(embed=embed)
+            return
+
+        result = DB.link_account(interaction.user.id, token)
 
         if isinstance(result, Paradise.DiscordLink):
             embed.title = "**Аккаунт успешно привязан.**"
