@@ -94,7 +94,8 @@ class Paradise(DBSchema, SSDatabase):
         __tablename__ = "changelog"
         id: Mapped[int] = mapped_column(primary_key=True)
         pr_number: Mapped[int] = mapped_column(Integer())
-        date_merged: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
+        date_merged: Mapped[DateTime] = mapped_column(
+            DateTime, server_default=func.now())
         author: Mapped[str] = mapped_column(String(32))
         cl_type: Mapped[ChangelogTypes] = mapped_column(Enum(ChangelogTypes))
         cl_entry: Mapped[str] = mapped_column(Text)
@@ -163,7 +164,8 @@ class Paradise(DBSchema, SSDatabase):
     def get_player(self, ckey: str) -> Player | None:
         ckey = sanitize_ckey(ckey)
         with self.Session() as session:
-            result = session.query(self.Player).where(self.Player.ckey == ckey).first()
+            result = session.query(self.Player).where(
+                self.Player.ckey == ckey).first()
             player = result if result else None
             return player
 

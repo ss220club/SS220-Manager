@@ -7,6 +7,7 @@ import logging
 
 from api.base import *
 
+
 class Server13(Server):
     # TODO: add cyrillic support
     @staticmethod
@@ -20,7 +21,8 @@ class Server13(Server):
         try:
             sock.connect((self.ip, self.port))
         except (ConnectionRefusedError, TimeoutError):
-            logging.error(f"Could not execute {command} at server {self.ip}:{self.port} due to connection error.")
+            logging.error(
+                f"Could not execute {command} at server {self.ip}:{self.port} due to connection error.")
             return bytes()
         request = self.__prepare_packet(command)
         sock.sendall(request)
@@ -83,10 +85,12 @@ class Server14(Server):
     def __do_command(self, cmd: str) -> dict:
         data = {}
         try:
-            res = requests.get(f'http://{self.ip}:{self.port}/{cmd}', timeout=5)
+            res = requests.get(
+                f'http://{self.ip}:{self.port}/{cmd}', timeout=5)
             data = res.json()
         except Exception as e:
-            logging.error(f"Could not execute {cmd} at server {self.ip}:{self.port}. Error: {e}")
+            logging.error(
+                f"Could not execute {cmd} at server {self.ip}:{self.port}. Error: {e}")
         return data
 
     def get_server_status(self) -> Status:
@@ -112,7 +116,8 @@ def load_servers_config(config: dict) -> list[Server]:
         for server in our_servers[SS]:
             server_info = our_servers[SS][server]
             server_obj = (
-                Server13(server, server_info["build"], server_info["ip"], server_info["port"], server_info["key"])
+                Server13(server, server_info["build"], server_info["ip"],
+                         server_info["port"], server_info["key"])
                 if SS == "SS13"
                 else Server14(server, server_info["build"], server_info["ip"], server_info["port"], server_info["key"]))
 

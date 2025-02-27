@@ -112,7 +112,8 @@ def emojify_changelog(changelog: dict, emojified_tags: dict[str, str]):
         if change["tag"] in emojified_tags:
             change["tag"] = emojified_tags[change["tag"]]
         else:
-            raise Exception(f"Invalid tag for emoji: {change}. Valid tags: {emojified_tags.keys()}")
+            raise Exception(
+                f"Invalid tag for emoji: {change}. Valid tags: {emojified_tags.keys()}")
     return changelog_copy
 
 
@@ -239,13 +240,15 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
     img_bytes = base64_to_image(img_b64)
     img = create_image_from_bytes(img_bytes)
 
-    img = img.resize((img.size[0] * 4, img.size[1] * 4), resample=Resampling.NEAREST)
+    img = img.resize((img.size[0] * 4, img.size[1] * 4),
+                     resample=Resampling.NEAREST)
 
     arr = BytesIO()
     img.save(arr, format='PNG')
     arr.seek(0)
     img_file = discord.File(fp=arr, filename="article_photo.png")
     return img_file
+
 
 def get_player_info_embed(player_links_info):
     ckey = player_links_info.ckey if player_links_info else None

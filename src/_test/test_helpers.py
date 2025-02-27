@@ -66,8 +66,10 @@ experiment: Added an experimental thingy
         self.assertEqual(changelog["author"], "TestAuthor")
         self.assertIsNotNone(changelog["changes"])
         self.assertEqual(len(changelog["changes"]), 11)
-        self.assertTrue(all(change["tag"] in VALID_TAGS for change in changelog["changes"]))
-        self.assertTrue(all(not self.isBlank(change["message"]) for change in changelog["changes"]))
+        self.assertTrue(
+            all(change["tag"] in VALID_TAGS for change in changelog["changes"]))
+        self.assertTrue(all(not self.isBlank(
+            change["message"]) for change in changelog["changes"]))
 
     def test_extended(self):
         message = """
@@ -101,8 +103,10 @@ experimental: Added an experimental thingy
         self.assertEqual("TestAuthor1, TestAuthor2", changelog["author"])
         self.assertIsNotNone(changelog["changes"])
         self.assertEqual(23, len(changelog["changes"]))
-        self.assertTrue(all(change["tag"] in VALID_TAGS for change in changelog["changes"]))
-        self.assertTrue(all(not self.isBlank(change["message"]) for change in changelog["changes"]))
+        self.assertTrue(
+            all(change["tag"] in VALID_TAGS for change in changelog["changes"]))
+        self.assertTrue(all(not self.isBlank(
+            change["message"]) for change in changelog["changes"]))
 
     def test_no_author(self):
         message = """
@@ -142,7 +146,8 @@ add: Added new things
         self.assertIsNotNone(changelog["changes"])
         self.assertEqual(1, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
-        self.assertEqual("Added new things", changelog["changes"][0]["message"])
+        self.assertEqual("Added new things",
+                         changelog["changes"][0]["message"])
 
     def test_not_wrapped(self):
         message = """
@@ -189,7 +194,8 @@ add: Added new things ([details](https://example.com)).
         changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual(1, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
-        self.assertEqual("Added new things ([details](https://example.com)).", changelog["changes"][0]["message"])
+        self.assertEqual(
+            "Added new things ([details](https://example.com)).", changelog["changes"][0]["message"])
 
     def test_comment(self):
         message = """
@@ -200,7 +206,8 @@ add: Added new things. <!-- Comment. -->
         changelog = parse_changelog(message, VALID_TAGS)
         self.assertEqual(1, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
-        self.assertEqual("Added new things.", changelog["changes"][0]["message"])
+        self.assertEqual("Added new things.",
+                         changelog["changes"][0]["message"])
 
     def test_multiline(self):
         message = """
@@ -214,7 +221,8 @@ fix: Fixed a few things
         self.assertEqual(2, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
         self.assertEqual("fix", changelog["changes"][1]["tag"])
-        self.assertEqual("Added new things. Some more text.", changelog["changes"][0]["message"])
+        self.assertEqual("Added new things. Some more text.",
+                         changelog["changes"][0]["message"])
 
     def test_multiline_comment(self):
         message = """
@@ -233,8 +241,10 @@ fix: Commented change.
         self.assertEqual(2, len(changelog["changes"]))
         self.assertEqual("codeadd", changelog["changes"][0]["tag"])
         self.assertEqual("fix", changelog["changes"][1]["tag"])
-        self.assertEqual("Added new things.", changelog["changes"][0]["message"])
-        self.assertEqual("Fixed a few things. Not a comment.", changelog["changes"][1]["message"])
+        self.assertEqual("Added new things.",
+                         changelog["changes"][0]["message"])
+        self.assertEqual("Fixed a few things. Not a comment.",
+                         changelog["changes"][1]["message"])
 
     def test_multiline_invalid(self):
         message = """
@@ -268,7 +278,8 @@ add: Added new things.
             ":screwdriver:", ":tools:", ":construction_site:", ":pencil:", ":microscope:"
         ]
         modified_changelog = emojify_changelog(changelog, EMOJIFIED_TAGS)
-        self.assertEqual(expected_emoji, list(map(lambda change: change["tag"], modified_changelog["changes"])))
+        self.assertEqual(expected_emoji, list(
+            map(lambda change: change["tag"], modified_changelog["changes"])))
 
     def test_emojify_invalid_tag(self):
         changelog = {
@@ -290,7 +301,8 @@ add: Added new things.
         }
         changelog = build_changelog(pr, VALID_TAGS)
         self.assertEqual(1, len(changelog["labels"]))
-        self.assertEqual(":page_with_curl: Требуется изменение WIKI", changelog["labels"][0])
+        self.assertEqual(
+            ":page_with_curl: Требуется изменение WIKI", changelog["labels"][0])
 
     def test_build_pr_author(self):
         pr = {

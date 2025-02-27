@@ -23,7 +23,8 @@ logging.basicConfig(level=config["log_level"], filename="logs/ss220.log", filemo
                     format="%(asctime)s %(levelname)s %(message)s", force=True)
 
 HEAD_ADMIN_ROLES = config["discord"]["roles"]["heads"]
-PRIME_ADMIN_ROLES = [*HEAD_ADMIN_ROLES] + config["discord"]["roles"]["prime_admins"]
+PRIME_ADMIN_ROLES = [*HEAD_ADMIN_ROLES] + \
+    config["discord"]["roles"]["prime_admins"]
 ADMIN_ROLES = [*HEAD_ADMIN_ROLES] + config["discord"]["roles"]["admins"]
 MENTOR_ROLES = [*ADMIN_ROLES] + config["discord"]["roles"]["mentors"]
 XENOMOD_ROLES = [*HEAD_ADMIN_ROLES] + config["discord"]["roles"]["xenomod"]
@@ -47,10 +48,13 @@ DB: Paradise = connect_database("paradise", config["db"]["paradise"])
 REDIS = aioredis.from_url(config["redis"]["connection_string"])
 REDIS_SUB = REDIS.pubsub(ignore_subscribe_messages=True)
 REDIS_SUB_BINDINGS = {}
-CENTRAL = Central(config["central"]["endpoint"], config["central"]["bearer_token"])
+CENTRAL = Central(config["central"]["endpoint"],
+                  config["central"]["bearer_token"])
+
 
 def run_bot():
     intents = discord.Intents.default()
+    intents.members = True
     client = discord.Client(intents=intents)
     tree = app_commands.CommandTree(client)
 
@@ -70,7 +74,7 @@ def run_bot():
         await interaction.response.defer()
         await interaction.followup.send("Понг!")
 
-    # region BYOND
+    # region BYOND Topics
 
     @tree.command(name="онлайн", description="Показать онлайн серверов.")
     async def online(interaction: discord.Interaction):
@@ -139,7 +143,8 @@ def run_bot():
                 break
             message_channel = message["channel"].decode()
             if message_channel not in REDIS_SUB_BINDINGS:
-                logging.warning("Got redis event from a channel without handler: %s", message_channel)
+                logging.warning(
+                    "Got redis event from a channel without handler: %s", message_channel)
                 continue
             asyncio.create_task(REDIS_SUB_BINDINGS[message_channel](message))
 
@@ -151,7 +156,8 @@ def run_bot():
             return embed_player_info(None, None, [])
         ingame_player_info = DB.get_player(player_links_info.ckey)
         chars = DB.get_characters(player_links_info.ckey)
-        embed_msg = embed_player_info(ingame_player_info, player_links_info, chars)
+        embed_msg = embed_player_info(
+            ingame_player_info, player_links_info, chars)
         return embed_msg
 
     @tree.command(name="я", description="Посмотреть информацию о себе.")
@@ -218,7 +224,6 @@ def run_bot():
             await CHANNEL_CACHE.get("ban").send(embed=embed)
         logging.info(f"Sent {len(embeds)} bans to discord.")
 
-
     @tree.command(name="нотесы", description="Нотесы по сикею.")
     @app_commands.describe(ckey="Сикей игрока.")
     @app_commands.describe(num="Количество нотесов.")
@@ -244,6 +249,29 @@ def run_bot():
         whitelists = await CENTRAL.get_player_whitelists(ckey=ckey, discord_id=discord_user.id if discord_user else None, wl_type=wl_type)
 
         await interaction.followup.send(str(whitelists))
+
+    @client.event
+    async def on_member_update(before: discord.Member, after: discord.Member):
+        if before.roles == after.roles:
+            return
+
+        delta = set(after.roles) - set(before.roles)
+        if not delta:
+            return # User *lost* a role
+
+        donate_roles_added = {role.id for role in delta} & set(map(int, config["central"]["donation_roles"].keys()))
+
+        if not donate_roles_added:
+            return # We arent interested
+        
+        donate_tiers = [config["central"]["donation_roles"][str(role)] for role in donate_roles_added]
+        tier_to_give = max(donate_tiers)
+
+        logging.info("User %s got donate tier %s role in discord.", after.id, tier_to_give)
+        CENTRAL.give_donate_tier(after.id, tier_to_give)
+        # TODO: handle got donate before discord link
+    
+    # region Xenowl
 
     @tree.command(name="добавить_вайтлист_на_ксенорасу", description="Разрешить игроку играть на указанной ксенорасе")
     @app_commands.describe(ckey="Сикей.")
@@ -330,6 +358,7 @@ def run_bot():
         await interaction.followup.send(result)
 
     # endregion
+    # endregion
     # region MISC
 
     @tree.command(name="ролл", description="Бросить кость.")
@@ -356,11 +385,14 @@ def run_bot():
 
         try:
             with open(workflow_config["private_key_source"], "r") as key_file:
-                integration = GithubIntegration(workflow_config["app_id"], key_file.read())
-                token = integration.get_access_token(workflow_config["installation_id"]).token
+                integration = GithubIntegration(
+                    workflow_config["app_id"], key_file.read())
+                token = integration.get_access_token(
+                    workflow_config["installation_id"]).token
                 github = Github(token)
             repo = github.get_repo(workflow_config["repo_id"])
-            merge_workflow = repo.get_workflow(workflow_config["merge_upstream"])
+            merge_workflow = repo.get_workflow(
+                workflow_config["merge_upstream"])
             if merge_workflow.create_dispatch(workflow_config["ref"]):
                 result = (
                     f"Инициирован мерж апстрима {CHECKMARK_ICON}"
@@ -385,7 +417,8 @@ def run_bot():
         await asyncio.sleep(config["discord"]["redis"]["news_delay"])
         article = json.loads(entry["data"].decode())
         embed = Embed(title=article["title"], color=Color.random())
-        embed.add_field(name=f"{article['channel_name']} сообщает", value=article["body"])
+        embed.add_field(
+            name=f"{article['channel_name']} сообщает", value=article["body"])
         embed.set_footer(
             text=(
                 f"{article['author']}\n"
@@ -402,12 +435,15 @@ def run_bot():
         channel = CHANNEL_CACHE.get("news")
         await channel.send(embed=embed, file=img_file, allowed_mentions=NO_MENTIONS)
 
+    # endregion
+
     @client.event
     async def on_ready():
         await tree.sync()
         await client.change_presence(activity=discord.Game(name="Поднятие TTS с нуля"))
         for channel in config["discord"]["channels"]:
-            CHANNEL_CACHE[channel] = client.get_partial_messageable(config["discord"]["channels"][channel])
+            CHANNEL_CACHE[channel] = client.get_partial_messageable(
+                config["discord"]["channels"][channel])
         await REDIS_SUB.subscribe("byond.news")
         REDIS_SUB_BINDINGS["byond.news"] = publish_news
         announce_loop.start()
