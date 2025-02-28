@@ -90,7 +90,7 @@ class Central:
         }
         async with ClientSession() as session:
             async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
-                if response.status != 201 and response.status != 409:
+                if response.status not in [201, 409]:
                     raise Exception(f"Failed to give whitelist: {response.status} - {await response.text()}")
                 if response.status == 201:
                     logging.info(
@@ -140,7 +140,7 @@ class Central:
         }
         async with ClientSession() as session:
             async with session.patch(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
-                if response.status != 200 and response.status != 404:
+                if response.status not in [200, 404]:
                     raise Exception(f"Failed to pardon whitelist ban: {response.status} - {await response.text()}")
 
                 return (response.status, WhitelistBan.model_validate(await response.json()) if response.status == 200 else None)

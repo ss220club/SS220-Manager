@@ -41,6 +41,8 @@ OUR_SERVERS = load_servers_config(config)
 server_choices = [app_commands.Choice(
     name=server.name, value=i) for i, server in enumerate(OUR_SERVERS)]
 
+server_type_choices = Literal[*config["central"]["server_types"]]
+
 NO_MENTIONS = discord.AllowedMentions(roles=False, users=False, everyone=False)
 last_status_sever = 0
 
@@ -180,10 +182,8 @@ def run_bot():
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def bans(interaction: discord.Interaction, ckey: str, num: int):
         await interaction.response.defer()
-        embeds = get_nice_bans(DB.get_bans(ckey))[:num]
-        if not embeds:
-            embeds = [Embed(title="**Отсутствуют баны, связанные с эти игроком.**",
-                            color=Color.green())]
+        embeds = get_nice_bans(DB.get_bans(ckey))[:num] or [Embed(title="**Отсутствуют баны, связанные с эти игроком.**",
+                                                                  color=Color.green())]
         for embed in embeds:
             await interaction.channel.send(embed=embed)
         await interaction.followup.send(f"Список банов **{ckey}**:")
@@ -207,10 +207,8 @@ def run_bot():
     async def show_notes(interaction: discord.Interaction, ckey: str, num: int):
         await interaction.response.defer()
         notes = DB.get_notes(ckey, num)
-        embeds = embed_notes(notes)
-        if not embeds:
-            embeds = [Embed(title="**Отсутствуют нотесы, связанные с эти игроком.**",
-                            color=Color.green())]
+        embeds = embed_notes(notes) or [Embed(title="**Отсутствуют нотесы, связанные с эти игроком.**",
+                                              color=Color.green())]
         await interaction.followup.send(f"Список нотесов **{ckey}**:")
         for embed in embeds:
             await interaction.channel.send(embed=embed)
@@ -333,7 +331,7 @@ def run_bot():
 
     @tree.command(name="вайтлисты")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: str | None = None):
+    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None): # type: ignore
         await interaction.response.defer()
         if not (ckey or player_discord_user):
             await interaction.followup.send("Нужно указать хотя бы один идентификатор игрока.")
@@ -343,37 +341,45 @@ def run_bot():
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
     @tree.command(name="мои_вайтлисты")
-    async def my_whitelists(interaction: discord.Interaction, server_type: str | None = None):
+    async def my_whitelists(interaction: discord.Interaction, server_type: server_type_choices | None = None): # type: ignore
         await interaction.response.defer()
         whitelists = await CENTRAL.get_player_whitelists(discord_id=interaction.user.id, server_type=server_type)
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
     @tree.command(name="вписать", description="Дать игроку вайтлист.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def grant_whitelist(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: str = "prime", duration_days: int = 30):
+    async def grant_whitelist(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: server_type_choices = "prime", duration_days: int = 30): # type: ignore
         await interaction.response.defer()
         status, wl = await CENTRAL.give_whitelist_discord(player_discord_user.id, interaction.user.id, server_type, duration_days)
         if status == 409:
             await interaction.followup.send("Игрок выписан из этого типа вайтлиста.")
             return
         await interaction.followup.send(f"Вайтлист #{wl['id']} в {server_type} игроку {player_discord_user.mention} на {duration_days} дней успешно выдан.")
+        role_to_add = discord.utils.get(
+            interaction.guild.roles, id=config["central"]["server_types"][server_type])
+        if role_to_add is None:
+            await interaction.followup.send("Для данного типа вайтлиста роль не нашлась.")
+        player_discord_user.add_roles(role_to_add)
 
     @tree.command(name="выписать", description="Выписать игрока из вайтилиста.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def whitelist_ban(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: str = "prime", duration_days: int = 14, reason: str | None = None):
+    async def whitelist_ban(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: server_type_choices = "prime", duration_days: int = 14, reason: str | None = None): # type: ignore
         await interaction.response.defer()
         wl_ban = await CENTRAL.ban_whitelist_discord(player_discord_user.id, interaction.user.id, server_type, duration_days, reason)
         await interaction.followup.send(f"Выписка #{wl_ban.id} из {server_type} игроку {player_discord_user.mention} на {duration_days} дней успешно выдана.")
 
     @tree.command(name="выписки", description="Посмотреть выписки игрока/админа.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def whitelist_bans(interaction: discord.Interaction, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: str | None = None):
+    async def whitelist_bans(interaction: discord.Interaction, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None): # type: ignore
         await interaction.response.defer()
         if not (player_discord_user or admin_discord_user):
             await interaction.followup.send("Нужно указать хотя бы один идентификатор.")
             return
         wl_bans = await CENTRAL.get_whitelist_bans(player_discord_user.id if player_discord_user else None, admin_discord_user.id if admin_discord_user else None, server_type)
-        await interaction.followup.send(f"Выписки{' на ' + server_type if server_type else ''}{' игрока ' + player_discord_user.mention if player_discord_user else ''}{' от админа ' + admin_discord_user.mention  if admin_discord_user else ''}:", embeds=embed_whitelist_bans(wl_bans))
+        await interaction.followup.send(
+            f"Выписки{f' на {server_type}' if server_type else ''}{f' игрока {player_discord_user.mention}' if player_discord_user else ''}{f' от админа {admin_discord_user.mention}' if admin_discord_user else ''}:",
+            embeds=embed_whitelist_bans(wl_bans),
+        )
 
     @tree.command(name="развыписать", description="Анулировать выписку игрока.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
@@ -416,8 +422,31 @@ def run_bot():
                      after.id, tier_to_give)
         await CENTRAL.give_donate_tier(after.id, tier_to_give)
 
-        after.add_roles(discord.utils.get(
-            after.guild.roles, id=config["central"]["donation_roles"][str(tier_to_give)]))
+        if tier_to_give < config["central"]["min_donate_tier_wl"]:
+            return
+
+        for server_type in config["central"]["donate_gives_server_types"]:
+
+            status, wl = await CENTRAL.give_whitelist_discord(
+                after.id,
+                config["central"]["boosty_discord_id"],
+                server_type,
+                30
+            )
+
+            if status == 409:
+                logging.info(
+                    "User %s couldnt get wl from donation due to ban", after.id)
+                return
+            logging.info("User %s got wl %s from donation", after.id, wl.id)
+
+            role_to_add = discord.utils.get(
+                after.guild.roles, id=config["central"]["server_types"][server_type])
+            if role_to_add is None:
+                logging.info(
+                    "User %s couldnt get wl from donation due to no role", after.id)
+                return
+            await after.add_roles(role_to_add)
 
     async def on_player_link(entry: dict[bytes]):
         player_json = json.loads(entry["data"].decode())
