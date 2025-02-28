@@ -342,7 +342,6 @@ def run_bot():
 
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
-
     @tree.command(name="мои_вайтлисты")
     async def my_whitelists(interaction: discord.Interaction, server_type: str | None = None):
         await interaction.response.defer()
@@ -359,14 +358,12 @@ def run_bot():
             return
         await interaction.followup.send(f"Вайтлист #{wl['id']} в {server_type} игроку {player_discord_user.mention} на {duration_days} дней успешно выдан.")
 
-
     @tree.command(name="выписать", description="Выписать игрока из вайтилиста.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
     async def whitelist_ban(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: str = "prime", duration_days: int = 14, reason: str | None = None):
         await interaction.response.defer()
         wl_ban = await CENTRAL.ban_whitelist_discord(player_discord_user.id, interaction.user.id, server_type, duration_days, reason)
         await interaction.followup.send(f"Выписка #{wl_ban.id} из {server_type} игроку {player_discord_user.mention} на {duration_days} дней успешно выдана.")
-
 
     @tree.command(name="выписки", description="Посмотреть выписки игрока/админа.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
@@ -377,7 +374,6 @@ def run_bot():
             return
         wl_bans = await CENTRAL.get_whitelist_bans(player_discord_user.id if player_discord_user else None, admin_discord_user.id if admin_discord_user else None, server_type)
         await interaction.followup.send(f"Выписки{' на ' + server_type if server_type else ''}{' игрока ' + player_discord_user.mention if player_discord_user else ''}{' от админа ' + admin_discord_user.mention  if admin_discord_user else ''}:", embeds=embed_whitelist_bans(wl_bans))
-
 
     @tree.command(name="развыписать", description="Анулировать выписку игрока.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
@@ -397,7 +393,8 @@ def run_bot():
         delta = set(after.roles) - set(before.roles)
         if not delta:
             negative_delta = set(before.roles) - set(after.roles)
-            donte_roles_removed = {role.id for role in negative_delta} & set(map(int, config["central"]["donation_roles"].keys()))
+            donte_roles_removed = {role.id for role in negative_delta} & set(
+                map(int, config["central"]["donation_roles"].keys()))
             if not donte_roles_removed:
                 return
 
@@ -405,26 +402,28 @@ def run_bot():
             await CENTRAL.remove_donate_tier(after.id)
             return
 
-        donate_roles_added = {role.id for role in delta} & set(map(int, config["central"]["donation_roles"].keys()))
+        donate_roles_added = {role.id for role in delta} & set(
+            map(int, config["central"]["donation_roles"].keys()))
 
         if not donate_roles_added:
-            return # We arent interested
-        
-        donate_tiers = [config["central"]["donation_roles"][str(role)] for role in donate_roles_added]
+            return  # We arent interested
+
+        donate_tiers = [config["central"]["donation_roles"]
+                        [str(role)] for role in donate_roles_added]
         tier_to_give = max(donate_tiers)
 
-        logging.info("User %s got donate tier %s role in discord.", after.id, tier_to_give)
+        logging.info("User %s got donate tier %s role in discord.",
+                     after.id, tier_to_give)
         await CENTRAL.give_donate_tier(after.id, tier_to_give)
 
-        after.add_roles(discord.utils.get(after.guild.roles, id=config["central"]["donation_roles"][str(tier_to_give)]))
-
+        after.add_roles(discord.utils.get(
+            after.guild.roles, id=config["central"]["donation_roles"][str(tier_to_give)]))
 
     async def on_player_link(entry: dict[bytes]):
         player_json = json.loads(entry["data"].decode())
         player = Player(**player_json)
         logging.info("Player link updated: %s", player)
         # TODO: Give 'verified' role to the player
-
 
     # endregion
     # region MISC
@@ -503,8 +502,8 @@ def run_bot():
         channel = CHANNEL_CACHE.get("news")
         await channel.send(embed=embed, file=img_file, allowed_mentions=NO_MENTIONS)
 
-
     # endregion
+
     @client.event
     async def on_ready():
         await tree.sync()
@@ -513,7 +512,7 @@ def run_bot():
         for channel in config["discord"]["channels"]:
             CHANNEL_CACHE[channel] = client.get_partial_messageable(
                 config["discord"]["channels"][channel])
-        
+
         await REDIS_SUB.subscribe("byond.news")
         REDIS_SUB_BINDINGS["byond.news"] = publish_news
 

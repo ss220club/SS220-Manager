@@ -54,7 +54,8 @@ class Central:
             params["discord_id"] = discord_id
         if server_type:
             params["server_type"] = server_type
-        params["active_only"] = "true" if active_only else "false" # I hate this, but for some reason aiohttp doesn't support bool params
+        # I hate this, but for some reason aiohttp doesn't support bool params
+        params["active_only"] = "true" if active_only else "false"
 
         endpoint = f"{self.endpoint}/v1/whitelists"
         async with ClientSession() as session:
@@ -74,7 +75,7 @@ class Central:
             async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                 if response.status != 201:
                     raise Exception(f"Failed to give donate tier: {response.status} - {await response.text()}")
-    
+
     async def remove_donate_tier(self, discord_id: int):
         pass
         # TODO
@@ -92,9 +93,9 @@ class Central:
                 if response.status != 201 and response.status != 409:
                     raise Exception(f"Failed to give whitelist: {response.status} - {await response.text()}")
                 if response.status == 201:
-                    logging.info(f"Whitelist given to {player_discord_id} by {admin_discord_id}")
+                    logging.info(
+                        f"Whitelist given to {player_discord_id} by {admin_discord_id}")
                 return (response.status, Whitelist.model_validate(await response.json()) if response.status == 201 else None)
-    
 
     async def ban_whitelist_discord(self, player_discord_id: int, admin_discord_id: int, server_type: str, duration_days: int, reason: str | None = None) -> WhitelistBan:
         endpoint = f"{self.endpoint}/v1/whitelist_bans"
@@ -109,9 +110,9 @@ class Central:
             async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                 if response.status != 201:
                     raise Exception(f"Failed to whitelist ban: {response.status} - {await response.text()}")
-                logging.info(f"Whitelist ban given to {player_discord_id} by {admin_discord_id}")
+                logging.info(
+                    f"Whitelist ban given to {player_discord_id} by {admin_discord_id}")
                 return WhitelistBan.model_validate(await response.json())
-
 
     async def get_whitelist_bans(self, player_discord_id: int | None = None, admin_discord_id: int | None = None, server_type: str | None = None, active_only: bool = False) -> list[WhitelistBan]:
         endpoint = f"{self.endpoint}/v1/whitelist_bans"
@@ -122,7 +123,8 @@ class Central:
             params["admin_discord_id"] = admin_discord_id
         if server_type:
             params["server_type"] = server_type
-        params["active_only"] = "true" if active_only else "false" # I hate this, but for some reason aiohttp doesn't support bool params
+        # I hate this, but for some reason aiohttp doesn't support bool params
+        params["active_only"] = "true" if active_only else "false"
 
         async with ClientSession() as session:
             async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
@@ -130,7 +132,6 @@ class Central:
                     raise Exception(f"Failed to get whitelist bans: {response.status} - {await response.text()}")
                 whitelist_bans = (await response.json())["items"]
                 return [WhitelistBan.model_validate(whitelist_ban) for whitelist_ban in whitelist_bans]
-
 
     async def pardon_whitelist_ban(self, whitelist_ban_id: int) -> tuple[int, WhitelistBan]:
         endpoint = f"{self.endpoint}/v1/whitelist_bans/{whitelist_ban_id}"
@@ -141,5 +142,5 @@ class Central:
             async with session.patch(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                 if response.status != 200 and response.status != 404:
                     raise Exception(f"Failed to pardon whitelist ban: {response.status} - {await response.text()}")
-                
+
                 return (response.status, WhitelistBan.model_validate(await response.json()) if response.status == 200 else None)

@@ -253,10 +253,11 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
 
 def embed_player_whitelists(wls: list[Whitelist]) -> Embed:
     embed = Embed(
-        title=f"Вайтлисты игрока {wls[0].player_id}"  if len(wls) else "У игроков нет вайтлистов",
+        title=f"Вайтлисты игрока {wls[0].player_id}" if len(
+            wls) else "У игроков нет вайтлистов",
         description="\n".join(
             f"#{wl.id:04} {':x:' if not wl.valid else ':timer:' if wl.expiration_time < datetime.now() else ':white_check_mark:'}: на **{wl.server_type}** от **{wl.issue_time}** до **{wl.expiration_time}**"
-              for wl in wls),
+            for wl in wls),
         color=Color.green() if any(wl.valid and wl.expiration_time > datetime.now()
                                    for wl in wls) else Color.red()
     )
@@ -275,7 +276,7 @@ def embed_whitelist_bans(wl_bans: list[WhitelistBan]) -> list[Embed]:
                 f"**Дата выписки:** {ban.issue_time}\n"
                 f"**Дата истечения:** {ban.expiration_time}\n"
                 f"**Причина:** {ban.reason}"
-                ),
+            ),
             color=Color.red() if ban.valid and ban.expiration_time > datetime.now() else Color.green()
         ))
     return embeds
