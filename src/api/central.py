@@ -1,3 +1,4 @@
+import logging
 from aiohttp import ClientSession
 from pydantic import BaseModel
 from datetime import datetime
@@ -12,11 +13,15 @@ class Player(BaseModel):
 class Whitelist(BaseModel):
     id: int
     player_id: int
-    wl_type: str
+    server_type: str
     admin_id: int
     issue_time: datetime
     expiration_time: datetime
     valid: bool
+
+
+class WhitelistBan(Whitelist):
+    reason: str | None
 
 
 class Central:
@@ -41,14 +46,16 @@ class Central:
     async def get_player_by_discord(self, discord_id: int) -> Player:
         return await self.get_player(param="discord", param_value=discord_id)
 
-    async def get_player_whitelists(self, ckey: str | None = None, discord_id: int | None = None, wl_type: str | None = None) -> list[Player]:
+    async def get_player_whitelists(self, ckey: str | None = None, discord_id: int | None = None, server_type: str | None = None, active_only: bool = False) -> list[Player]:
         params = {}
         if ckey:
             params["ckey"] = ckey
         if discord_id:
             params["discord_id"] = discord_id
-        if wl_type:
-            params["wl_type"] = wl_type
+        if server_type:
+            params["server_type"] = server_type
+        params["active_only"] = "true" if active_only else "false" # I hate this, but for some reason aiohttp doesn't support bool params
+
         endpoint = f"{self.endpoint}/v1/whitelists"
         async with ClientSession() as session:
             async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
@@ -71,3 +78,68 @@ class Central:
     async def remove_donate_tier(self, discord_id: int):
         pass
         # TODO
+
+    async def give_whitelist_discord(self, player_discord_id: int, admin_discord_id: int, server_type: str, duration_days: int) -> tuple[int, Whitelist]:
+        endpoint = f"{self.endpoint}/v1/whitelists"
+        body = {
+            "server_type": server_type,
+            "player_discord_id": str(player_discord_id),
+            "admin_discord_id": str(admin_discord_id),
+            "duration_days": duration_days
+        }
+        async with ClientSession() as session:
+            async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+                if response.status != 201 and response.status != 409:
+                    raise Exception(f"Failed to give whitelist: {response.status} - {await response.text()}")
+                if response.status == 201:
+                    logging.info(f"Whitelist given to {player_discord_id} by {admin_discord_id}")
+                return (response.status, Whitelist.model_validate(await response.json()) if response.status == 201 else None)
+    
+
+    async def ban_whitelist_discord(self, player_discord_id: int, admin_discord_id: int, server_type: str, duration_days: int, reason: str | None = None) -> WhitelistBan:
+        endpoint = f"{self.endpoint}/v1/whitelist_bans"
+        body = {
+            "server_type": server_type,
+            "player_discord_id": str(player_discord_id),
+            "admin_discord_id": str(admin_discord_id),
+            "duration_days": duration_days,
+            "reason": reason
+        }
+        async with ClientSession() as session:
+            async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+                if response.status != 201:
+                    raise Exception(f"Failed to whitelist ban: {response.status} - {await response.text()}")
+                logging.info(f"Whitelist ban given to {player_discord_id} by {admin_discord_id}")
+                return WhitelistBan.model_validate(await response.json())
+
+
+    async def get_whitelist_bans(self, player_discord_id: int | None = None, admin_discord_id: int | None = None, server_type: str | None = None, active_only: bool = False) -> list[WhitelistBan]:
+        endpoint = f"{self.endpoint}/v1/whitelist_bans"
+        params = {}
+        if player_discord_id:
+            params["player_discord_id"] = player_discord_id
+        if admin_discord_id:
+            params["admin_discord_id"] = admin_discord_id
+        if server_type:
+            params["server_type"] = server_type
+        params["active_only"] = "true" if active_only else "false" # I hate this, but for some reason aiohttp doesn't support bool params
+
+        async with ClientSession() as session:
+            async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+                if response.status != 200:
+                    raise Exception(f"Failed to get whitelist bans: {response.status} - {await response.text()}")
+                whitelist_bans = (await response.json())["items"]
+                return [WhitelistBan.model_validate(whitelist_ban) for whitelist_ban in whitelist_bans]
+
+
+    async def pardon_whitelist_ban(self, whitelist_ban_id: int) -> tuple[int, WhitelistBan]:
+        endpoint = f"{self.endpoint}/v1/whitelist_bans/{whitelist_ban_id}"
+        body = {
+            "valid": False
+        }
+        async with ClientSession() as session:
+            async with session.patch(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+                if response.status != 200 and response.status != 404:
+                    raise Exception(f"Failed to pardon whitelist ban: {response.status} - {await response.text()}")
+                
+                return (response.status, WhitelistBan.model_validate(await response.json()) if response.status == 200 else None)

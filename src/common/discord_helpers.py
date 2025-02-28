@@ -7,7 +7,7 @@ from PIL.Image import Resampling
 
 from db.db_paradise import *
 from api.game import *
-from api.central import Player as CentralPlayer
+from api.central import Player as CentralPlayer, Whitelist, WhitelistBan
 from common.helpers import *
 
 BYOND_ICON = "<:byond:1109845921904205874>"
@@ -40,7 +40,7 @@ SERVERS_NICE = {
 }  # TODO: To config
 
 
-def embed_player_info(ingame_player_infp: Paradise.Player, player_links: CentralPlayer, chars: Sequence[Paradise.Character]):
+def embed_player_info(ingame_player_info: Paradise.Player, player_links: CentralPlayer, chars: Sequence[Paradise.Character]):
     if not player_links:
         return Embed(
             title=f"Дискорд игрока не привязан к игре.",
@@ -53,16 +53,16 @@ def embed_player_info(ingame_player_infp: Paradise.Player, player_links: Central
         ),
         color=Color.blue()
     )
-    if ingame_player_infp:
+    if ingame_player_info:
         embed.description += (
             f"\n"
-            f"**Ранг:** {ingame_player_infp.lastadminrank}\n"
-            f"**Стаж:** {ingame_player_infp.lastseen - ingame_player_infp.firstseen}\n"
-            f"**Первое появление:** {ingame_player_infp.firstseen}\n"
-            f"**Последнее появление: **{ingame_player_infp.lastseen}"
+            f"**Ранг:** {ingame_player_info.lastadminrank}\n"
+            f"**Стаж:** {ingame_player_info.lastseen - ingame_player_info.firstseen}\n"
+            f"**Первое появление:** {ingame_player_info.firstseen}\n"
+            f"**Последнее появление: **{ingame_player_info.lastseen}"
         )
-        if ingame_player_infp.exp:
-            exp = parse_player_exp(ingame_player_infp)
+        if ingame_player_info.exp:
+            exp = parse_player_exp(ingame_player_info)
             embed.add_field(
                 name=f"Время игры: {round((int(exp['Living']) + int(exp['Ghost'])) / 60, 2)} ч.",
                 value=get_nice_exp(exp),
@@ -249,3 +249,33 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
     arr.seek(0)
     img_file = discord.File(fp=arr, filename="article_photo.png")
     return img_file
+
+
+def embed_player_whitelists(wls: list[Whitelist]) -> Embed:
+    embed = Embed(
+        title=f"Вайтлисты игрока {wls[0].player_id}"  if len(wls) else "У игроков нет вайтлистов",
+        description="\n".join(
+            f"#{wl.id:04} {':x:' if not wl.valid else ':timer:' if wl.expiration_time < datetime.now() else ':white_check_mark:'}: на **{wl.server_type}** от **{wl.issue_time}** до **{wl.expiration_time}**"
+              for wl in wls),
+        color=Color.green() if any(wl.valid and wl.expiration_time > datetime.now()
+                                   for wl in wls) else Color.red()
+    )
+    return embed
+
+
+def embed_whitelist_bans(wl_bans: list[WhitelistBan]) -> list[Embed]:
+    embeds = []
+    for ban in wl_bans:
+        embeds.append(Embed(
+            title=f"Выписка #{ban.id:04} {'<:Deadge:1173397059857035364>' if not ban.valid else '<:sus:1291534540073861152>' if ban.expiration_time < datetime.now() else '<:gonnacryhampter:1213341826958762044>'}",
+            description=(
+                f"**Игрок:** {ban.player_id}\n"
+                f"**Номер выписки:** #{ban.id:04}\n"
+                f"**Сервер:** {ban.server_type}\n"
+                f"**Дата выписки:** {ban.issue_time}\n"
+                f"**Дата истечения:** {ban.expiration_time}\n"
+                f"**Причина:** {ban.reason}"
+                ),
+            color=Color.red() if ban.valid and ban.expiration_time > datetime.now() else Color.green()
+        ))
+    return embeds
