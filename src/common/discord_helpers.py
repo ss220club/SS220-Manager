@@ -248,11 +248,3 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
     arr.seek(0)
     img_file = discord.File(fp=arr, filename="article_photo.png")
     return img_file
-
-
-def get_player_info_embed(player_links_info):
-    ckey = player_links_info.ckey if player_links_info else None
-    player_info = DB.get_player(ckey)
-    chars = DB.get_characters(player_info.ckey)
-    embed_msg = embed_player_info(player_info, player_links_info, chars)
-    return embed_msg
