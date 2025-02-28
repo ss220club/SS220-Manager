@@ -160,31 +160,6 @@ def run_bot():
             ingame_player_info, player_links_info, chars)
         return embed_msg
 
-    @tree.command(name="я", description="Посмотреть информацию о себе.")
-    async def me(interaction: discord.Interaction):
-        await interaction.response.defer()
-        player_links_info = await CENTRAL.get_player_by_discord(interaction.user.id)
-        embed_msg = get_player_info_embed(player_links_info)
-        await interaction.followup.send(embed=embed_msg)
-
-    @tree.command(name="дискорд", description="Посмотреть информацию об игроке по дискорду.")
-    @app_commands.describe(discord_user="Игрок в дискорде.")
-    @app_commands.checks.has_any_role(*ADMIN_ROLES)
-    async def player_by_discord(interaction: discord.Interaction, discord_user: discord.Member):
-        await interaction.response.defer()
-        player_links_info = await CENTRAL.get_player_by_discord(discord_user.id)
-        embed_msg = get_player_info_embed(player_links_info)
-        await interaction.followup.send(embed=embed_msg)
-
-    @tree.command(name="игрок", description="Посмотреть информацию об игроке.")
-    @app_commands.describe(ckey="Сикей.")
-    @app_commands.checks.has_any_role(*ADMIN_ROLES)
-    async def player(interaction: discord.Interaction, ckey: str):
-        await interaction.response.defer()
-        player_links_info = await CENTRAL.get_player_by_ckey(ckey)
-        embed_msg = get_player_info_embed(player_links_info)
-        await interaction.followup.send(embed=embed_msg)
-
     @tree.command(name="персонаж", description="Узнать сикей по персонажу.")
     @app_commands.describe(name="Имя.")
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
@@ -239,38 +214,6 @@ def run_bot():
         for embed in embeds:
             await interaction.channel.send(embed=embed)
 
-    @tree.command(name="вайтлисты")
-    @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, discord_user: discord.Member | None = None, wl_type: str | None = None):
-        await interaction.response.defer()
-        if not (ckey or discord_user or wl_type):
-            await interaction.followup.send("Нужно указать хотя бы один параметр")
-            return
-        whitelists = await CENTRAL.get_player_whitelists(ckey=ckey, discord_id=discord_user.id if discord_user else None, wl_type=wl_type)
-
-        await interaction.followup.send(str(whitelists))
-
-    @client.event
-    async def on_member_update(before: discord.Member, after: discord.Member):
-        if before.roles == after.roles:
-            return
-
-        delta = set(after.roles) - set(before.roles)
-        if not delta:
-            return # User *lost* a role
-
-        donate_roles_added = {role.id for role in delta} & set(map(int, config["central"]["donation_roles"].keys()))
-
-        if not donate_roles_added:
-            return # We arent interested
-        
-        donate_tiers = [config["central"]["donation_roles"][str(role)] for role in donate_roles_added]
-        tier_to_give = max(donate_tiers)
-
-        logging.info("User %s got donate tier %s role in discord.", after.id, tier_to_give)
-        CENTRAL.give_donate_tier(after.id, tier_to_give)
-        # TODO: handle got donate before discord link
-    
     # region Xenowl
 
     @tree.command(name="добавить_вайтлист_на_ксенорасу", description="Разрешить игроку играть на указанной ксенорасе")
@@ -358,6 +301,83 @@ def run_bot():
         await interaction.followup.send(result)
 
     # endregion
+
+    # endregion
+    # region Central
+
+    @tree.command(name="я", description="Посмотреть информацию о себе.")
+    async def me(interaction: discord.Interaction):
+        await interaction.response.defer()
+        player_links_info = await CENTRAL.get_player_by_discord(interaction.user.id)
+        embed_msg = get_player_info_embed(player_links_info)
+        await interaction.followup.send(embed=embed_msg)
+
+    @tree.command(name="дискорд", description="Посмотреть информацию об игроке по дискорду.")
+    @app_commands.describe(discord_user="Игрок в дискорде.")
+    @app_commands.checks.has_any_role(*ADMIN_ROLES)
+    async def player_by_discord(interaction: discord.Interaction, discord_user: discord.Member):
+        await interaction.response.defer()
+        player_links_info = await CENTRAL.get_player_by_discord(discord_user.id)
+        embed_msg = get_player_info_embed(player_links_info)
+        await interaction.followup.send(embed=embed_msg)
+
+    @tree.command(name="игрок", description="Посмотреть информацию об игроке.")
+    @app_commands.describe(ckey="Сикей.")
+    @app_commands.checks.has_any_role(*ADMIN_ROLES)
+    async def player(interaction: discord.Interaction, ckey: str):
+        await interaction.response.defer()
+        player_links_info = await CENTRAL.get_player_by_ckey(ckey)
+        embed_msg = get_player_info_embed(player_links_info)
+        await interaction.followup.send(embed=embed_msg)
+
+    @tree.command(name="вайтлисты")
+    @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
+    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, discord_user: discord.Member | None = None, wl_type: str | None = None):
+        await interaction.response.defer()
+        if not (ckey or discord_user or wl_type):
+            await interaction.followup.send("Нужно указать хотя бы один параметр")
+            return
+        whitelists = await CENTRAL.get_player_whitelists(ckey=ckey, discord_id=discord_user.id if discord_user else None, wl_type=wl_type)
+
+        await interaction.followup.send(str(whitelists))
+
+    @client.event
+    async def on_member_update(before: discord.Member, after: discord.Member):
+        if before.roles == after.roles:
+            return
+
+        delta = set(after.roles) - set(before.roles)
+        if not delta:
+            negative_delta = set(before.roles) - set(after.roles)
+            donte_roles_removed = {role.id for role in negative_delta} & set(map(int, config["central"]["donation_roles"].keys()))
+            if not donte_roles_removed:
+                return
+
+            logging.info("User %s lost donate tier role in discord.", after.id)
+            await CENTRAL.remove_donate_tier(after.id)
+            return
+
+        donate_roles_added = {role.id for role in delta} & set(map(int, config["central"]["donation_roles"].keys()))
+
+        if not donate_roles_added:
+            return # We arent interested
+        
+        donate_tiers = [config["central"]["donation_roles"][str(role)] for role in donate_roles_added]
+        tier_to_give = max(donate_tiers)
+
+        logging.info("User %s got donate tier %s role in discord.", after.id, tier_to_give)
+        await CENTRAL.give_donate_tier(after.id, tier_to_give)
+
+        after.add_roles(discord.utils.get(after.guild.roles, id=config["central"]["donation_roles"][str(tier_to_give)]))
+
+
+    async def on_player_link(entry: dict[bytes]):
+        player_json = json.loads(entry["data"].decode())
+        player = Player(**player_json)
+        logging.info("Player link updated: %s", player)
+        # TODO: Give 'verified' role to the player
+
+
     # endregion
     # region MISC
 
@@ -435,17 +455,23 @@ def run_bot():
         channel = CHANNEL_CACHE.get("news")
         await channel.send(embed=embed, file=img_file, allowed_mentions=NO_MENTIONS)
 
-    # endregion
 
+    # endregion
     @client.event
     async def on_ready():
         await tree.sync()
         await client.change_presence(activity=discord.Game(name="Поднятие TTS с нуля"))
+
         for channel in config["discord"]["channels"]:
             CHANNEL_CACHE[channel] = client.get_partial_messageable(
                 config["discord"]["channels"][channel])
+        
         await REDIS_SUB.subscribe("byond.news")
         REDIS_SUB_BINDINGS["byond.news"] = publish_news
+
+        await REDIS_SUB.subscribe("central.link")
+        REDIS_SUB_BINDINGS["central.link"] = on_player_link
+
         announce_loop.start()
         announceloop_long.start()
         logging.info("Set up SS220 Manager")

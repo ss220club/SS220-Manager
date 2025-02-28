@@ -45,9 +45,10 @@ def embed_player_info(ingame_player_infp: Paradise.Player, player_links: Central
             title=f"Дискорд игрока не привязан к игре.",
             color=Color.red())
     embed = Embed(
-        title=f"Информация об игроке {player_links.ckey}",
+        title=f"Информация об игроке {player_links.id}",
         description=(
             f"**Дискорд:** <@{player_links.discord_id}>\n"
+            f"**Сикей:** {player_links.ckey}\n"
         ),
         color=Color.blue()
     )
@@ -70,7 +71,6 @@ def embed_player_info(ingame_player_infp: Paradise.Player, player_links: Central
                         value=get_nice_player_chars(chars), inline=True)
     embed.set_footer(
         text=(
-            f"Внутренний идентификатор игрока: {player_links.id}\n"
             "Тут был Фуриор"
         )
     )

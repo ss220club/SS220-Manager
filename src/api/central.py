@@ -60,11 +60,14 @@ class Central:
     async def give_donate_tier(self, discord_id: int, tier: int):
         endpoint = f"{self.endpoint}/v1/donates"
         body = {
-            "discord_id": discord_id,
+            "discord_id": str(discord_id),
             "tier": tier
         }
         async with ClientSession() as session:
             async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                 if response.status != 201:
                     raise Exception(f"Failed to give donate tier: {response.status} - {await response.text()}")
-                # TODO: handle player not found
+    
+    async def remove_donate_tier(self, discord_id: int):
+        pass
+        # TODO
