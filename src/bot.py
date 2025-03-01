@@ -52,7 +52,8 @@ REDIS = aioredis.from_url(config["redis"]["connection_string"])
 REDIS_SUB = REDIS.pubsub(ignore_subscribe_messages=True)
 REDIS_SUB_BINDINGS = {}
 CENTRAL = Central(config["central"]["endpoint"],
-                  config["central"]["bearer_token"])
+                  config["central"]["bearer_token"],
+                  config["central"]["boosty_discord_id"])
 
 
 def run_bot():
@@ -406,6 +407,7 @@ def run_bot():
 
             logging.info("User %s lost donate tier role in discord.", after.id)
             await CENTRAL.remove_donate_tier(after.id)
+            await CENTRAL.remove_donate_wls(after.id)
             return
 
         donate_roles_added = {role.id for role in delta} & set(
@@ -431,7 +433,7 @@ def run_bot():
                 after.id,
                 config["central"]["boosty_discord_id"],
                 server_type,
-                30
+                7777 # forever
             )
 
             if status == 409:

@@ -24,10 +24,20 @@ class WhitelistBan(Whitelist):
     reason: str | None
 
 
+class Donation(BaseModel):
+    id: int
+    player_id: int
+    tier: int
+    issue_time: datetime
+    expiration_time: datetime
+    valid: bool
+
+
 class Central:
-    def __init__(self, endpoint: str, bearer_token: str) -> None:
+    def __init__(self, endpoint: str, bearer_token: str, donation_manager_discord_id: int) -> None:
         self.endpoint = endpoint
         self.bearer_token = bearer_token
+        self.donation_manager_discord_id = str(donation_manager_discord_id)
 
     async def get_player(self, param: str, param_value: str) -> Player | None:
         endpoint = f"{self.endpoint}/v1/players/{param}/{param_value}"
@@ -46,12 +56,14 @@ class Central:
     async def get_player_by_discord(self, discord_id: int) -> Player:
         return await self.get_player(param="discord", param_value=discord_id)
 
-    async def get_player_whitelists(self, ckey: str | None = None, discord_id: int | None = None, server_type: str | None = None, active_only: bool = False) -> list[Player]:
+    async def get_player_whitelists(self, ckey: str | None = None, discord_id: int | None = None, admin_discord_id: int | None = None, server_type: str | None = None, active_only: bool = False) -> list[Player]:
         params = {}
         if ckey:
             params["ckey"] = ckey
         if discord_id:
             params["discord_id"] = discord_id
+        if admin_discord_id:
+            params["admin_discord_id"] = admin_discord_id
         if server_type:
             params["server_type"] = server_type
         # I hate this, but for some reason aiohttp doesn't support bool params
@@ -65,20 +77,63 @@ class Central:
                 whitelists = (await response.json())["items"]
                 return [Whitelist.model_validate(whitelist) for whitelist in whitelists]
 
-    async def give_donate_tier(self, discord_id: int, tier: int):
+    async def give_donate_tier(self, discord_id: int, tier: int, duration_days: int):
         endpoint = f"{self.endpoint}/v1/donates"
         body = {
             "discord_id": str(discord_id),
-            "tier": tier
+            "tier": tier,
+            duration_days: 7777 # forever
         }
         async with ClientSession() as session:
             async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                 if response.status != 201:
                     raise Exception(f"Failed to give donate tier: {response.status} - {await response.text()}")
 
-    async def remove_donate_tier(self, discord_id: int):
-        pass
-        # TODO
+
+    async def get_player_active_donates(self, discord_id: int) -> list[Donation]:
+        
+        endpoint = f"{self.endpoint}/v1/donates"
+        params = {
+            "discord_id": discord_id,
+            "active_only": "true"
+        }
+
+        async with ClientSession() as session:
+            async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+                if response.status != 200:
+                    raise Exception(f"Failed to get player whitelists: {response.status} - {await response.text()}")
+                donates = (await response.json())["items"]
+                return [Donation.model_validate(donate) for donate in donates]
+
+    async def remove_donate_tiers(self, discord_id: int):
+        current_donations = await self.get_player_active_donates(discord_id)
+        endpoint = f"{self.endpoint}/v1/donates"
+        async with ClientSession() as session:
+            for donation in current_donations:
+                body = {
+                    "expiration_time": datetime.now
+                }
+                async with session.patch(f"{endpoint}/{donation.id}", json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+                    if response.status != 200:
+                        raise Exception(f"Failed to remove donate tier: {response.status} - {await response.text()}")
+                    logging.info(f"Removed donate tiers {donation.tier} for {discord_id}")
+
+
+    async def remove_donate_wls(self, discord_id: int):
+        current_donate_wls = await self.get_player_whitelists(
+            discord_id=discord_id,
+            admin_discord_id=self.donation_manager_discord_id,
+            active_only=True
+        )
+        endpoint = f"{self.endpoint}/v1/whitelists"
+        async with ClientSession() as session:
+            for donate_wl in current_donate_wls:
+                body = {
+                    "expiration_time": datetime.now
+                }
+                async with session.patch(f"{endpoint}/{donate_wl.id}", json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+                    pass
+
 
     async def give_whitelist_discord(self, player_discord_id: int, admin_discord_id: int, server_type: str, duration_days: int) -> tuple[int, Whitelist]:
         endpoint = f"{self.endpoint}/v1/whitelists"
