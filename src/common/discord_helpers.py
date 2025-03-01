@@ -42,9 +42,7 @@ SERVERS_NICE = {
 
 def embed_player_info(ingame_player_info: Paradise.Player, player_links: CentralPlayer, chars: Sequence[Paradise.Character]):
     if not player_links:
-        return Embed(
-            title=f"Дискорд игрока не привязан к игре.",
-            color=Color.red())
+        return Embed(title="Дискорд игрока не привязан к игре.", color=Color.red())
     embed = Embed(
         title=f"Информация об игроке {player_links.id}",
         description=(
@@ -80,13 +78,10 @@ def embed_player_info(ingame_player_info: Paradise.Player, player_links: Central
 
 
 def get_nice_player_chars(chars: Sequence[Paradise.Character]):
-    res = ''
-    for char in chars:
-        res += (
-            f"`{char.slot}:` **{char.real_name}**\n"
-            f"{gender_to_emoji(char.gender)} {char.species} {char.age} лет\n"
-        )
-    return res
+    return ''.join(
+        f"`{char.slot}:` **{char.real_name}**\n{gender_to_emoji(char.gender)} {char.species} {char.age} лет\n"
+        for char in chars
+    )
 
 
 def parse_player_exp(player: Paradise.Player):
@@ -100,10 +95,10 @@ def parse_player_exp(player: Paradise.Player):
 
 
 def get_nice_exp(exp: dict):
-    res = ""
-    for departament in DEPARTMENT_TRANSLATIONS:
-        res += f"{departament}: {round(int(exp[DEPARTMENT_TRANSLATIONS[departament]]) / 60, 2)} ч.\n"
-    return res
+    return "".join(
+        f"{departament}: {round(int(exp[DEPARTMENT_TRANSLATIONS[departament]]) / 60, 2)} ч.\n"
+        for departament in DEPARTMENT_TRANSLATIONS
+    )
 
 
 def emojify_changelog(changelog: dict, emojified_tags: dict[str, str]):
@@ -155,17 +150,11 @@ def get_nice_bans(bans: Sequence[Paradise.Ban]) -> list[Embed]:
                 ban_color = Color.light_embed()
         if ban.unbanned or (ban.duration > 0 and ban.expiration_time < datetime.now()):
             ban_color = Color.green()
-        embed = (Embed(title=f"**{ban.bantype} {ban.id}**",
-                       description=(
-                           f"**Игрок:** {ban.ckey}\n"
-                           f"**Админ:** {ban.a_ckey}\n"
-                           f"**Длительность:** {str(ban.duration // 60)} ч. до {str(ban.expiration_time) if ban.duration > 0 else 'Навсегда'}\n"
-                           f"**Причина:** {ban.reason}\n"
-                           f"{'**Роль:** ' + ban.job if ban.job else ''}"
-                       ),
-                       color=ban_color
-                       )
-                 )
+        embed = Embed(
+            title=f"**{ban.bantype} {ban.id}**",
+            description=f"**Игрок:** {ban.ckey}\n**Админ:** {ban.a_ckey}\n**Длительность:** {str(ban.duration // 60)} ч. до {str(ban.expiration_time) if ban.duration > 0 else 'Навсегда'}\n**Причина:** {ban.reason}\n{f'**Роль:** {ban.job}' if ban.job else ''}",
+            color=ban_color,
+        )
         embed.set_footer(
             text=f"{SERVERS_NICE[ban.serverip][0]} - {ban.expiration_time - timedelta(minutes=ban.duration)}",
             icon_url=SERVERS_NICE[ban.serverip][1]
@@ -179,9 +168,12 @@ def convert_bans(data: Sequence[Paradise.Ban]) -> Sequence[Paradise.Ban]:
     for ban in data:
         sameban = False
         for nice_ban in bans:
-            if ban.reason == nice_ban.reason and ban.duration == nice_ban.duration and (
-                    ban.bantype == "JOB_TEMPBAN" or ban.bantype == "JOB_PERMABAN"):
-                nice_ban.job = nice_ban.job + ", " + ban.job
+            if (
+                ban.reason == nice_ban.reason
+                and ban.duration == nice_ban.duration
+                and ban.bantype in ["JOB_TEMPBAN", "JOB_PERMABAN"]
+            ):
+                nice_ban.job = f"{nice_ban.job}, {ban.job}"
                 nice_ban.id = ban.id
                 sameban = True
         if not sameban:
@@ -233,8 +225,7 @@ def get_players_online(server: Server) -> str:
     if not players_list.is_online:
         return f'**{server.name}:** OFFLINE'
     players_list = players_list.players
-    res = f"**{server.name}:** {', '.join(players_list)}"
-    return res
+    return f"**{server.name}:** {', '.join(players_list)}"
 
 
 def base64_to_discord_image(img_b64: str) -> discord.File:
@@ -247,27 +238,41 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
     arr = BytesIO()
     img.save(arr, format='PNG')
     arr.seek(0)
-    img_file = discord.File(fp=arr, filename="article_photo.png")
-    return img_file
+    return discord.File(fp=arr, filename="article_photo.png")
 
 
 def embed_player_whitelists(wls: list[Whitelist]) -> Embed:
     embed = Embed(
-        title=f"Вайтлисты игрока {wls[0].player_id}" if len(
-            wls) else "У игроков нет вайтлистов",
-        description="\n".join(
-            f"#{wl.id:04} {':x:' if not wl.valid else ':timer:' if wl.expiration_time < datetime.now() else ':white_check_mark:'}: на **{wl.server_type}** от **{wl.issue_time}** до **{wl.expiration_time}**"
-            for wl in wls),
-        color=Color.green() if any(wl.valid and wl.expiration_time > datetime.now()
-                                   for wl in wls) else Color.red()
+        title=f"Вайтлисты игрока {wls[0].player_id}" if wls else "У игроков нет вайтлистов",
+        color=Color.green() if any(wl.valid and wl.expiration_time > datetime.now() for wl in wls) else Color.red()
     )
+
+    if not wls:
+        embed.description = "У игроков нет вайтлистов"
+    else:
+        format_wls_into_embed(wls, embed)
     return embed
+
+
+def format_wls_into_embed(wls: list[Whitelist], embed: Embed):
+    id_status = "\n".join(
+        f"{'✅' if wl.valid and wl.expiration_time > datetime.now() else '⏳' if wl.expiration_time < datetime.now() else '❌'} "
+        f"**#{wl.id:04}**"
+        for wl in wls
+    )
+
+    servers = "\n".join(f"{wl.server_type}" for wl in wls)
+    periods = "\n".join(f"{wl.issue_time.strftime('%d.%m.%Y')} - {wl.expiration_time.strftime('%d.%m.%Y')}" for wl in wls)
+
+    embed.add_field(name="**ID и Статус**", value=id_status, inline=True)
+    embed.add_field(name="**Сервер**", value=servers, inline=True)
+    embed.add_field(name="**Срок**", value=periods, inline=True)
 
 
 def embed_whitelist_bans(wl_bans: list[WhitelistBan]) -> list[Embed]:
     embeds = []
-    for ban in wl_bans:
-        embeds.append(Embed(
+    embeds.extend(
+        Embed(
             title=f"Выписка #{ban.id:04} {'<:Deadge:1173397059857035364>' if not ban.valid else '<:sus:1291534540073861152>' if ban.expiration_time < datetime.now() else '<:gonnacryhampter:1213341826958762044>'}",
             description=(
                 f"**Игрок:** {ban.player_id}\n"
@@ -277,6 +282,12 @@ def embed_whitelist_bans(wl_bans: list[WhitelistBan]) -> list[Embed]:
                 f"**Дата истечения:** {ban.expiration_time}\n"
                 f"**Причина:** {ban.reason}"
             ),
-            color=Color.red() if ban.valid and ban.expiration_time > datetime.now() else Color.green()
-        ))
+            color=(
+                Color.red()
+                if ban.valid and ban.expiration_time > datetime.now()
+                else Color.green()
+            ),
+        )
+        for ban in wl_bans
+    )
     return embeds
