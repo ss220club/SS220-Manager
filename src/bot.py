@@ -454,11 +454,44 @@ def run_bot():
         player_json = json.loads(entry["data"].decode())
         player = Player(**player_json)
         logging.info("Player link updated: %s", player)
-        # TODO: Give 'verified' role to the player
+        # guild = await client.fetch_guild(config["discord"]["guild"])
+        # player_discord_user = await guild.fetch_member(player.discord_id)
+        # if player_discord_user is None:
+        #     logging.warning("Player %s isnot on discord", player.ckey)
+        #     return
+        # await player_discord_user.add_roles(
+        #     discord.utils.get(guild.roles, id=config["discord"]["roles"]["linked"]))
 
     @tasks.loop(hours=1)
     async def wl_role_update_loop():
-        pass
+        logging.info("Updating wl roles")
+        guild = await client.fetch_guild(config["discord"]["guild"])
+
+        server_type_to_actual_whitelisted_discord_ids = {
+            server_type: await CENTRAL.get_whitelisted_discord_ids(
+                server_type,
+                active_only = True
+            )
+            for server_type in config["central"]["server_types"]
+        }
+        server_type_to_role = {
+            server_type: discord.utils.get(
+                guild.roles, id=config["central"]["server_types"][server_type]
+            )
+            for server_type in config["central"]["server_types"]
+        }
+
+        async for member in guild.fetch_members(limit=None):
+            for server_type in config["central"]["server_types"]:
+                role = server_type_to_role[server_type]
+                if role is None:
+                    logging.error("Role for %s not found", server_type)
+                    continue
+                
+                if role in member.roles and member.id not in server_type_to_actual_whitelisted_discord_ids[server_type]:
+                    await member.remove_roles(role)
+                    logging.info("Removed outdated role for %s from %s", server_type,member.id)
+        
 
     # endregion
     # region MISC
@@ -556,6 +589,7 @@ def run_bot():
 
         announce_loop.start()
         announceloop_long.start()
+        wl_role_update_loop.start()
         logging.info("Set up SS220 Manager")
 
     client.run(config["token"])

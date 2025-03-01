@@ -203,3 +203,16 @@ class Central:
                     raise Exception(f"Failed to pardon whitelist ban: {response.status} - {await response.text()}")
 
                 return (response.status, WhitelistBan.model_validate(await response.json()) if response.status == 200 else None)
+            
+    
+    async def get_whitelisted_discord_ids(self, server_type: str, active_only: bool) -> list[int]:
+        endpoint = f"{self.endpoint}/v1/whitelists/discord_ids"
+        params = {
+            "server_type": server_type,
+            "active_only": "true" if active_only else "false"
+        }
+        async with ClientSession() as session:
+            async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
+                if response.status != 200:
+                    raise Exception(f"Failed to get whitelisted discord ids: {response.status} - {await response.text()}")
+                return list(map(int, (await response.json())["items"]))
