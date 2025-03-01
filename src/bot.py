@@ -355,7 +355,7 @@ def run_bot():
         if status == 409:
             await interaction.followup.send("Игрок выписан из этого типа вайтлиста.")
             return
-        await interaction.followup.send(f"Вайтлист #{wl['id']} в {server_type} игроку {player_discord_user.mention} на {duration_days} дней успешно выдан.")
+        await interaction.followup.send(f"Вайтлист #{wl.id} в {server_type} игроку {player_discord_user.mention} на {duration_days} дней успешно выдан.")
         role_to_add = discord.utils.get(
             interaction.guild.roles, id=config["central"]["server_types"][server_type])
         if role_to_add is None:

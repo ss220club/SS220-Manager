@@ -100,7 +100,7 @@ class Central:
 
         async with ClientSession() as session:
             async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
-                if response.status != 200:
+                if response.status not in [200, 404]:
                     raise Exception(f"Failed to get player whitelists: {response.status} - {await response.text()}")
                 donates = (await response.json())["items"]
                 return [Donation.model_validate(donate) for donate in donates]
