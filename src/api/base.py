@@ -74,10 +74,7 @@ class AWho(Info):
 class Success(Info):
     def __init__(self, data: dict):
         super().__init__(data)
-        if "success" in data:
-            self.success = data.get("success")
-        else:
-            self.success = data.get("error")
+        self.success = data.get("success", data.get("error"))
 
     def __str__(self) -> str:
         return f"Response: {self.success}"

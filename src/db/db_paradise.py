@@ -166,8 +166,7 @@ class Paradise(DBSchema, SSDatabase):
         with self.Session() as session:
             result = session.query(self.Player).where(
                 self.Player.ckey == ckey).first()
-            player = result if result else None
-            return player
+            return result or None
 
     def get_characters(self, ckey: str) -> Sequence[Character]:
         ckey = sanitize_ckey(ckey)
