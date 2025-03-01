@@ -400,13 +400,13 @@ def run_bot():
         delta = set(after.roles) - set(before.roles)
         if not delta:
             negative_delta = set(before.roles) - set(after.roles)
-            donte_roles_removed = {role.id for role in negative_delta} & set(
+            donate_roles_removed = {role.id for role in negative_delta} & set(
                 map(int, config["central"]["donation_roles"].keys()))
-            if not donte_roles_removed:
+            if not donate_roles_removed:
                 return
 
             logging.info("User %s lost donate tier role in discord.", after.id)
-            await CENTRAL.remove_donate_tier(after.id)
+            await CENTRAL.remove_donate_tiers(after.id)
             await CENTRAL.remove_donate_wls(after.id)
             return
 
@@ -422,7 +422,7 @@ def run_bot():
 
         logging.info("User %s got donate tier %s role in discord.",
                      after.id, tier_to_give)
-        await CENTRAL.give_donate_tier(after.id, tier_to_give)
+        await CENTRAL.give_donate_tier(after.id, tier_to_give, 7777)
 
         if tier_to_give < config["central"]["min_donate_tier_wl"]:
             return
@@ -455,6 +455,10 @@ def run_bot():
         player = Player(**player_json)
         logging.info("Player link updated: %s", player)
         # TODO: Give 'verified' role to the player
+
+    @tasks.loop(hours=1)
+    async def wl_role_update_loop():
+        pass
 
     # endregion
     # region MISC

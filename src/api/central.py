@@ -82,7 +82,7 @@ class Central:
         body = {
             "discord_id": str(discord_id),
             "tier": tier,
-            duration_days: 7777 # forever
+            "duration_days": duration_days # forever
         }
         async with ClientSession() as session:
             async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
@@ -111,7 +111,7 @@ class Central:
         async with ClientSession() as session:
             for donation in current_donations:
                 body = {
-                    "expiration_time": datetime.now
+                    "expiration_time": datetime.now().isoformat()
                 }
                 async with session.patch(f"{endpoint}/{donation.id}", json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                     if response.status != 200:
@@ -125,14 +125,18 @@ class Central:
             admin_discord_id=self.donation_manager_discord_id,
             active_only=True
         )
+        # TODO: probably should handle different donate tiers and roles and etc
         endpoint = f"{self.endpoint}/v1/whitelists"
         async with ClientSession() as session:
             for donate_wl in current_donate_wls:
                 body = {
-                    "expiration_time": datetime.now
+                    "expiration_time": datetime.now().isoformat()
                 }
                 async with session.patch(f"{endpoint}/{donate_wl.id}", json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
-                    pass
+                    if response.status != 200:
+                        raise Exception(f"Failed to remove donate wl: {response.status} - {await response.text()}")
+                    logging.info(f"Removed donate wl for {discord_id}")
+                
 
 
     async def give_whitelist_discord(self, player_discord_id: int, admin_discord_id: int, server_type: str, duration_days: int) -> tuple[int, Whitelist]:
