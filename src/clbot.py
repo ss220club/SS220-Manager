@@ -38,7 +38,8 @@ WIKI_LABEL = ":page_with_curl: Требуется изменение WIKI"
 MAX_DESCRIPTION_LENGTH = 4096
 
 databases: dict[int, SSDatabase | None] = {
-    cl_config["repo_id"]: connect_database(build, config["db"][build]) if build in config["db"] else None
+    cl_config["repo_id"]: connect_database(
+        build, config["db"][build]) if build in config["db"] else None
     for build, cl_config in config["changelog"].items()
 }
 cl_configs = {
@@ -73,7 +74,8 @@ def send_message(build: str, cl_config: dict, cl: dict, number: int, repo_url: s
 
     footer_text = f"{cl['author']} - {datetime.datetime.now().strftime('%H:%M %d.%m.%Y')}"
     headers = {"Content-Type": "application/json"}
-    base_message_content = " ".join([f"<@&{role}>" for role in WIKI_IDS]) if requires_wiki_update else ""
+    base_message_content = " ".join(
+        [f"<@&{role}>" for role in WIKI_IDS]) if requires_wiki_update else ""
 
     for i, cl_fragment in enumerate(cl_fragments):
         data = {
@@ -92,11 +94,14 @@ def send_message(build: str, cl_config: dict, cl: dict, number: int, repo_url: s
         }
 
         try:
-            result = requests.post(cl_config["discord_webhook"], json=data, headers=headers)
+            result = requests.post(
+                cl_config["discord_webhook"], json=data, headers=headers)
             result.raise_for_status()
-            logging.info("Message %d/%d sent successfully, code %d.", i + 1, len(cl_fragments), result.status_code)
+            logging.info("Message %d/%d sent successfully, code %d.",
+                         i + 1, len(cl_fragments), result.status_code)
         except requests.exceptions.HTTPError as err:
-            logging.error("Error sending message %d: %s\n%s", i + 1, err, err.response.text)
+            logging.error("Error sending message %d: %s\n%s",
+                          i + 1, err, err.response.text)
             break
 
         # Add a delay between messages to ensure proper ordering and avoid rate limits
@@ -130,7 +135,8 @@ def on_pr_event(event: Event):
 
     repo_id = repo["id"]
     if repo_id not in cl_configs or not cl_configs[repo_id]:
-        logging.error("No changelog config provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
+        logging.error(
+            "No changelog config provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
         return False
     try:
         changelog = build_changelog(pr, cl_configs[repo_id]["valid_tags"])
@@ -141,7 +147,8 @@ def on_pr_event(event: Event):
 
     try:
         if repo_id not in discord_senders or not discord_senders[repo_id]:
-            logging.error("No discord sender provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
+            logging.error(
+                "No discord sender provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
             return False
         discord_sender = discord_senders[repo_id]
         discord_sender(changelog, number, repo["html_url"])
@@ -151,7 +158,8 @@ def on_pr_event(event: Event):
 
     try:
         if repo_id not in databases or not databases[repo_id]:
-            logging.warning("No database provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
+            logging.warning(
+                "No database provided for repo - id: %s, url: %s", repo_id, repo['html_url'])
             return False
         db = databases[repo_id]
         db.push_changelog(changelog, number)
