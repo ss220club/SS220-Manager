@@ -82,16 +82,15 @@ class Central:
         body = {
             "discord_id": str(discord_id),
             "tier": tier,
-            "duration_days": duration_days # forever
+            "duration_days": duration_days  # forever
         }
         async with ClientSession() as session:
             async with session.post(endpoint, json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                 if response.status != 201:
                     raise Exception(f"Failed to give donate tier: {response.status} - {await response.text()}")
 
-
     async def get_player_active_donates(self, discord_id: int) -> list[Donation]:
-        
+
         endpoint = f"{self.endpoint}/v1/donates"
         params = {
             "discord_id": discord_id,
@@ -116,8 +115,8 @@ class Central:
                 async with session.patch(f"{endpoint}/{donation.id}", json=body, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
                     if response.status != 200:
                         raise Exception(f"Failed to remove donate tier: {response.status} - {await response.text()}")
-                    logging.info(f"Removed donate tiers {donation.tier} for {discord_id}")
-
+                    logging.info(
+                        f"Removed donate tiers {donation.tier} for {discord_id}")
 
     async def remove_donate_wls(self, discord_id: int):
         current_donate_wls = await self.get_player_whitelists(
@@ -136,8 +135,6 @@ class Central:
                     if response.status != 200:
                         raise Exception(f"Failed to remove donate wl: {response.status} - {await response.text()}")
                     logging.info(f"Removed donate wl for {discord_id}")
-                
-
 
     async def give_whitelist_discord(self, player_discord_id: int, admin_discord_id: int, server_type: str, duration_days: int) -> tuple[int, Whitelist]:
         endpoint = f"{self.endpoint}/v1/whitelists"
@@ -203,8 +200,7 @@ class Central:
                     raise Exception(f"Failed to pardon whitelist ban: {response.status} - {await response.text()}")
 
                 return (response.status, WhitelistBan.model_validate(await response.json()) if response.status == 200 else None)
-            
-    
+
     async def get_whitelisted_discord_ids(self, server_type: str, active_only: bool) -> list[int]:
         endpoint = f"{self.endpoint}/v1/whitelists/discord_ids"
         params = {

@@ -244,7 +244,8 @@ def base64_to_discord_image(img_b64: str) -> discord.File:
 def embed_player_whitelists(wls: list[Whitelist]) -> Embed:
     embed = Embed(
         title=f"Вайтлисты игрока {wls[0].player_id}" if wls else "У игроков нет вайтлистов",
-        color=Color.green() if any(wl.valid and wl.expiration_time > datetime.now() for wl in wls) else Color.red()
+        color=Color.green() if any(wl.valid and wl.expiration_time > datetime.now()
+                                   for wl in wls) else Color.red()
     )
 
     if not wls:
@@ -262,7 +263,8 @@ def format_wls_into_embed(wls: list[Whitelist], embed: Embed):
     )
 
     servers = "\n".join(f"{wl.server_type}" for wl in wls)
-    periods = "\n".join(f"{wl.issue_time.strftime('%d.%m.%Y')} - {wl.expiration_time.strftime('%d.%m.%Y')}" for wl in wls)
+    periods = "\n".join(
+        f"{wl.issue_time.strftime('%d.%m.%Y')} - {wl.expiration_time.strftime('%d.%m.%Y')}" for wl in wls)
 
     embed.add_field(name="**ID и Статус**", value=id_status, inline=True)
     embed.add_field(name="**Сервер**", value=servers, inline=True)

@@ -332,7 +332,7 @@ def run_bot():
 
     @tree.command(name="вайтлисты")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None): # type: ignore
+    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None):  # type: ignore
         await interaction.response.defer()
         if not (ckey or player_discord_user):
             await interaction.followup.send("Нужно указать хотя бы один идентификатор игрока.")
@@ -342,14 +342,14 @@ def run_bot():
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
     @tree.command(name="мои_вайтлисты")
-    async def my_whitelists(interaction: discord.Interaction, server_type: server_type_choices | None = None): # type: ignore
+    async def my_whitelists(interaction: discord.Interaction, server_type: server_type_choices | None = None):  # type: ignore
         await interaction.response.defer()
         whitelists = await CENTRAL.get_player_whitelists(discord_id=interaction.user.id, server_type=server_type)
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
     @tree.command(name="вписать", description="Дать игроку вайтлист.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def grant_whitelist(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: server_type_choices = "prime", duration_days: int = 30): # type: ignore
+    async def grant_whitelist(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: server_type_choices = "prime", duration_days: int = 30):  # type: ignore
         await interaction.response.defer()
         status, wl = await CENTRAL.give_whitelist_discord(player_discord_user.id, interaction.user.id, server_type, duration_days)
         if status == 409:
@@ -364,14 +364,14 @@ def run_bot():
 
     @tree.command(name="выписать", description="Выписать игрока из вайтилиста.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def whitelist_ban(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: server_type_choices = "prime", duration_days: int = 14, reason: str | None = None): # type: ignore
+    async def whitelist_ban(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: server_type_choices = "prime", duration_days: int = 14, reason: str | None = None):  # type: ignore
         await interaction.response.defer()
         wl_ban = await CENTRAL.ban_whitelist_discord(player_discord_user.id, interaction.user.id, server_type, duration_days, reason)
         await interaction.followup.send(f"Выписка #{wl_ban.id} из {server_type} игроку {player_discord_user.mention} на {duration_days} дней успешно выдана.")
 
     @tree.command(name="выписки", description="Посмотреть выписки игрока/админа.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def whitelist_bans(interaction: discord.Interaction, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None): # type: ignore
+    async def whitelist_bans(interaction: discord.Interaction, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None):  # type: ignore
         await interaction.response.defer()
         if not (player_discord_user or admin_discord_user):
             await interaction.followup.send("Нужно указать хотя бы один идентификатор.")
@@ -433,7 +433,7 @@ def run_bot():
                 after.id,
                 config["central"]["boosty_discord_id"],
                 server_type,
-                7777 # forever
+                7777  # forever
             )
 
             if status == 409:
@@ -470,7 +470,7 @@ def run_bot():
         server_type_to_actual_whitelisted_discord_ids = {
             server_type: await CENTRAL.get_whitelisted_discord_ids(
                 server_type,
-                active_only = True
+                active_only=True
             )
             for server_type in config["central"]["server_types"]
         }
@@ -487,11 +487,11 @@ def run_bot():
                 if role is None:
                     logging.error("Role for %s not found", server_type)
                     continue
-                
+
                 if role in member.roles and member.id not in server_type_to_actual_whitelisted_discord_ids[server_type]:
                     await member.remove_roles(role)
-                    logging.info("Removed outdated role for %s from %s", server_type,member.id)
-        
+                    logging.info(
+                        "Removed outdated role for %s from %s", server_type, member.id)
 
     # endregion
     # region MISC
