@@ -174,7 +174,7 @@ class Central:
         endpoint = f"{self.endpoint}/v1/whitelist_bans"
         params = {}
         if player_discord_id:
-            params["player_discord_id"] = player_discord_id
+            params["discord_id"] = player_discord_id
         if admin_discord_id:
             params["admin_discord_id"] = admin_discord_id
         if server_type:

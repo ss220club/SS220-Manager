@@ -332,12 +332,12 @@ def run_bot():
 
     @tree.command(name="вайтлисты")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None):  # type: ignore
+    async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None, active_only: bool = False):  # type: ignore
         await interaction.response.defer()
         if not (ckey or player_discord_user):
             await interaction.followup.send("Нужно указать хотя бы один идентификатор игрока.")
             return
-        whitelists = await CENTRAL.get_player_whitelists(ckey=ckey, discord_id=player_discord_user.id if player_discord_user else None, server_type=server_type)
+        whitelists = await CENTRAL.get_player_whitelists(ckey=ckey, discord_id=player_discord_user.id if player_discord_user else None, server_type=server_type, active_only=active_only)
 
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
@@ -371,12 +371,12 @@ def run_bot():
 
     @tree.command(name="выписки", description="Посмотреть выписки игрока/админа.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def whitelist_bans(interaction: discord.Interaction, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None):  # type: ignore
+    async def whitelist_bans(interaction: discord.Interaction, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None, active_only: bool = False):  # type: ignore
         await interaction.response.defer()
         if not (player_discord_user or admin_discord_user):
             await interaction.followup.send("Нужно указать хотя бы один идентификатор.")
             return
-        wl_bans = await CENTRAL.get_whitelist_bans(player_discord_user.id if player_discord_user else None, admin_discord_user.id if admin_discord_user else None, server_type)
+        wl_bans = await CENTRAL.get_whitelist_bans(player_discord_user.id if player_discord_user else None, admin_discord_user.id if admin_discord_user else None, server_type, active_only)
         await interaction.followup.send(
             f"Выписки{f' на {server_type}' if server_type else ''}{f' игрока {player_discord_user.mention}' if player_discord_user else ''}{f' от админа {admin_discord_user.mention}' if admin_discord_user else ''}:",
             embeds=embed_whitelist_bans(wl_bans),
