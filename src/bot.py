@@ -397,24 +397,22 @@ def run_bot():
         if before.roles == after.roles:
             return
 
-        delta = set(after.roles) - set(before.roles)
-        if not delta:
-            negative_delta = set(before.roles) - set(after.roles)
-            donate_roles_removed = {role.id for role in negative_delta} & set(
-                map(int, config["central"]["donation_roles"].keys()))
-            if not donate_roles_removed:
-                return
-
+        # TODO: extract to a function handle_role_loss
+        negative_delta = set(before.roles) - set(after.roles)
+        donate_roles_removed = {role.id for role in negative_delta} & set(
+            map(int, config["central"]["donation_roles"].keys()))
+        if donate_roles_removed:
             logging.info("User %s lost donate tier role in discord.", after.id)
             await CENTRAL.remove_donate_tiers(after.id)
             await CENTRAL.remove_donate_wls(after.id)
-            return
 
+        # TODO: extract to a function handle_role_gain
+        delta = set(after.roles) - set(before.roles)
         donate_roles_added = {role.id for role in delta} & set(
             map(int, config["central"]["donation_roles"].keys()))
 
         if not donate_roles_added:
-            return  # We arent interested
+            return
 
         donate_tiers = [config["central"]["donation_roles"]
                         [str(role)] for role in donate_roles_added]
