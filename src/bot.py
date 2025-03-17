@@ -382,6 +382,15 @@ def run_bot():
             embeds=embed_whitelist_bans(wl_bans),
         )
 
+    @tree.command(name="мои_выписки", description="Посмотреть свои выписки.")
+    async def my_whitelist_bans(interaction: discord.Interaction, server_type: server_type_choices | None = None, active_only: bool = False):  # type: ignore
+        await interaction.response.defer()
+        wl_bans = await CENTRAL.get_whitelist_bans(discord_id=interaction.user.id, server_type=server_type, active_only=active_only)
+        await interaction.followup.send(
+            f"Мои выписки{f' на {server_type}' if server_type else ''}:",
+            embeds=embed_whitelist_bans(wl_bans),
+        )
+
     @tree.command(name="развыписать", description="Анулировать выписку игрока.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
     async def whitelist_unban(interaction: discord.Interaction, wl_ban_id: int):
