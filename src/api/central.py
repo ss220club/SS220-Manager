@@ -3,6 +3,8 @@ from aiohttp import ClientSession
 from pydantic import BaseModel
 from datetime import datetime
 
+from common.helpers import sanitize_ckey
+
 
 class Player(BaseModel):
     id: int
@@ -51,7 +53,7 @@ class Central:
                 return Player.model_validate(await response.json())
 
     async def get_player_by_ckey(self, ckey: str) -> Player:
-        return await self.get_player(param="ckey", param_value=ckey)
+        return await self.get_player(param="ckey", param_value=sanitize_ckey(ckey))
 
     async def get_player_by_discord(self, discord_id: int) -> Player:
         return await self.get_player(param="discord", param_value=discord_id)
@@ -59,7 +61,7 @@ class Central:
     async def get_player_whitelists(self, ckey: str | None = None, discord_id: int | None = None, admin_discord_id: int | None = None, server_type: str | None = None, active_only: bool = False) -> list[Player]:
         params = {}
         if ckey:
-            params["ckey"] = ckey
+            params["ckey"] = sanitize_ckey(ckey)
         if discord_id:
             params["discord_id"] = discord_id
         if admin_discord_id:
