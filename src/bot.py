@@ -67,8 +67,10 @@ def run_bot():
             await interaction.response.send_message("Рано еще тебе такое использовать.")
         elif isinstance(error, discord.app_commands.errors.NoPrivateMessage):
             await interaction.response.send_message("Не работает в лс.")
+        elif isinstance(error, discord.app_commands.errors.BotMissingPermissions):
+            await interaction.response.send_message("У меня недостаточно прав в этом канале.")
         else:
-            logging.error(f"{type(error)}: {error}")
+            logging.error("%s: %s", type(error), error)
             await interaction.followup.send(f"Что то явно пошло не так. Сообщите об ошибке кодеру(<@{CODER_ID}>)")
 
     tree.on_error = on_tree_error
