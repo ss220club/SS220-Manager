@@ -2,7 +2,7 @@ import types
 import re
 from typing import Literal
 import base64
-from PIL import Image
+from PIL import Image, ImageFile
 from io import BytesIO
 
 ALL_PLAYABLE_SPECIES = Literal[
@@ -19,7 +19,7 @@ CL_BODY = re.compile(
 CL_SPLIT = re.compile(r"\s*(?:(?P<tag>\w+)\s*:)?\s*(?P<message>.*)")
 
 
-def build_changelog(pr: dict, valid_tags: dict[str, str]) -> dict:
+def build_changelog(pr: dict, valid_tags: dict[str, str]) -> dict[str, str]:
     changelog = parse_changelog(pr["body"], valid_tags)
     changelog["author"] = changelog["author"] or pr["user"]["login"]
     changelog["labels"] = [label["name"] for label in pr["labels"]]
@@ -92,7 +92,7 @@ def base64_to_image(base64_string: str) -> bytes:
     return image_bytes
 
 
-def create_image_from_bytes(image_bytes: bytes) -> Image:
+def create_image_from_bytes(image_bytes: bytes) -> ImageFile.ImageFile:
     image_stream = BytesIO(image_bytes)
     image = Image.open(image_stream)
     return image
