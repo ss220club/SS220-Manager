@@ -376,6 +376,7 @@ def run_bot():
             interaction.guild.roles, id=config["central"]["server_types"][server_type])
         if role_to_add is None:
             await interaction.followup.send("Для данного типа вайтлиста роль не нашлась.")
+            return
         await player_discord_user.add_roles(role_to_add)
 
     @tree.command(name="выписать", description="Выписать игрока из вайтилиста.")
