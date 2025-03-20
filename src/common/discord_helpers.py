@@ -282,6 +282,7 @@ def embed_whitelist_bans(wl_bans: list[WhitelistBan]) -> list[Embed]:
                 f"**Сервер:** {ban.server_type}\n"
                 f"**Дата выписки:** {ban.issue_time}\n"
                 f"**Дата истечения:** {ban.expiration_time}\n"
+                f"**Админ:** {ban.admin_id}\n"
                 f"**Причина:** {ban.reason}"
             ),
             color=(
