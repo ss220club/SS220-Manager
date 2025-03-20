@@ -41,7 +41,7 @@ class Central:
         self.bearer_token = bearer_token
         self.donation_manager_discord_id = str(donation_manager_discord_id)
 
-    async def get_player(self, param: str, param_value: str) -> Player | None:
+    async def get_player(self, param: str, param_value: str | int) -> Player | None:
         endpoint = f"{self.endpoint}/v1/players/{param}/{param_value}"
 
         async with ClientSession() as session:
@@ -52,10 +52,10 @@ class Central:
                     raise Exception(f"Failed to get player: {response.status} - {await response.text()}")
                 return Player.model_validate(await response.json())
 
-    async def get_player_by_ckey(self, ckey: str) -> Player:
+    async def get_player_by_ckey(self, ckey: str) -> Player | None:
         return await self.get_player(param="ckey", param_value=sanitize_ckey(ckey))
 
-    async def get_player_by_discord(self, discord_id: int) -> Player:
+    async def get_player_by_discord(self, discord_id: int) -> Player | None:
         return await self.get_player(param="discord", param_value=discord_id)
 
     async def get_player_whitelists(self, ckey: str | None = None, discord_id: int | None = None, admin_discord_id: int | None = None, server_type: str | None = None, active_only: bool = False) -> list[Player]:

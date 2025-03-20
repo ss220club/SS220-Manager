@@ -349,11 +349,25 @@ def run_bot():
         whitelists = await CENTRAL.get_player_whitelists(discord_id=interaction.user.id, server_type=server_type)
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
-    @tree.command(name="вписать", description="Дать игроку вайтлист.")
+    @tree.command(name="вписать", description="Дать игроку вайтлист. Нужно указать discord_id или ckey.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def grant_whitelist(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: server_type_choices = "prime", duration_days: int = 30):  # type: ignore
+    async def grant_whitelist(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices = "prime", duration_days: int = 30):  # type: ignore
         await interaction.response.defer()
-        status, wl = await CENTRAL.give_whitelist_discord(player_discord_user.id, interaction.user.id, server_type, duration_days)
+        status, wl = None, None
+        if player_discord_user:
+            status, wl = await CENTRAL.give_whitelist_discord(player_discord_user.id, interaction.user.id, server_type, duration_days)
+        elif ckey:
+            player = await CENTRAL.get_player_by_ckey(ckey)
+            if not player:
+                await interaction.followup.send("Игрок не нашелся.")
+                return
+            player_discord_user = await interaction.guild.fetch_member(player.discord_id)
+            if not player_discord_user:
+                await interaction.followup.send("игрок должен быть на сервере.")
+            status, wl = await CENTRAL.give_whitelist_discord(player.discord_id , interaction.user.id, server_type, duration_days)
+        else:
+            await interaction.followup.send("Нужно указать хотя бы один идентификатор игрока.")
+            return
         if status == 409:
             await interaction.followup.send("Игрок выписан из этого типа вайтлиста.")
             return
@@ -362,14 +376,37 @@ def run_bot():
             interaction.guild.roles, id=config["central"]["server_types"][server_type])
         if role_to_add is None:
             await interaction.followup.send("Для данного типа вайтлиста роль не нашлась.")
-        player_discord_user.add_roles(role_to_add)
+        await player_discord_user.add_roles(role_to_add)
 
     @tree.command(name="выписать", description="Выписать игрока из вайтилиста.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def whitelist_ban(interaction: discord.Interaction, player_discord_user: discord.Member, server_type: server_type_choices = "prime", duration_days: int = 14, reason: str | None = None):  # type: ignore
+    async def whitelist_ban(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices = "prime", duration_days: int = 14, reason: str | None = None):  # type: ignore
         await interaction.response.defer()
-        wl_ban = await CENTRAL.ban_whitelist_discord(player_discord_user.id, interaction.user.id, server_type, duration_days, reason)
-        await interaction.followup.send(f"Выписка #{wl_ban.id} из {server_type} игроку {player_discord_user.mention} на {duration_days} дней успешно выдана.")
+        player_discord_id = None
+        if ckey:
+            player = await CENTRAL.get_player_by_ckey(ckey)
+            if not player:
+                await interaction.followup.send("Игрок не нашелся.")
+                return
+            player_discord_id = player.discord_id
+            
+            player_discord_user = await interaction.guild.fetch_member(player.discord_id)
+        elif player_discord_user:
+            player_discord_id = player_discord_user.id    
+        else:
+            await interaction.followup.send("Нужно указать хотя бы один идентификатор игрока.")
+            return
+ 
+        wl_ban = await CENTRAL.ban_whitelist_discord(player_discord_id, interaction.user.id, server_type, duration_days, reason)
+        if player_discord_user:
+            role_to_remove = discord.utils.get(interaction.guild.roles, id=config["central"]["server_types"][server_type])
+            if role_to_remove is None:
+                await interaction.followup.send("Для данного типа вайтлиста роль не нашлась.")
+            else:
+                await player_discord_user.remove_roles(role_to_remove)
+                logging.info("Removed role %s from %s", role_to_remove, player_discord_user)
+        logging.info("Added wl_ban %s", wl_ban)
+        await interaction.followup.send(f"Выписка #{wl_ban.id} из {server_type} игроку {player_discord_user.mention if player_discord_user else ckey} на {duration_days} дней успешно выдана.")
 
     @tree.command(name="выписки", description="Посмотреть выписки игрока/админа.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
