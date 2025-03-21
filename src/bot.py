@@ -361,9 +361,11 @@ def run_bot():
             if not player:
                 await interaction.followup.send("Игрок не нашелся.")
                 return
-            player_discord_user = await interaction.guild.fetch_member(player.discord_id)
-            if not player_discord_user:
+            try:
+                player_discord_user = await interaction.guild.fetch_member(player.discord_id)
+            except discord.NotFound:
                 await interaction.followup.send("игрок должен быть на сервере.")
+                return
             status, wl = await CENTRAL.give_whitelist_discord(player.discord_id , interaction.user.id, server_type, duration_days)
         else:
             await interaction.followup.send("Нужно указать хотя бы один идентификатор игрока.")
@@ -390,8 +392,10 @@ def run_bot():
                 await interaction.followup.send("Игрок не нашелся.")
                 return
             player_discord_id = player.discord_id
-            
-            player_discord_user = await interaction.guild.fetch_member(player.discord_id)
+            try:
+                player_discord_user = await interaction.guild.fetch_member(player.discord_id)
+            except discord.NotFound:
+                pass
         elif player_discord_user:
             player_discord_id = player_discord_user.id    
         else:
