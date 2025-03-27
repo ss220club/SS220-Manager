@@ -6,6 +6,7 @@ import asyncio
 
 import discord
 from discord import app_commands
+from discord.errors import Forbidden
 from discord.ext import tasks
 # Includes a lot of other internal libs
 from api.central import Central, Player
@@ -67,7 +68,7 @@ def run_bot():
             await interaction.response.send_message("Рано еще тебе такое использовать.")
         elif isinstance(error, discord.app_commands.errors.NoPrivateMessage):
             await interaction.response.send_message("Не работает в лс.")
-        elif isinstance(error, discord.app_commands.errors.BotMissingPermissions):
+        elif isinstance(error, Forbidden):
             await interaction.response.send_message("У меня недостаточно прав в этом канале.")
         else:
             logging.error("%s: %s", type(error), error)
