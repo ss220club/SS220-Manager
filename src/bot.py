@@ -1,12 +1,10 @@
 import os
 import random
-from datetime import UTC, datetime, timedelta
 from typing import get_args
 import asyncio
 
 import discord
 from discord import app_commands
-from discord.errors import Forbidden
 from discord.ext import tasks
 # Includes a lot of other internal libs
 from api.central import Central, Player
@@ -68,8 +66,8 @@ def run_bot():
             await interaction.response.send_message("Рано еще тебе такое использовать.")
         elif isinstance(error, discord.app_commands.errors.NoPrivateMessage):
             await interaction.response.send_message("Не работает в лс.")
-        elif isinstance(error, Forbidden):
-            await interaction.response.send_message("У меня недостаточно прав в этом канале.")
+        elif isinstance(error, app_commands.CommandInvokeError):
+            await interaction.response.send_message("Скорее всего, у меня недостаточно прав в этом канале.")
         else:
             logging.error("%s: %s", type(error), error)
             await interaction.followup.send(f"Что то явно пошло не так. Сообщите об ошибке кодеру(<@{CODER_ID}>)")
