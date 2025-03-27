@@ -209,7 +209,8 @@ class Central:
         endpoint = f"{self.endpoint}/v1/whitelists/discord_ids"
         params = {
             "server_type": server_type,
-            "active_only": "true" if active_only else "false"
+            "active_only": "true" if active_only else "false",
+            "page_size": 999999
         }
         async with ClientSession() as session:
             async with session.get(endpoint, params=params, headers={"Authorization": f"Bearer {self.bearer_token}"}) as response:
