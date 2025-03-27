@@ -172,7 +172,7 @@ class Central:
                     f"Whitelist ban given to {player_discord_id} by {admin_discord_id}")
                 return WhitelistBan.model_validate(await response.json())
 
-    async def get_whitelist_bans(self, player_discord_id: int | None = None, admin_discord_id: int | None = None, server_type: str | None = None, active_only: bool = False) -> list[WhitelistBan]:
+    async def get_whitelist_bans(self, player_discord_id: int | None = None, admin_discord_id: int | None = None, server_type: str | None = None, active_only: bool = False, amount: int | None = None) -> list[WhitelistBan]:
         endpoint = f"{self.endpoint}/v1/whitelist_bans"
         params = {}
         if player_discord_id:
@@ -181,6 +181,8 @@ class Central:
             params["admin_discord_id"] = admin_discord_id
         if server_type:
             params["server_type"] = server_type
+        if amount:
+            params["page_size"] = amount
         # I hate this, but for some reason aiohttp doesn't support bool params
         params["active_only"] = "true" if active_only else "false"
 

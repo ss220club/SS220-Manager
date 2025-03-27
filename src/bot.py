@@ -416,16 +416,17 @@ def run_bot():
 
     @tree.command(name="выписки", description="Посмотреть выписки игрока/админа.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
-    async def whitelist_bans(interaction: discord.Interaction, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None, active_only: bool = False):  # type: ignore
+    async def whitelist_bans(interaction: discord.Interaction, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None, active_only: bool = False, amount: int = 10):  # type: ignore
         await interaction.response.defer()
         if not (player_discord_user or admin_discord_user):
             await interaction.followup.send("Нужно указать хотя бы один идентификатор.")
             return
-        wl_bans = await CENTRAL.get_whitelist_bans(player_discord_user.id if player_discord_user else None, admin_discord_user.id if admin_discord_user else None, server_type, active_only)
+        wl_bans = await CENTRAL.get_whitelist_bans(player_discord_user.id if player_discord_user else None, admin_discord_user.id if admin_discord_user else None, server_type, active_only, amount)
         await interaction.followup.send(
             f"Выписки{f' на {server_type}' if server_type else ''}{f' игрока {player_discord_user.mention}' if player_discord_user else ''}{f' от админа {admin_discord_user.mention}' if admin_discord_user else ''}:",
-            embeds=embed_whitelist_bans(wl_bans),
         )
+        for wl_ban in embed_whitelist_bans(wl_bans):
+            await interaction.channel.send(embed=wl_ban)
 
     @tree.command(name="мои_выписки", description="Посмотреть свои выписки.")
     async def my_whitelist_bans(interaction: discord.Interaction, server_type: server_type_choices | None = None, active_only: bool = False):  # type: ignore
