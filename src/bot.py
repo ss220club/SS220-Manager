@@ -545,6 +545,10 @@ def run_bot():
                     await member.remove_roles(role)
                     logging.info(
                         "Removed outdated role for %s from %s", server_type, member.id)
+                elif role not in member.roles and member.id in server_type_to_actual_whitelisted_discord_ids[server_type]:
+                    await member.add_roles(role)
+                    logging.info(
+                        "Added role for %s to %s", server_type, member.id)
 
     # endregion
     # region MISC
