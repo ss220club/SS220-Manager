@@ -158,7 +158,7 @@ def run_bot():
     # endregion
     # region API & DB
 
-    def get_player_info_embed(player_links_info: Player):
+    def get_player_info_embed(player_links_info: Player | None):
         if not player_links_info:
             return embed_player_info(None, None, [])
         ingame_player_info = DB.get_player(player_links_info.ckey)

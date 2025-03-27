@@ -39,8 +39,9 @@ SERVERS_NICE = {
     "135.125.189.154:4000": ["Black", "https://cdn.discordapp.com/emojis/1098305756836663379.webp?size=64"]
 }  # TODO: To config
 
+MAX_FIELD_LENGTH = 1024
 
-def embed_player_info(ingame_player_info: Paradise.Player, player_links: CentralPlayer, chars: Sequence[Paradise.Character]):
+def embed_player_info(ingame_player_info: Paradise.Player | None, player_links: CentralPlayer | None, chars: Sequence[Paradise.Character]):
     if not player_links:
         return Embed(title="Дискорд игрока не привязан к игре.", color=Color.red())
     embed = Embed(
@@ -66,22 +67,40 @@ def embed_player_info(ingame_player_info: Paradise.Player, player_links: Central
                 value=get_nice_exp(exp),
                 inline=True)
     if len(chars):
-        embed.add_field(name="Персонажи",
-                        value=get_nice_player_chars(chars), inline=True)
-    embed.set_footer(
-        text=(
-            "Тут был Фуриор"
-        )
-    )
+        chars_info = get_nice_player_chars(chars)
+        add_character_info(embed, chars_info)
+    embed.set_footer(text="Тут был Фуриор")
 
     return embed
 
 
 def get_nice_player_chars(chars: Sequence[Paradise.Character]):
-    return ''.join(
-        f"`{char.slot}:` **{char.real_name}**\n{gender_to_emoji(char.gender)} {char.species} {char.age} лет\n"
+    return '\n'.join(
+        f"`{char.slot}:` **{char.real_name}**\n{gender_to_emoji(char.gender)} {char.species} {char.age} лет"
         for char in chars
     )
+
+def add_character_info(embed: Embed, chars_info: str):
+    if not len(chars_info):
+        return
+    base_field_name = "Персонажи"
+    lines = chars_info.split("\n")
+    # Один персонаж - две строки
+    current_field_len = 0
+    current_field_data = ""
+    for i in range(0, len(lines), 2):
+        potential_data = f"{lines[i]}\n{lines[i + 1]}\n"
+        potential_data_len = len(potential_data)
+        if current_field_len + potential_data_len > MAX_FIELD_LENGTH:
+            embed.add_field(name=base_field_name, value=current_field_data, inline=True)
+            base_field_name = ""
+            current_field_data = ""
+            current_field_len = 0
+
+        current_field_len += potential_data_len
+        current_field_data += potential_data
+    if current_field_data:
+        embed.add_field(name=base_field_name, value=current_field_data, inline=True)
 
 
 def parse_player_exp(player: Paradise.Player):
