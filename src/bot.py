@@ -315,6 +315,7 @@ def run_bot():
 
     @tree.command(name="дискорд", description="Посмотреть информацию об игроке по дискорду.")
     @app_commands.describe(player_discord_user="Игрок в дискорде.")
+    @app_commands.rename(player_discord_user="игрок")
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def player_by_discord(interaction: discord.Interaction, player_discord_user: discord.Member):
         await interaction.response.defer()
@@ -323,7 +324,8 @@ def run_bot():
         await interaction.followup.send(embed=embed_msg)
 
     @tree.command(name="игрок", description="Посмотреть информацию об игроке.")
-    @app_commands.describe(ckey="Сикей.")
+    @app_commands.describe(ckey="Логин игрока в BYOND.")
+    @app_commands.rename(ckey="сикей")
     @app_commands.checks.has_any_role(*ADMIN_ROLES)
     async def player(interaction: discord.Interaction, ckey: str):
         await interaction.response.defer()
@@ -332,6 +334,10 @@ def run_bot():
         await interaction.followup.send(embed=embed_msg)
 
     @tree.command(name="вайтлисты")
+    @app_commands.rename(ckey="сикей")
+    @app_commands.rename(player_discord_user="дискорд")
+    @app_commands.rename(server_type="сервер")
+    @app_commands.rename(active_only="активные")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
     async def get_whitelists(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None, active_only: bool = False):  # type: ignore
         await interaction.response.defer()
@@ -343,12 +349,18 @@ def run_bot():
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
     @tree.command(name="мои_вайтлисты")
+    @app_commands.rename(server_type="сервер")
     async def my_whitelists(interaction: discord.Interaction, server_type: server_type_choices | None = None):  # type: ignore
         await interaction.response.defer()
         whitelists = await CENTRAL.get_player_whitelists(discord_id=interaction.user.id, server_type=server_type)
         await interaction.followup.send(embed=embed_player_whitelists(whitelists))
 
     @tree.command(name="вписать", description="Дать игроку вайтлист. Нужно указать discord_id или ckey.")
+    @app_commands.rename(ckey="сикей")
+    @app_commands.rename(player_discord_user="дискорд")
+    @app_commands.rename(server_type="сервер")
+    @app_commands.rename(duration_days="длительность")
+    @app_commands.describe(duration_days="Длительность в днях.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
     async def grant_whitelist(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices = "prime", duration_days: int = 30):  # type: ignore
         await interaction.response.defer()
@@ -381,6 +393,11 @@ def run_bot():
         await player_discord_user.add_roles(role_to_add)
 
     @tree.command(name="выписать", description="Выписать игрока из вайтилиста.")
+    @app_commands.rename(ckey="сикей")
+    @app_commands.rename(player_discord_user="дискорд")
+    @app_commands.rename(server_type="сервер")
+    @app_commands.rename(duration_days="длительность")
+    @app_commands.describe(duration_days="Длительность в днях.")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
     async def whitelist_ban(interaction: discord.Interaction, ckey: str | None = None, player_discord_user: discord.Member | None = None, server_type: server_type_choices = "prime", duration_days: int = 14, reason: str | None = None):  # type: ignore
         await interaction.response.defer()
@@ -413,6 +430,12 @@ def run_bot():
         await interaction.followup.send(f"Выписка #{wl_ban.id} из {server_type} игроку {player_discord_user.mention if player_discord_user else ckey} на {duration_days} дней успешно выдана.")
 
     @tree.command(name="выписки", description="Посмотреть выписки игрока/админа.")
+    @app_commands.rename(ckey="сикей")
+    @app_commands.rename(player_discord_user="дискорд")
+    @app_commands.rename(admin_discord_user="дискорд_админа")
+    @app_commands.rename(server_type="сервер")
+    @app_commands.rename(active_only="активные")
+    @app_commands.rename(amount="количество")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
     async def whitelist_bans(interaction: discord.Interaction, ckey: str | None, player_discord_user: discord.Member | None = None, admin_discord_user: discord.Member | None = None, server_type: server_type_choices | None = None, active_only: bool = False, amount: int = 10):  # type: ignore
         await interaction.response.defer()
@@ -433,6 +456,8 @@ def run_bot():
             await interaction.channel.send(embed=wl_ban)
 
     @tree.command(name="мои_выписки", description="Посмотреть свои выписки.")
+    @app_commands.rename(server_type="сервер")
+    @app_commands.rename(active_only="активные")
     async def my_whitelist_bans(interaction: discord.Interaction, server_type: server_type_choices | None = None, active_only: bool = False):  # type: ignore
         await interaction.response.defer()
         wl_bans = await CENTRAL.get_whitelist_bans(player_discord_id=interaction.user.id, server_type=server_type, active_only=active_only)
@@ -442,6 +467,7 @@ def run_bot():
         )
 
     @tree.command(name="развыписать", description="Анулировать выписку игрока.")
+    @app_commands.rename(wl_ban_id="номер_выписки")
     @app_commands.checks.has_any_role(*PRIME_ADMIN_ROLES)
     async def whitelist_unban(interaction: discord.Interaction, wl_ban_id: int):
         await interaction.response.defer()
