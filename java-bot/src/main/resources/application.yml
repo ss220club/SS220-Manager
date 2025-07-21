@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: ss220-manager
+  datasource:
+    url: jdbc:mysql://localhost:6033/paradise
+    username: root
+    password: password
+    driver-class-name: org.mariadb.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  data:
+    redis:
+      host: localhost
+      port: 6603
+
+logging:
+  level:
+    root: INFO
+    club.ss220.manager: DEBUG
+    org.springframework: INFO
+    net.dv8tion.jda: INFO
+
+bot:
+  token: ${BOT_TOKEN:your_token_here}
+
+api:
+  central:
+    endpoint: "https://central.ss220.space/api"
+    token: ${CENTRAL_API_TOKEN:your_token_here}
