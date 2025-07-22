@@ -18,7 +18,7 @@ spring:
       path: /h2-console
 
 bot:
-  token: "${BOT_TOKEN:test_token}"
+  token: ${BOT_TOKEN:test_token}
 
 api:
   central:
