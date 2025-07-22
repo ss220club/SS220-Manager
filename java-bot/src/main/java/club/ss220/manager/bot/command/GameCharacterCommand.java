@@ -37,7 +37,7 @@ public class GameCharacterCommand extends ApplicationCommand {
         event.deferReply().queue();
 
         Consumer<MessageEmbed> onSuccess = senders.sendEmbed(event);
-        Consumer<String> onFail = senders.sendMessage(event);
+        Consumer<String> onFail = m -> senders.sendEmbed(event, embeds.error(m));
         try {
             getCharactersInfoByName(name, onSuccess, onFail);
         } catch (CommandException e) {
