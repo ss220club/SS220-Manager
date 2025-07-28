@@ -1,12 +1,11 @@
 package club.ss220.manager.service;
 
-import club.ss220.manager.api.central.CentralApiClient;
-import club.ss220.manager.api.central.model.PlayerDTO;
-import club.ss220.manager.db.paradise.entity.Player;
-import club.ss220.manager.db.paradise.repository.PlayerRepository;
-import club.ss220.manager.util.CkeyUtils;
+import club.ss220.manager.data.api.impl.CentralApiClientImpl;
+import club.ss220.manager.data.api.PlayerDto;
+import club.ss220.manager.data.db.paradise.repository.ParadisePlayerRepository;
+import club.ss220.manager.data.mapper.Mappers;
+import club.ss220.manager.model.Player;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Optional;
@@ -15,24 +14,26 @@ import java.util.Optional;
 @Service
 public class PlayerService {
 
-    private final CentralApiClient centralApiClient;
-    private final PlayerRepository playerRepository;
+    private final CentralApiClientImpl centralApiClient;
+    private final ParadisePlayerRepository paradisePlayerRepository;
+    private final Mappers mappers;
 
-    @Autowired
-    public PlayerService(CentralApiClient centralApiClient, PlayerRepository playerRepository) {
+    public PlayerService(CentralApiClientImpl centralApiClient, ParadisePlayerRepository paradisePlayerRepository,
+                         Mappers mappers) {
         this.centralApiClient = centralApiClient;
-        this.playerRepository = playerRepository;
+        this.paradisePlayerRepository = paradisePlayerRepository;
+        this.mappers = mappers;
     }
 
     public Optional<Player> getPlayerByCkey(String ckey) {
-        String sanitizedCkey = CkeyUtils.sanitizeCkey(ckey);
-        return playerRepository.findByCkey(sanitizedCkey);
+        Optional<PlayerDto> playerDtoOptional = centralApiClient.getPlayerByCkey(ckey).blockOptional();
+        return playerDtoOptional.flatMap(playerDto -> paradisePlayerRepository.findByCkey(playerDto.getCkey())
+                .map(paradisePlayer -> mappers.toPlayer(playerDto, paradisePlayer)));
     }
 
     public Optional<Player> getPlayerByDiscordId(Long discordId) {
-        return centralApiClient.getPlayerByDiscordId(discordId)
-                .blockOptional()
-                .map(PlayerDTO::getCkey)
-                .flatMap(playerRepository::findByCkey);
+        Optional<PlayerDto> playerDtoOptional = centralApiClient.getPlayerByDiscordId(discordId).blockOptional();
+        return playerDtoOptional.flatMap(playerDto -> paradisePlayerRepository.findByCkey(playerDto.getCkey())
+                .map(paradisePlayer -> mappers.toPlayer(playerDto, paradisePlayer)));
     }
 }

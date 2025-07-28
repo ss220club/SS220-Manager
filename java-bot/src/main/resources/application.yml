@@ -1,21 +1,39 @@
 spring:
   application:
     name: ss220-manager
+    revision: ${REVISION:snapshot}
+  config:
+    import: optional:classpath:/application-dev.yml
   datasource:
-    url: jdbc:mysql://localhost:6033/paradise
-    username: root
-    password: password
-    driver-class-name: org.mariadb.jdbc.Driver
+    persistence:
+      url: jdbc:h2:./ss220manager-database;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
+      username:
+      password:
+      driver-class-name: org.h2.Driver
+    paradise:
+      url: jdbc:mariadb://localhost:3306/paradise
+      username: root
+      password: password
+      driver-class-name: org.mariadb.jdbc.Driver
   jpa:
     hibernate:
       ddl-auto: validate
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.MySQLDialect
-  data:
-    redis:
-      host: localhost
-      port: 6603
+
+botcommands:
+  application:
+    forceGuildCommands: true
+  components:
+    enable: true
+
+application:
+  token: ${BOT_TOKEN}
+  profile:
+    name: SS220 Manager
+    avatar: classpath:images/profile.png
+  api:
+    central:
+      endpoint: ${CENTRAL_API_ENDPOINT}
+      token: ${CENTRAL_API_TOKEN}
 
 logging:
   level:
@@ -23,11 +41,3 @@ logging:
     club.ss220.manager: DEBUG
     org.springframework: INFO
     net.dv8tion.jda: INFO
-
-bot:
-  token: ${BOT_TOKEN:your_token_here}
-
-api:
-  central:
-    endpoint: "https://central.ss220.space/api"
-    token: ${CENTRAL_API_TOKEN:your_token_here}
