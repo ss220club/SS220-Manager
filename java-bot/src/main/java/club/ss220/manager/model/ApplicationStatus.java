@@ -15,6 +15,8 @@ public class ApplicationStatus {
     private final Duration uptime;
     private final List<String> profiles;
     private final long latency;
+    private final int globalCommands;
+    private final int guildCommands;
     private final boolean persistenceStatus;
 
     // JVM metrics

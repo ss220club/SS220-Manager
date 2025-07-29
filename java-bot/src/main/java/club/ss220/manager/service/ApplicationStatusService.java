@@ -4,6 +4,7 @@ import club.ss220.manager.data.db.botcommands.PersistenceSource;
 import club.ss220.manager.model.ApplicationStatus;
 import com.zaxxer.hikari.HikariDataSource;
 import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.entities.Guild;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
@@ -32,10 +33,13 @@ public class ApplicationStatusService {
         this.revision = revision;
     }
 
-    public ApplicationStatus getApplicationStatus(JDA jda) {
+    public ApplicationStatus getApplicationStatus(Guild guild) {
+        JDA jda = guild.getJDA();
         Duration uptime = Duration.between(startTime, Instant.now());
         List<String> profiles = List.of(environment.getActiveProfiles());
         long discordLatency = jda.getGatewayPing();
+        int globalCommands = jda.retrieveCommands().complete().size();
+        int guildCommands = guild.retrieveCommands().complete().size();
         boolean persistenceStatus = getPersistenceStatus();
 
         MemoryMXBean memoryBean = ManagementFactory.getMemoryMXBean();
@@ -50,6 +54,8 @@ public class ApplicationStatusService {
                 uptime,
                 profiles,
                 discordLatency,
+                globalCommands,
+                guildCommands,
                 persistenceStatus,
                 javaVersion,
                 threadCount,

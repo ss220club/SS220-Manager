@@ -64,6 +64,8 @@ public class Embeds {
         addApplicationStatusLine(description, "Revision", applicationStatus.getRevision());
         addApplicationStatusLine(description, "Uptime", formatters.formatDuration(applicationStatus.getUptime()));
         addApplicationStatusLine(description, "Profiles", applicationStatus.getProfiles().toString());
+        addApplicationStatusLine(description, "Global commands", applicationStatus.getGlobalCommands());
+        addApplicationStatusLine(description, "Guild commands", applicationStatus.getGuildCommands());
         ApplicationStatus.Level latencyStatus = applicationStatus.getLatencyLevel();
         addApplicationStatusLine(description, latencyStatus, "Latency", applicationStatus.getLatency() + "ms");
         ApplicationStatus.Level persistenceLevel = applicationStatus.getPersistenceLevel();
