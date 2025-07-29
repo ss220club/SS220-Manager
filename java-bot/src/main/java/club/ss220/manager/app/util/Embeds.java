@@ -18,6 +18,7 @@ import org.springframework.util.unit.DataSize;
 
 import java.awt.Color;
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,6 +41,16 @@ public class Embeds {
         EmbedBuilder embed = new EmbedBuilder();
         embed.setTitle("Ошибка");
         embed.setDescription(message);
+        embed.setColor(COLOR_ERROR);
+        return embed.build();
+    }
+
+    public MessageEmbed uncaughtException(String message, LinkedHashMap<String, Object> context) {
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("Отчет об ошибке");
+        embed.setDescription(message);
+        context.forEach((key, value) -> embed.addField(key, String.valueOf(value), false));
+        embed.setFooter("К сообщению прикреплен файл со стеком вызовов.");
         embed.setColor(COLOR_ERROR);
         return embed.build();
     }

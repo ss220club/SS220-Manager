@@ -36,6 +36,7 @@ application:
       token: example_central_token
 
 logging:
+  errorDispatchChannelId: 0
   level:
     root: INFO
     club.ss220.manager: DEBUG

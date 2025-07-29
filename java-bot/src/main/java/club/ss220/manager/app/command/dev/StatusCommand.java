@@ -8,11 +8,8 @@ import io.github.freya022.botcommands.api.commands.annotations.Command;
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand;
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent;
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand;
-import lombok.extern.slf4j.Slf4j;
-import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 
-@Slf4j
 @Command
 public class StatusCommand extends ApplicationCommand {
 
@@ -29,15 +26,9 @@ public class StatusCommand extends ApplicationCommand {
     @JDASlashCommand(name = "status", description = "Показать статус бота.")
     public void onSlashInteraction(GuildSlashEvent event) {
         event.deferReply().queue();
-        InteractionHook hook = event.getHook();
 
-        try {
-            JDA jda = event.getJDA();
-            ApplicationStatus applicationStatus = applicationStatusService.getApplicationStatus(jda);
-            senders.sendEmbed(hook, embeds.applicationStatus(applicationStatus));
-        } catch (Exception e) {
-            log.error("Error building status embed", e);
-            senders.sendEmbed(hook, embeds.error("Произошла ошибка при получении статуса бота"));
-        }
+        InteractionHook hook = event.getHook();
+        ApplicationStatus applicationStatus = applicationStatusService.getApplicationStatus(event.getGuild());
+        senders.sendEmbed(hook, embeds.applicationStatus(applicationStatus));
     }
 }
