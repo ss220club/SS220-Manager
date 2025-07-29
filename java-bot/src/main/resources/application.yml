@@ -1,7 +1,7 @@
 spring:
   application:
     name: ss220-manager
-    revision: ${REVISION:snapshot}
+    revision: snapshot
   config:
     import: optional:classpath:/application-dev.yml
   datasource:
@@ -26,14 +26,14 @@ botcommands:
     enable: true
 
 application:
-  token: ${BOT_TOKEN}
+  token: example_bot_token
   profile:
     name: SS220 Manager
     avatar: classpath:images/profile.png
   api:
     central:
-      endpoint: ${CENTRAL_API_ENDPOINT}
-      token: ${CENTRAL_API_TOKEN}
+      endpoint: http://localhost:8080
+      token: example_central_token
 
 logging:
   level:
