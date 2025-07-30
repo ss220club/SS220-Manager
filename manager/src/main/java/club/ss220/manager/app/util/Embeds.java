@@ -18,6 +18,7 @@ import org.springframework.util.unit.DataSize;
 
 import java.awt.Color;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -142,14 +143,16 @@ public class Embeds {
     public MessageEmbed playersOnline(Map<GameServer, GameServerStatus> serversStatuses) {
         StringBuilder description = new StringBuilder();
 
-        Map<String, Map<GameServer, GameServerStatus>> groupedByBuild = serversStatuses.entrySet().stream()
-                .collect(Collectors.groupingBy(
-                        e -> e.getKey().getBuild(),
-                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-                ));
+        Map<GameBuildStyle, Map<GameServer, GameServerStatus>> groupedByBuild =
+                serversStatuses.entrySet().stream()
+                        .sorted(Comparator.comparing(e -> GameBuildStyle.fromName(e.getKey().getBuild())))
+                        .collect(Collectors.groupingBy(
+                                e -> GameBuildStyle.fromName(e.getKey().getBuild()),
+                                LinkedHashMap::new,
+                                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
+                        ));
 
-        groupedByBuild.forEach((build, servers) -> {
-            GameBuildStyle buildStyle = GameBuildStyle.fromName(build);
+        groupedByBuild.forEach((buildStyle, servers) -> {
             description.append("**").append(buildStyle.getName()).append("**\n");
 
             servers.forEach((server, status) -> description
