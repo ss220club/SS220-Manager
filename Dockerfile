@@ -1,11 +1,13 @@
-FROM python:3.11
+FROM maven:3.9.9-eclipse-temurin-24-alpine AS build
+WORKDIR /build
 
+COPY . .
+
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:24-alpine AS manager
 WORKDIR /app
 
-RUN apt-get update -y
-RUN apt-get install -y libmariadb-dev
-COPY requirements.txt .
-RUN pip install -r requirements.txt
-COPY src/ .
+COPY --from=build /build/manager/target/club.ss220.manager.jar app.jar
 
-ENTRYPOINT ["python", "bot.py"]
+ENTRYPOINT ["java", "-jar", "app.jar"]

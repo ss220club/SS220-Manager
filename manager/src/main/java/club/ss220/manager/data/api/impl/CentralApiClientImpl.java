@@ -1,5 +1,6 @@
 package club.ss220.manager.data.api.impl;
 
+import club.ss220.manager.data.api.CentralApiClient;
 import club.ss220.manager.data.api.PlayerDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,7 +12,7 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-public class CentralApiClientImpl {
+public class CentralApiClientImpl implements CentralApiClient {
 
     private final WebClient webClient;
 

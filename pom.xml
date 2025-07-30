@@ -9,14 +9,13 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>club.ss220</groupId>
-    <artifactId>manager</artifactId>
-    <version>0.0.1-SNAPSHOT</version>
+    <artifactId>infrastructure</artifactId>
+    <version>1.0</version>
     <packaging>pom</packaging>
-    <name>SS220-Manager</name>
-    <description>Discord bot for SS220 server management</description>
+    <description>SS220 Infrastructure POM</description>
 
     <modules>
-        <module>java-bot</module>
+        <module>manager</module>
     </modules>
 
     <properties>
