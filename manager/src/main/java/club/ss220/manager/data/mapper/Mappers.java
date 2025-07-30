@@ -4,12 +4,8 @@ import club.ss220.manager.data.api.PlayerDto;
 import club.ss220.manager.data.db.paradise.ParadiseBan;
 import club.ss220.manager.data.db.paradise.ParadiseCharacter;
 import club.ss220.manager.data.db.paradise.ParadisePlayer;
-import club.ss220.manager.data.integration.game.AdminStatusDto;
-import club.ss220.manager.data.integration.game.PlayerStatusDto;
-import club.ss220.manager.data.integration.game.ServerStatusDto;
-import club.ss220.manager.model.GameServerStatus;
+import club.ss220.manager.data.integration.game.impl.paradise.AdminStatusDto;
 import club.ss220.manager.model.OnlineAdmin;
-import club.ss220.manager.model.OnlinePlayer;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
@@ -43,27 +39,6 @@ public class Mappers {
                 .gender(paradiseCharacter.getGender())
                 .age(paradiseCharacter.getAge())
                 .species(paradiseCharacter.getSpecies())
-                .build();
-    }
-
-    public GameServerStatus toGameServerStatus(ServerStatusDto serverStatusDto) {
-        return GameServerStatus.builder()
-                .version(serverStatusDto.getVersion())
-                .playersCount(serverStatusDto.getPlayersCount())
-                .stationTime(serverStatusDto.getStationTime())
-                .roundDuration(serverStatusDto.getRoundDuration())
-                .map(serverStatusDto.getMap())
-                .adminsCount(serverStatusDto.getAdminsCount())
-                .roundId(serverStatusDto.getRoundId())
-                .mode(serverStatusDto.getMode())
-                .build();
-    }
-
-    public OnlinePlayer toOnlinePlayer(PlayerStatusDto playerStatusDto) {
-        return OnlinePlayer.builder()
-                .ckey(playerStatusDto.getCkey())
-                .characterName(playerStatusDto.getCharacterName())
-                .job(playerStatusDto.getJob())
                 .build();
     }
 

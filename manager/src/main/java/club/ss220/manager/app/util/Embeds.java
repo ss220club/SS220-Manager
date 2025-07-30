@@ -5,8 +5,8 @@ import club.ss220.manager.model.ApplicationStatus;
 import club.ss220.manager.model.Ban;
 import club.ss220.manager.model.GameCharacter;
 import club.ss220.manager.model.GameServer;
+import club.ss220.manager.model.GameServerStatus;
 import club.ss220.manager.model.OnlineAdmin;
-import club.ss220.manager.model.OnlinePlayer;
 import club.ss220.manager.model.Player;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -139,26 +139,41 @@ public class Embeds {
         return embed.build();
     }
 
-    public MessageEmbed playersOnline(String serverName, List<OnlinePlayer> players) {
-        EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle("Игроки онлайн на сервере: " + serverName);
+    public MessageEmbed playersOnline(Map<GameServer, GameServerStatus> serversStatuses) {
+        StringBuilder description = new StringBuilder();
 
-        if (players.isEmpty()) {
-            embed.setDescription("На сервере сейчас нет игроков");
-        } else {
-            StringBuilder playersList = new StringBuilder();
-            for (OnlinePlayer player : players) {
-                playersList.append("**").append(player.getCharacterName()).append("** (")
-                        .append(player.getCkey()).append(") - ")
-                        .append(player.getJob()).append("\n");
-            }
+        Map<String, Map<GameServer, GameServerStatus>> groupedByBuild = serversStatuses.entrySet().stream()
+                .collect(Collectors.groupingBy(
+                        e -> e.getKey().getBuild(),
+                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
+                ));
 
-            embed.setDescription(playersList.toString());
-            embed.addField("Всего игроков", String.valueOf(players.size()), true);
-        }
+        groupedByBuild.forEach((build, servers) -> {
+            GameBuildStyle buildStyle = GameBuildStyle.fromName(build);
+            description.append("**").append(buildStyle.getName()).append("**\n");
 
-        embed.setColor(COLOR_INFO);
-        return embed.build();
+            servers.forEach((server, status) -> description
+                    .append(buildStyle.getEmoji().getFormatted())
+                    .append(" **")
+                    .append(server.getName())
+                    .append("**: ")
+                    .append(status.getPlayers())
+                    .append(" (")
+                    .append(status.getAdmins())
+                    .append(") - ")
+                    .append(formatters.formatRoundDuration(status.getRoundDuration())).append("\n")
+            );
+            description.append("\n");
+        });
+
+        int totalPlayers = serversStatuses.values().stream().mapToInt(GameServerStatus::getPlayers).sum();
+
+        return new EmbedBuilder()
+                .setTitle("Текущий онлайн: " + totalPlayers)
+                .setDescription(description.toString().trim())
+                .setFooter("(*) - администрация")
+                .setColor(COLOR_INFO)
+                .build();
     }
 
     public MessageEmbed paginatedBanList(PaginationData<Ban> paginationData) {

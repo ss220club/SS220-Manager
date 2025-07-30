@@ -24,6 +24,9 @@ botcommands:
     forceGuildCommands: true
   components:
     enable: true
+  app:
+    emojis:
+      enable: true
 
 application:
   token: example_bot_token

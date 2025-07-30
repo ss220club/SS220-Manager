@@ -1,17 +1,33 @@
 package club.ss220.manager.model;
 
-import lombok.Builder;
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 
-@Data
-@Builder
-public class GameServerStatus {
-    private final String version;
-    private final Integer playersCount;
-    private final String stationTime;
-    private final String roundDuration;
-    private final String map;
-    private final Integer adminsCount;
-    private final Integer roundId;
-    private final String mode;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+
+public abstract class GameServerStatus {
+
+    protected final Map<String, Object> data;
+
+    public GameServerStatus() {
+        this.data = new HashMap<>();
+    }
+
+    @JsonAnyGetter
+    public Map<String, Object> getData() {
+        return data;
+    }
+
+    @JsonAnySetter
+    public void setData(String key, Object value) {
+        data.put(key, value);
+    }
+
+    public abstract Integer getPlayers();
+
+    public abstract Integer getAdmins();
+
+    public abstract Duration getRoundDuration();
 }

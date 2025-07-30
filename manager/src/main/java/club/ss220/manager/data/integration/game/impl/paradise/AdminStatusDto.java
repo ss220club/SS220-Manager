@@ -1,4 +1,4 @@
-package club.ss220.manager.data.integration.game;
+package club.ss220.manager.data.integration.game.impl.paradise;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;

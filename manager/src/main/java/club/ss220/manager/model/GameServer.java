@@ -8,7 +8,7 @@ import lombok.Data;
 public class GameServer {
     private final String name;
     private final String build;
-    private final String ip;
+    private final String host;
     private final int port;
     private final String key;
 }

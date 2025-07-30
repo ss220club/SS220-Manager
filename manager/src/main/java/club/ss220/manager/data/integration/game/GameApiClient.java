@@ -1,22 +1,21 @@
 package club.ss220.manager.data.integration.game;
 
+import club.ss220.manager.data.integration.game.impl.paradise.AdminStatusDto;
 import club.ss220.manager.model.GameServer;
+import club.ss220.manager.model.GameServerStatus;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 
-public interface GameApiClient {
-    
-    Mono<ServerStatusDto> getServerStatus(String serverName);
+public interface GameApiClient<S extends GameServerStatus> {
 
-    Mono<Map<GameServer, ServerStatusDto>> getAllServersStatus();
-    
-    Mono<List<PlayerStatusDto>> getPlayersList(String serverName);
+    Mono<S> getServerStatus(GameServer gameServer);
 
-    Mono<Map<GameServer, List<AdminStatusDto>>> getAllAdminsList();
-    
-    Mono<Boolean> sendHostAnnounce(String serverName, String message);
+    Mono<List<String>> getPlayersList(GameServer gameServer);
 
-    Mono<Boolean> sendAdminMessage(String serverName, String ckey, String message, String adminName);
+    Mono<List<AdminStatusDto>> getAdminsList(GameServer gameServer);
+
+    Mono<Boolean> sendHostAnnounce(GameServer gameServer, String message);
+
+    Mono<Boolean> sendAdminMessage(GameServer gameServer, String ckey, String message, String adminName);
 }

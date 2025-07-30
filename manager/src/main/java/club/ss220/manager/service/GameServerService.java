@@ -1,74 +1,104 @@
 package club.ss220.manager.service;
 
-import club.ss220.manager.data.integration.game.AdminStatusDto;
+import club.ss220.manager.config.GameConfig;
 import club.ss220.manager.data.integration.game.GameApiClient;
 import club.ss220.manager.data.mapper.Mappers;
 import club.ss220.manager.model.GameServer;
 import club.ss220.manager.model.GameServerStatus;
 import club.ss220.manager.model.OnlineAdmin;
-import club.ss220.manager.model.OnlinePlayer;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 @Slf4j
 @Service
 public class GameServerService {
 
-    private final GameApiClient gameApiClient;
+    private final Map<String, GameApiClient<?>> gameApiClients;
+    private final GameConfig gameConfig;
     private final Mappers mappers;
 
-    public GameServerService(GameApiClient gameApiClient, Mappers mappers) {
-        this.gameApiClient = gameApiClient;
+    public GameServerService(Map<String, GameApiClient<?>> gameApiClients, GameConfig gameConfig, Mappers mappers) {
+        this.gameApiClients = gameApiClients;
+        this.gameConfig = gameConfig;
         this.mappers = mappers;
     }
 
     public GameServerStatus getServerStatus(String serverName) {
-        return gameApiClient.getServerStatus(serverName)
-                .map(mappers::toGameServerStatus)
-                .block();
+        GameServer gameServer = getServerByName(serverName);
+        return getGameApiClient(gameServer).getServerStatus(gameServer).block();
     }
 
     public Map<GameServer, GameServerStatus> getAllServersStatus() {
-        return gameApiClient.getAllServersStatus()
-                .map(map -> map.entrySet().stream()
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                entry -> mappers.toGameServerStatus(entry.getValue()),
-                                (v1, v2) -> v1)))
+        return Flux.fromIterable(gameConfig.getServers())
+                .flatMap(server -> Mono.fromCallable(() -> getGameApiClient(server))
+                        .onErrorResume(e -> {
+                            log.error("Unknown build: {}", server.getBuild(), e);
+                            return Mono.empty();
+                        })
+                        .flatMap(client -> client.getServerStatus(server)
+                                .map(status -> Map.entry(server, (GameServerStatus) status))
+                        )
+                        .onErrorResume(e -> {
+                            log.error("Error getting status for server: {}", server.getName(), e);
+                            return Mono.empty();
+                        })
+                )
+                .collectMap(Map.Entry::getKey, Map.Entry::getValue)
                 .block();
     }
 
-    public List<OnlinePlayer> getPlayersList(String serverName) {
-        return gameApiClient.getPlayersList(serverName)
-                .map(players -> players.stream().map(mappers::toOnlinePlayer).toList())
-                .block();
+
+    public List<String> getPlayersList(String serverName) {
+        GameServer gameServer = getServerByName(serverName);
+        return getGameApiClient(gameServer).getPlayersList(gameServer).block();
     }
 
     public Map<GameServer, List<OnlineAdmin>> getAllAdminsList() {
-        Function<Map<GameServer, List<AdminStatusDto>>, Map<GameServer, List<OnlineAdmin>>> applyMappers =
-                serverAdminsMap -> serverAdminsMap.entrySet().stream()
-                        .collect(Collectors.toMap(
-                                Map.Entry::getKey,
-                                entry -> entry.getValue().stream()
-                                        .map(mappers::toOnlineAdmin)
-                                        .toList()
-                        ));
-
-        return gameApiClient.getAllAdminsList()
-                .map(applyMappers)
+        return Flux.fromIterable(gameConfig.getServers())
+                .flatMap(server -> Mono.fromCallable(() -> getGameApiClient(server))
+                        .onErrorResume(e -> {
+                            log.error("Unknown build: {}", server.getBuild(), e);
+                            return Mono.empty();
+                        })
+                        .flatMap(client -> client.getAdminsList(server)
+                                .map(admins -> admins.stream().map(mappers::toOnlineAdmin).toList())
+                                .map(admins -> Map.entry(server, admins))
+                        )
+                        .onErrorResume(e -> {
+                            log.error("Error getting admins for server: {}", server.getName(), e);
+                            return Mono.empty();
+                        })
+                )
+                .collectMap(Map.Entry::getKey, Map.Entry::getValue)
                 .block();
     }
 
     public boolean sendHostAnnounce(String serverName, String message) {
-        return Boolean.TRUE.equals(gameApiClient.sendHostAnnounce(serverName, message).block());
+        GameServer gameServer = getServerByName(serverName);
+        GameApiClient<?> gameApiClient = getGameApiClient(gameServer);
+        return Boolean.TRUE.equals(gameApiClient.sendHostAnnounce(gameServer, message).block());
     }
 
     public boolean sendAdminMessage(String serverName, String ckey, String message, String adminName) {
-        return Boolean.TRUE.equals(gameApiClient.sendAdminMessage(serverName, ckey, message, adminName).block());
+        GameServer gameServer = getServerByName(serverName);
+        GameApiClient<?> gameApiClient = getGameApiClient(gameServer);
+        return Boolean.TRUE.equals(gameApiClient.sendAdminMessage(gameServer, ckey, message, adminName).block());
+    }
+
+    private GameServer getServerByName(String serverName) {
+        return gameConfig.getServerByName(serverName)
+                .orElseThrow(() -> new NoSuchElementException("Unknown server: " + serverName));
+    }
+
+    private GameApiClient<?> getGameApiClient(GameServer gameServer) {
+        return Optional.ofNullable(gameServer.getBuild()).map(gameApiClients::get)
+                .orElseThrow(() -> new NoSuchElementException("Unknown build: " + gameServer.getBuild()));
     }
 }
