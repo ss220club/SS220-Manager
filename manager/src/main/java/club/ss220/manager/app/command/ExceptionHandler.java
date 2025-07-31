@@ -129,7 +129,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
 
     @Override
     public void handle(@NotNull EntitySelectInteractionEvent event, @NotNull Throwable throwable) {
-        String message = "Произошла ошибка при взаимодействии с выпадающим списком значений.";
+        String message = "Произошла ошибка при взаимодействии с выпадающим списком сущностей.";
         List<String> options = event.getValues().stream().map(IMentionable::getAsMention).toList();
         Map<String, Object> context = Map.of(
                 "channel", event.getChannel().getAsMention(),

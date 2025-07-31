@@ -1,6 +1,5 @@
 package club.ss220.manager.model;
 
-import lombok.Data;
 import lombok.Getter;
 
 import java.time.Duration;
@@ -8,22 +7,21 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-@Data
-public class ApplicationStatus {
+public record ApplicationStatus(
+        String revision,
+        Duration uptime,
+        List<String> profiles,
+        long latency,
+        int globalCommands,
+        int guildCommands,
+        boolean persistenceStatus,
 
-    private final String revision;
-    private final Duration uptime;
-    private final List<String> profiles;
-    private final long latency;
-    private final int globalCommands;
-    private final int guildCommands;
-    private final boolean persistenceStatus;
-
-    // JVM metrics
-    private final String javaVersion;
-    private final int threadCount;
-    private final long heapUsed;
-    private final long heapMax;
+        // JVS metrics
+        String javaVersion,
+        int threadCount,
+        long heapUsed,
+        long heapMax
+) {
 
     public Level getSummaryLevel() {
         return Arrays.stream(Level.values())

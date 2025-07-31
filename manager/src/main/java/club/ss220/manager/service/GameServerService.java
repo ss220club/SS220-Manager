@@ -2,15 +2,15 @@ package club.ss220.manager.service;
 
 import club.ss220.manager.config.GameConfig;
 import club.ss220.manager.data.integration.game.GameApiClient;
-import club.ss220.manager.data.mapper.Mappers;
 import club.ss220.manager.model.GameServer;
 import club.ss220.manager.model.GameServerStatus;
-import club.ss220.manager.model.OnlineAdmin;
+import club.ss220.manager.model.OnlineAdminStatus;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -20,14 +20,12 @@ import java.util.Optional;
 @Service
 public class GameServerService {
 
-    private final Map<String, GameApiClient<?>> gameApiClients;
+    private final Map<String, GameApiClient> gameApiClients;
     private final GameConfig gameConfig;
-    private final Mappers mappers;
 
-    public GameServerService(Map<String, GameApiClient<?>> gameApiClients, GameConfig gameConfig, Mappers mappers) {
+    public GameServerService(Map<String, GameApiClient> gameApiClients, GameConfig gameConfig) {
         this.gameApiClients = gameApiClients;
         this.gameConfig = gameConfig;
-        this.mappers = mappers;
     }
 
     public GameServerStatus getServerStatus(String serverName) {
@@ -43,7 +41,7 @@ public class GameServerService {
                             return Mono.empty();
                         })
                         .flatMap(client -> client.getServerStatus(server)
-                                .map(status -> Map.entry(server, (GameServerStatus) status))
+                                .map(status -> Map.entry(server, status))
                         )
                         .onErrorResume(e -> {
                             log.error("Error getting status for server: {}", server.getName(), e);
@@ -54,41 +52,41 @@ public class GameServerService {
                 .block();
     }
 
-
     public List<String> getPlayersList(String serverName) {
         GameServer gameServer = getServerByName(serverName);
         return getGameApiClient(gameServer).getPlayersList(gameServer).block();
     }
 
-    public Map<GameServer, List<OnlineAdmin>> getAllAdminsList() {
+    public Map<GameServer, List<OnlineAdminStatus>> getAllAdminsList() {
         return Flux.fromIterable(gameConfig.getServers())
                 .flatMap(server -> Mono.fromCallable(() -> getGameApiClient(server))
                         .onErrorResume(e -> {
-                            log.error("Unknown build: {}", server.getBuild(), e);
+                            log.error(e.getMessage(), e);
                             return Mono.empty();
                         })
                         .flatMap(client -> client.getAdminsList(server)
-                                .map(admins -> admins.stream().map(mappers::toOnlineAdmin).toList())
-                                .map(admins -> Map.entry(server, admins))
+                                .onErrorResume(e -> {
+                                    log.error("Failed to get admins from server: {}", server.getName(),
+                                              e);
+                                    return Mono.empty();
+                                })
+                                .map(list -> Map.entry(server, list))
                         )
-                        .onErrorResume(e -> {
-                            log.error("Error getting admins for server: {}", server.getName(), e);
-                            return Mono.empty();
-                        })
                 )
                 .collectMap(Map.Entry::getKey, Map.Entry::getValue)
-                .block();
+                .blockOptional()
+                .orElseGet(Collections::emptyMap);
     }
 
     public boolean sendHostAnnounce(String serverName, String message) {
         GameServer gameServer = getServerByName(serverName);
-        GameApiClient<?> gameApiClient = getGameApiClient(gameServer);
+        GameApiClient gameApiClient = getGameApiClient(gameServer);
         return Boolean.TRUE.equals(gameApiClient.sendHostAnnounce(gameServer, message).block());
     }
 
     public boolean sendAdminMessage(String serverName, String ckey, String message, String adminName) {
         GameServer gameServer = getServerByName(serverName);
-        GameApiClient<?> gameApiClient = getGameApiClient(gameServer);
+        GameApiClient gameApiClient = getGameApiClient(gameServer);
         return Boolean.TRUE.equals(gameApiClient.sendAdminMessage(gameServer, ckey, message, adminName).block());
     }
 
@@ -97,7 +95,7 @@ public class GameServerService {
                 .orElseThrow(() -> new NoSuchElementException("Unknown server: " + serverName));
     }
 
-    private GameApiClient<?> getGameApiClient(GameServer gameServer) {
+    private GameApiClient getGameApiClient(GameServer gameServer) {
         return Optional.ofNullable(gameServer.getBuild()).map(gameApiClients::get)
                 .orElseThrow(() -> new NoSuchElementException("Unknown build: " + gameServer.getBuild()));
     }

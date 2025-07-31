@@ -27,6 +27,10 @@ public class Senders {
         this.errorDispatchChannelId = errorDispatchChannelId;
     }
 
+    public Senders() {
+        this.errorDispatchChannelId = null;
+    }
+
     public Consumer<MessageEmbed> sendEmbed(InteractionHook hook) {
         return messageEmbed -> sendEmbed(hook, messageEmbed);
     }

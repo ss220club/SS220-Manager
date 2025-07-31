@@ -4,11 +4,7 @@ import club.ss220.manager.data.api.PlayerDto;
 import club.ss220.manager.data.db.paradise.ParadiseBan;
 import club.ss220.manager.data.db.paradise.ParadiseCharacter;
 import club.ss220.manager.data.db.paradise.ParadisePlayer;
-import club.ss220.manager.data.integration.game.impl.paradise.AdminStatusDto;
-import club.ss220.manager.model.OnlineAdmin;
 import org.springframework.stereotype.Component;
-
-import java.time.Duration;
 
 @Component
 public class Mappers {
@@ -39,17 +35,6 @@ public class Mappers {
                 .gender(paradiseCharacter.getGender())
                 .age(paradiseCharacter.getAge())
                 .species(paradiseCharacter.getSpecies())
-                .build();
-    }
-
-    public OnlineAdmin toOnlineAdmin(AdminStatusDto adminStatusDto) {
-        return OnlineAdmin.builder()
-                .ckey(adminStatusDto.getCkey())
-                .key(adminStatusDto.getKey())
-                .rank(adminStatusDto.getRank())
-                .afkDuration(Duration.ofMillis(100L * adminStatusDto.getAfkDuration()))
-                .stealthMode(OnlineAdmin.StealthMode.fromValue(adminStatusDto.getStealthMode()))
-                .stealthKey(adminStatusDto.getStealthKey())
                 .build();
     }
 

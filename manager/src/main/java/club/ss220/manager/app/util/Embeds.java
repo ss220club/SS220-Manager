@@ -6,7 +6,7 @@ import club.ss220.manager.model.Ban;
 import club.ss220.manager.model.GameCharacter;
 import club.ss220.manager.model.GameServer;
 import club.ss220.manager.model.GameServerStatus;
-import club.ss220.manager.model.OnlineAdmin;
+import club.ss220.manager.model.OnlineAdminStatus;
 import club.ss220.manager.model.Player;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import net.dv8tion.jda.api.EmbedBuilder;
@@ -18,6 +18,7 @@ import org.springframework.util.unit.DataSize;
 
 import java.awt.Color;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,6 +32,8 @@ public class Embeds {
     public static final Color COLOR_ERROR = new Color(220, 53, 69);
     public static final Color COLOR_SUCCESS = new Color(40, 167, 69);
     public static final Color COLOR_INFO = new Color(72, 115, 158);
+
+    public static final String SPACE_FILLER = "\u3164    ";
 
     private final Formatters formatters;
 
@@ -61,34 +64,47 @@ public class Embeds {
         ApplicationStatus.Level summaryLevel = applicationStatus.getSummaryLevel();
         embed.setTitle(mapStatusLevel(summaryLevel).getFormatted() + " " + summaryLevel.getDescription());
 
-        StringBuilder description = new StringBuilder();
-        addApplicationStatusLine(description, "Revision", applicationStatus.getRevision());
-        addApplicationStatusLine(description, "Uptime", formatters.formatDuration(applicationStatus.getUptime()));
-        addApplicationStatusLine(description, "Profiles", applicationStatus.getProfiles().toString());
-        addApplicationStatusLine(description, "Global commands", applicationStatus.getGlobalCommands());
-        addApplicationStatusLine(description, "Guild commands", applicationStatus.getGuildCommands());
         ApplicationStatus.Level latencyStatus = applicationStatus.getLatencyLevel();
-        addApplicationStatusLine(description, latencyStatus, "Latency", applicationStatus.getLatency() + "ms");
         ApplicationStatus.Level persistenceLevel = applicationStatus.getPersistenceLevel();
-        addApplicationStatusLine(description, persistenceLevel, "Persistence", applicationStatus.isPersistenceStatus());
 
-        description.append("\n");
+        StringBuilder description = new StringBuilder()
+                .append(applicationStatusLine("Revision", applicationStatus.revision()))
+                .append(applicationStatusLine("Uptime", formatters.formatDuration(applicationStatus.uptime())))
+                .append(applicationStatusLine("Profiles", applicationStatus.profiles().toString()))
+                .append(applicationStatusLine("Global commands", applicationStatus.globalCommands()))
+                .append(applicationStatusLine("Guild commands", applicationStatus.guildCommands()))
+                .append(applicationStatusLine(latencyStatus, "Latency", applicationStatus.latency() + "ms"))
+                .append(applicationStatusLine(persistenceLevel, "Persistence", applicationStatus.persistenceStatus()))
+                .append("\n");
 
-        addApplicationStatusLine(description, "Java", applicationStatus.getJavaVersion());
         ApplicationStatus.Level threadLevel = applicationStatus.getThreadLevel();
-        addApplicationStatusLine(description, threadLevel, "Threads", applicationStatus.getThreadCount());
-        long heapUsed = applicationStatus.getHeapUsed();
-        long heapMax = applicationStatus.getHeapMax();
+        long heapUsed = applicationStatus.heapUsed();
+        long heapMax = applicationStatus.heapMax();
         double heapRatio = heapMax != 0 ? (double) heapUsed / heapMax : 0;
         ApplicationStatus.Level memoryLevel = applicationStatus.getMemoryLevel();
-        addApplicationStatusLine(description, memoryLevel, "Heap", "%s MB / %s MB (%.2f%%)".formatted(
-                DataSize.ofBytes(heapUsed).toMegabytes(),
-                DataSize.ofBytes(heapMax).toMegabytes(),
-                heapRatio * 100));
+
+        description.append(applicationStatusLine("Java", applicationStatus.javaVersion()))
+                .append(applicationStatusLine(threadLevel, "Threads", applicationStatus.threadCount()))
+                .append(applicationStatusLine(memoryLevel, "Heap", "%s MB / %s MB (%.2f%%)".formatted(
+                        DataSize.ofBytes(heapUsed).toMegabytes(),
+                        DataSize.ofBytes(heapMax).toMegabytes(),
+                        heapRatio * 100)));
 
         embed.setDescription(description.toString());
         embed.setColor(COLOR_INFO);
         return embed.build();
+    }
+
+    private String applicationStatusLine(ApplicationStatus.Level level, String label, Object value) {
+        return applicationStatusLine(mapStatusLevel(level), label, value);
+    }
+
+    private String applicationStatusLine(String label, Object value) {
+        return applicationStatusLine(Emojis.WHITE_CIRCLE, label, value);
+    }
+
+    private String applicationStatusLine(Emoji statusEmoji, String label, Object value) {
+        return "%s %s: %s\n".formatted(statusEmoji.getFormatted(), label, value);
     }
 
     public MessageEmbed playerInfo(Player player) {
@@ -119,64 +135,85 @@ public class Embeds {
         return embed.build();
     }
 
-    public MessageEmbed onlineAdmins(Map<GameServer, List<OnlineAdmin>> serversAdminsMap) {
-        EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle("Админы онлайн");
+    public MessageEmbed onlineAdmins(Map<GameServer, List<OnlineAdminStatus>> serversAdmins) {
+        List<MessageEmbed.Field> fields = groupByBuildStyle(serversAdmins).entrySet().stream()
+                .map(e -> buildAdminsField(e.getKey(), e.getValue()))
+                .toList();
 
-        StringBuilder description = new StringBuilder();
-        for (Map.Entry<GameServer, List<OnlineAdmin>> entry : serversAdminsMap.entrySet()) {
-            GameServer server = entry.getKey();
-            List<OnlineAdmin> admins = entry.getValue();
+        long totalAdmins = serversAdmins.values().stream()
+                .flatMap(Collection::stream)
+                .map(OnlineAdminStatus::getCkey)
+                .distinct()
+                .count();
 
-            description.append("**").append(server.getName()).append(":**\n");
-            for (OnlineAdmin admin : admins) {
-                description.append("\t").append(admin.getKey()).append(" - ").append(admin.getRank()).append("\n");
-            }
-            description.append("\n");
+        EmbedBuilder embedBuilder = new EmbedBuilder().setTitle("Админы онлайн: " + totalAdmins);
+        embedBuilder.getFields().addAll(fields);
+        embedBuilder.setColor(COLOR_INFO);
+        return embedBuilder.build();
+    }
+
+    private <V> Map<GameBuildStyle, Map<GameServer, V>> groupByBuildStyle(Map<GameServer, V> map) {
+        return map.entrySet().stream()
+                .sorted(Comparator.comparing(e -> GameBuildStyle.fromName(e.getKey().getBuild())))
+                .collect(Collectors.groupingBy(
+                        e -> GameBuildStyle.fromName(e.getKey().getBuild()),
+                        LinkedHashMap::new,
+                        Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
+                ));
+    }
+
+    private MessageEmbed.Field buildAdminsField(GameBuildStyle buildStyle,
+                                                Map<GameServer, List<OnlineAdminStatus>> serversAdmins) {
+        String title = buildStyle.getEmoji().getFormatted() + " " + buildStyle.getName();
+        String value = serversAdmins.entrySet().stream()
+                .map(e -> serverAdminsBlock(e.getKey(), e.getValue()))
+                .collect(Collectors.joining("\n"));
+        return new MessageEmbed.Field(title, value, true);
+    }
+
+    private String serverAdminsBlock(GameServer server, List<OnlineAdminStatus> admins) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("**").append(server.getName()).append("**\n");
+        if (admins.isEmpty()) {
+            builder.append(SPACE_FILLER + "Нет админов онлайн.");
+            return builder.toString();
         }
-        embed.setDescription(description.toString());
+        admins.forEach(a -> {
+            String ranks = String.join(", ", a.getRanks());
+            builder.append(SPACE_FILLER).append(a.getKey()).append(" - ").append(ranks).append("\n");
+        });
+        return builder.toString().trim();
+    }
 
+    public MessageEmbed playersOnline(Map<GameServer, GameServerStatus> serversStatuses) {
+        List<MessageEmbed.Field> fields = groupByBuildStyle(serversStatuses).entrySet().stream()
+                .map(e -> buildOnlineField(e.getKey(), e.getValue()))
+                .toList();
+
+        int totalPlayers = serversStatuses.values().stream().mapToInt(GameServerStatus::getPlayers).sum();
+
+        EmbedBuilder embed = new EmbedBuilder().setTitle("Текущий онлайн: " + totalPlayers);
+        embed.getFields().addAll(fields);
+        embed.setFooter("(*) - администрация");
         embed.setColor(COLOR_INFO);
         return embed.build();
     }
 
-    public MessageEmbed playersOnline(Map<GameServer, GameServerStatus> serversStatuses) {
-        StringBuilder description = new StringBuilder();
+    private MessageEmbed.Field buildOnlineField(GameBuildStyle buildStyle, Map<GameServer, GameServerStatus> servers) {
+        String title = buildStyle.getEmoji().getFormatted() + " **" + buildStyle.getName() + "**";
+        String value = servers.entrySet().stream()
+                .map(e -> serverOnlineBlock(e.getKey(), e.getValue()))
+                .collect(Collectors.joining("\n"));
+        return new MessageEmbed.Field(title, value, false);
+    }
 
-        Map<GameBuildStyle, Map<GameServer, GameServerStatus>> groupedByBuild =
-                serversStatuses.entrySet().stream()
-                        .sorted(Comparator.comparing(e -> GameBuildStyle.fromName(e.getKey().getBuild())))
-                        .collect(Collectors.groupingBy(
-                                e -> GameBuildStyle.fromName(e.getKey().getBuild()),
-                                LinkedHashMap::new,
-                                Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
-                        ));
-
-        groupedByBuild.forEach((buildStyle, servers) -> {
-            description.append("**").append(buildStyle.getName()).append("**\n");
-
-            servers.forEach((server, status) -> description
-                    .append(buildStyle.getEmoji().getFormatted())
-                    .append(" **")
-                    .append(server.getName())
-                    .append("**: ")
-                    .append(status.getPlayers())
-                    .append(" (")
-                    .append(status.getAdmins())
-                    .append(") - ")
-                    .append(formatters.formatRoundDuration(status.getRoundDuration())).append("\n")
-            );
-            description.append("\n");
-        });
-
-        int totalPlayers = serversStatuses.values().stream().mapToInt(GameServerStatus::getPlayers).sum();
-
-        return new EmbedBuilder()
-                .setTitle("Текущий онлайн: " + totalPlayers)
-                .setDescription(description.toString().trim())
-                .setFooter("(*) - администрация")
-                .setColor(COLOR_INFO)
-                .build();
+    private String serverOnlineBlock(GameServer server, GameServerStatus status) {
+        return "**%s**: %d (%d) - %s".formatted(
+                server.getName(),
+                status.getPlayers(),
+                status.getAdmins(),
+                formatters.formatRoundDuration(status.getRoundDuration())
+        );
     }
 
     public MessageEmbed paginatedBanList(PaginationData<Ban> paginationData) {
@@ -220,19 +257,6 @@ public class Embeds {
 
         embed.setColor(COLOR_INFO);
         return embed.build();
-    }
-
-    private void addApplicationStatusLine(StringBuilder builder, ApplicationStatus.Level level,
-                                          String label, Object value) {
-        addApplicationStatusLine(builder, mapStatusLevel(level), label, value);
-    }
-
-    private void addApplicationStatusLine(StringBuilder builder, String label, Object value) {
-        addApplicationStatusLine(builder, Emojis.WHITE_CIRCLE, label, value);
-    }
-
-    private void addApplicationStatusLine(StringBuilder builder, Emoji statusEmoji, String label, Object value) {
-        builder.append(statusEmoji.getFormatted()).append(" ").append(label).append(": ").append(value).append("\n");
     }
 
     private String banBlock(Ban ban) {

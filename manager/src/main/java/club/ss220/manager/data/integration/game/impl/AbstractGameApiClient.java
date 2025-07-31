@@ -2,7 +2,6 @@ package club.ss220.manager.data.integration.game.impl;
 
 import club.ss220.manager.data.integration.game.GameApiClient;
 import club.ss220.manager.model.GameServer;
-import club.ss220.manager.model.GameServerStatus;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -20,7 +19,7 @@ import java.util.List;
 import java.util.Map;
 
 @Slf4j
-public abstract class AbstractGameApiClient<S extends GameServerStatus> implements GameApiClient<S> {
+public abstract class AbstractGameApiClient implements GameApiClient {
 
     public static final int TIMEOUT_MS = 5000;
 
