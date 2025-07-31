@@ -1,11 +1,12 @@
 package club.ss220.manager.data.integration.game.impl.bandastation;
 
+import club.ss220.manager.data.integration.game.impl.ServerResponse;
 import club.ss220.manager.model.GameServerStatus;
 
 import java.time.Duration;
 import java.util.Optional;
 
-public class BandaStationServerStatusDTO extends GameServerStatus {
+public class BandaStationServerStatusDTO extends ServerResponse implements GameServerStatus {
 
     @Override
     public Integer getPlayers() {

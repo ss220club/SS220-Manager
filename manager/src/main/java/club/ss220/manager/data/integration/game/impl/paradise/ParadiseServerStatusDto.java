@@ -1,11 +1,12 @@
 package club.ss220.manager.data.integration.game.impl.paradise;
 
+import club.ss220.manager.data.integration.game.impl.ServerResponse;
 import club.ss220.manager.model.GameServerStatus;
 
 import java.time.Duration;
 import java.util.Optional;
 
-public class ParadiseServerStatusDto extends GameServerStatus {
+public class ParadiseServerStatusDto extends ServerResponse implements GameServerStatus {
 
     @Override
     public Integer getPlayers() {
