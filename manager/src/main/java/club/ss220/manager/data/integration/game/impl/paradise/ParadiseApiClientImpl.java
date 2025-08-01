@@ -13,8 +13,13 @@ import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
-@Component("paradise")
+@Component
 public class ParadiseApiClientImpl extends AbstractGameApiClient {
+
+    @Override
+    public GameServer.Build getBuild() {
+        return GameServer.Build.PARADISE;
+    }
 
     @Override
     public Mono<GameServerStatus> getServerStatus(GameServer gameServer) {

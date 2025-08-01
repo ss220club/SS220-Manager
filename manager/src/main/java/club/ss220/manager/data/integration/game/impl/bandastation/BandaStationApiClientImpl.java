@@ -13,8 +13,13 @@ import java.util.List;
 import java.util.function.Function;
 
 @Slf4j
-@Component("bandastation")
+@Component
 public class BandaStationApiClientImpl extends AbstractGameApiClient {
+
+    @Override
+    public GameServer.Build getBuild() {
+        return GameServer.Build.BANDASTATION;
+    }
 
     @Override
     public Mono<GameServerStatus> getServerStatus(GameServer gameServer) {

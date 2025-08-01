@@ -9,6 +9,8 @@ import java.util.List;
 
 public interface GameApiClient {
 
+    GameServer.Build getBuild();
+
     Mono<GameServerStatus> getServerStatus(GameServer gameServer);
 
     Mono<List<String>> getPlayersList(GameServer gameServer);

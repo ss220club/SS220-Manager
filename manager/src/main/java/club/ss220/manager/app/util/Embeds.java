@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
@@ -153,10 +154,11 @@ public class Embeds {
     }
 
     private <V> Map<GameBuildStyle, Map<GameServer, V>> groupByBuildStyle(Map<GameServer, V> map) {
+        Function<GameServer, GameBuildStyle> serverToStyle = e -> GameBuildStyle.fromName(e.getBuild().getName());
         return map.entrySet().stream()
-                .sorted(Comparator.comparing(e -> GameBuildStyle.fromName(e.getKey().getBuild())))
+                .sorted(Comparator.comparing(e -> serverToStyle.apply(e.getKey())))
                 .collect(Collectors.groupingBy(
-                        e -> GameBuildStyle.fromName(e.getKey().getBuild()),
+                        e -> serverToStyle.apply(e.getKey()),
                         LinkedHashMap::new,
                         Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
                 ));
@@ -214,6 +216,19 @@ public class Embeds {
                 status.getAdmins(),
                 formatters.formatRoundDuration(status.getRoundDuration())
         );
+    }
+
+    public MessageEmbed playersOnline(GameServer gameServer, List<String> playersOnline) {
+        String description = playersOnline.stream()
+                .sorted(String::compareTo)
+                .collect(Collectors.joining(", "));
+
+        return new EmbedBuilder()
+                .setTitle("Текущий онлайн: " + playersOnline.size())
+                .setDescription(description)
+                .setFooter(gameServer.getFullName())
+                .setColor(COLOR_INFO)
+                .build();
     }
 
     public MessageEmbed paginatedBanList(PaginationData<Ban> paginationData) {

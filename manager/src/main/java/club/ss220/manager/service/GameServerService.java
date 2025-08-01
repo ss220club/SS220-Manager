@@ -20,10 +20,10 @@ import java.util.Optional;
 @Service
 public class GameServerService {
 
-    private final Map<String, GameApiClient> gameApiClients;
+    private final Map<GameServer.Build, GameApiClient> gameApiClients;
     private final GameConfig gameConfig;
 
-    public GameServerService(Map<String, GameApiClient> gameApiClients, GameConfig gameConfig) {
+    public GameServerService(Map<GameServer.Build, GameApiClient> gameApiClients, GameConfig gameConfig) {
         this.gameApiClients = gameApiClients;
         this.gameConfig = gameConfig;
     }
@@ -37,14 +37,14 @@ public class GameServerService {
         return Flux.fromIterable(gameConfig.getServers())
                 .flatMap(server -> Mono.fromCallable(() -> getGameApiClient(server))
                         .onErrorResume(e -> {
-                            log.error("Unknown build: {}", server.getBuild(), e);
+                            log.error(e.getMessage(), e);
                             return Mono.empty();
                         })
                         .flatMap(client -> client.getServerStatus(server)
                                 .map(status -> Map.entry(server, status))
                         )
                         .onErrorResume(e -> {
-                            log.error("Error getting status for server: {}", server.getName(), e);
+                            log.error("Error getting status for server: {}", server.getFullName(), e);
                             return Mono.empty();
                         })
                 )
@@ -97,6 +97,7 @@ public class GameServerService {
 
     private GameApiClient getGameApiClient(GameServer gameServer) {
         return Optional.ofNullable(gameServer.getBuild()).map(gameApiClients::get)
-                .orElseThrow(() -> new NoSuchElementException("Unknown build: " + gameServer.getBuild()));
+                .orElseThrow(() -> new NoSuchElementException("No game API client fround for build: "
+                                                              + gameServer.getBuild()));
     }
 }
