@@ -1,6 +1,6 @@
-package club.ss220.manager.data.db.paradise.repository;
+package club.ss220.manager.data.db.game.paradise.repository;
 
-import club.ss220.manager.data.db.paradise.ParadiseNote;
+import club.ss220.manager.data.db.game.paradise.ParadiseNote;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;

@@ -1,11 +1,13 @@
 package club.ss220.manager.data.integration.game.impl.bandastation;
 
+import club.ss220.manager.config.GameConfig;
 import club.ss220.manager.data.integration.game.impl.AbstractGameApiClient;
 import club.ss220.manager.model.GameServer;
 import club.ss220.manager.model.GameServerStatus;
 import club.ss220.manager.model.OnlineAdminStatus;
 import com.fasterxml.jackson.core.type.TypeReference;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -14,12 +16,8 @@ import java.util.function.Function;
 
 @Slf4j
 @Component
+@Qualifier(GameConfig.BUILD_BANDASTRATION)
 public class BandaStationApiClientImpl extends AbstractGameApiClient {
-
-    @Override
-    public GameServer.Build getBuild() {
-        return GameServer.Build.BANDASTATION;
-    }
 
     @Override
     public Mono<GameServerStatus> getServerStatus(GameServer gameServer) {

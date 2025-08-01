@@ -13,6 +13,9 @@ import java.util.Optional;
 @ConfigurationProperties("application.integration.game")
 public class GameConfig {
 
+    public static final String BUILD_PARADISE = "paradise";
+    public static final String BUILD_BANDASTRATION = "bandastation";
+
     private List<GameServer> servers;
 
     public Optional<GameServer> getServerByName(String serverName) {

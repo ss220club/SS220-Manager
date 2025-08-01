@@ -5,6 +5,7 @@ import club.ss220.manager.data.integration.game.GameApiClient;
 import club.ss220.manager.model.GameServer;
 import club.ss220.manager.model.GameServerStatus;
 import club.ss220.manager.model.OnlineAdminStatus;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -14,19 +15,14 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 @Slf4j
 @Service
+@AllArgsConstructor
 public class GameServerService {
 
-    private final Map<GameServer.Build, GameApiClient> gameApiClients;
     private final GameConfig gameConfig;
-
-    public GameServerService(Map<GameServer.Build, GameApiClient> gameApiClients, GameConfig gameConfig) {
-        this.gameApiClients = gameApiClients;
-        this.gameConfig = gameConfig;
-    }
+    private final GameBuildStrategyService strategyService;
 
     public GameServerStatus getServerStatus(String serverName) {
         GameServer gameServer = getServerByName(serverName);
@@ -96,8 +92,6 @@ public class GameServerService {
     }
 
     private GameApiClient getGameApiClient(GameServer gameServer) {
-        return Optional.ofNullable(gameServer.getBuild()).map(gameApiClients::get)
-                .orElseThrow(() -> new NoSuchElementException("No game API client fround for build: "
-                                                              + gameServer.getBuild()));
+        return strategyService.getGameApiClient(gameServer.getBuild());
     }
 }

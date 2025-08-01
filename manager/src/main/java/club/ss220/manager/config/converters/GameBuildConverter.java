@@ -1,15 +1,15 @@
 package club.ss220.manager.config.converters;
 
-import club.ss220.manager.model.GameServer;
+import club.ss220.manager.model.GameBuild;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GameBuildConverter implements Converter<String, GameServer.Build> {
+public class GameBuildConverter implements Converter<String, GameBuild> {
 
     @Override
-    public GameServer.Build convert(@NotNull String source) {
-        return GameServer.Build.fromName(source);
+    public GameBuild convert(@NotNull String source) {
+        return GameBuild.fromName(source);
     }
 }

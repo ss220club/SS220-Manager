@@ -9,6 +9,7 @@ import club.ss220.manager.model.GameServerStatus;
 import club.ss220.manager.model.OnlineAdminStatus;
 import club.ss220.manager.model.Player;
 import dev.freya02.jda.emojis.unicode.Emojis;
+import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -28,6 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
+@AllArgsConstructor
 public class Embeds {
 
     public static final Color COLOR_ERROR = new Color(220, 53, 69);
@@ -37,10 +39,6 @@ public class Embeds {
     public static final String SPACE_FILLER = "\u3164    ";
 
     private final Formatters formatters;
-
-    public Embeds(Formatters formatters) {
-        this.formatters = formatters;
-    }
 
     public MessageEmbed error(String message) {
         EmbedBuilder embed = new EmbedBuilder();
@@ -125,13 +123,20 @@ public class Embeds {
     }
 
     public MessageEmbed charactersInfo(List<GameCharacter> characters) {
-        EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle("Информация о персонажах");
+        List<MessageEmbed.Field> fields = characters.stream().limit(MessageEmbed.MAX_FIELD_AMOUNT)
+                .map(character -> new MessageEmbed.Field(character.getRealName(), character.getCkey(), true))
+                .toList();
 
-        String names = characters.stream().map(GameCharacter::getRealName).collect(Collectors.joining("\n"));
-        embed.addField("Имя персонажа", names, true);
-        String ckeys = characters.stream().map(GameCharacter::getCkey).collect(Collectors.joining("\n"));
-        embed.addField("ckey", ckeys, true);
+        EmbedBuilder embed = new EmbedBuilder().setTitle("Информация о персонажах");
+        embed.getFields().addAll(fields);
+        if (characters.size() > fields.size()) {
+            String format = "Еще {0, plural,"
+                    + " one{# персонаж не отображен}"
+                    + " few{# персонажа не отображено}"
+                    + " many{# персонажей не отображено}"
+                    + " other{# персонажей не отображено}}.";
+            embed.setFooter(formatters.formatPlural(format, characters.size() - fields.size()));
+        }
         embed.setColor(COLOR_INFO);
         return embed.build();
     }
@@ -170,7 +175,7 @@ public class Embeds {
         String value = serversAdmins.entrySet().stream()
                 .map(e -> serverAdminsBlock(e.getKey(), e.getValue()))
                 .collect(Collectors.joining("\n"));
-        return new MessageEmbed.Field(title, value, true);
+        return new MessageEmbed.Field(title, value, false);
     }
 
     private String serverAdminsBlock(GameServer server, List<OnlineAdminStatus> admins) {

@@ -1,4 +1,4 @@
-package club.ss220.manager.data.db.paradise.converter;
+package club.ss220.manager.data.db.game.paradise.converter;
 
 import club.ss220.manager.model.GameCharacter;
 import jakarta.persistence.AttributeConverter;

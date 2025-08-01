@@ -11,6 +11,7 @@ import io.github.freya022.botcommands.api.components.SelectMenus;
 import io.github.freya022.botcommands.api.components.annotations.RequiresComponents;
 import io.github.freya022.botcommands.api.components.data.InteractionConstraints;
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.User;
@@ -29,17 +30,12 @@ import java.util.function.IntConsumer;
 @Slf4j
 @Component
 @RequiresComponents
+@AllArgsConstructor
 public class Pagination {
 
     private final Buttons buttons;
     private final SelectMenus selectMenus;
     private final Embeds embeds;
-
-    public Pagination(Buttons buttons, SelectMenus selectMenus, Embeds embeds) {
-        this.buttons = buttons;
-        this.selectMenus = selectMenus;
-        this.embeds = embeds;
-    }
 
     public <T> StringSelectMenu createSelectMenu(List<T> items,
                                                  Function<List<T>, List<SelectOption>> optionMapper,

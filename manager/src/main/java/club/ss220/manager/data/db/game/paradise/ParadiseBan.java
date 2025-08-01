@@ -1,4 +1,4 @@
-package club.ss220.manager.data.db.paradise;
+package club.ss220.manager.data.db.game.paradise;
 
 import jakarta.persistence.*;
 import lombok.Data;

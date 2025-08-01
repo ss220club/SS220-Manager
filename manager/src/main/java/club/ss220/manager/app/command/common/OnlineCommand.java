@@ -9,6 +9,7 @@ import io.github.freya022.botcommands.api.commands.annotations.Command;
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand;
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent;
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
@@ -17,17 +18,12 @@ import java.util.function.Consumer;
 
 @Slf4j
 @Command
+@AllArgsConstructor
 public class OnlineCommand extends ApplicationCommand {
 
     private final GameServerService gameServerService;
     private final Embeds embeds;
     private final Senders senders;
-
-    public OnlineCommand(GameServerService gameServerService, Embeds embeds, Senders senders) {
-        this.gameServerService = gameServerService;
-        this.embeds = embeds;
-        this.senders = senders;
-    }
 
     @JDASlashCommand(name = "online", description = "Показать текущий онлайн")
     public void onSlashInteraction(GuildSlashEvent event) {

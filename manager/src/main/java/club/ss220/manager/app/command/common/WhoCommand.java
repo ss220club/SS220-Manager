@@ -9,6 +9,7 @@ import io.github.freya022.botcommands.api.commands.application.ApplicationComman
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent;
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand;
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.SlashOption;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 
@@ -17,17 +18,12 @@ import java.util.function.Consumer;
 
 @Slf4j
 @Command
+@AllArgsConstructor
 public class WhoCommand extends ApplicationCommand {
 
     private final GameServerService gameServerService;
     private final Embeds embeds;
     private final Senders senders;
-
-    public WhoCommand(GameServerService gameServerService, Embeds embeds, Senders senders) {
-        this.gameServerService = gameServerService;
-        this.embeds = embeds;
-        this.senders = senders;
-    }
 
     @JDASlashCommand(name = "who", description = "Показать список игроков на сервере")
     public void onSlashInteraction(GuildSlashEvent event,

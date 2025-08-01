@@ -1,6 +1,6 @@
-package club.ss220.manager.data.db.paradise.repository;
+package club.ss220.manager.data.db.game.paradise.repository;
 
-import club.ss220.manager.data.db.paradise.ParadisePlayer;
+import club.ss220.manager.data.db.game.paradise.ParadisePlayer;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

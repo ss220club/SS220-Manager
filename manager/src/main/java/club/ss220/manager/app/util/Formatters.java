@@ -1,20 +1,22 @@
 package club.ss220.manager.app.util;
 
 import club.ss220.manager.config.FormatConfig;
+import com.ibm.icu.text.MessageFormat;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 
 @Component
+@AllArgsConstructor
 public class Formatters {
 
-    private final FormatConfig formatConfig;
+    public static final Locale LOCALE = Locale.of("ru");
 
-    public Formatters(FormatConfig formatConfig) {
-        this.formatConfig = formatConfig;
-    }
+    private final FormatConfig formatConfig;
 
     public String formatDateTime(LocalDateTime localDateTime) {
         return localDateTime.format(DateTimeFormatter.ofPattern(formatConfig.getDateTimeFormat()));
@@ -36,5 +38,10 @@ public class Formatters {
                 duration.toMinutesPart(),
                 duration.toSecondsPart()
         );
+    }
+
+    public String formatPlural(String pattern, Object... args) {
+        MessageFormat messageFormat = new MessageFormat(pattern, LOCALE);
+        return messageFormat.format(args);
     }
 }

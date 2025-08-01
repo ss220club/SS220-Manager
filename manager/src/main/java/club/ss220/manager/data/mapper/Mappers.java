@@ -1,16 +1,13 @@
 package club.ss220.manager.data.mapper;
 
 import club.ss220.manager.data.api.PlayerDto;
-import club.ss220.manager.data.db.paradise.ParadiseBan;
-import club.ss220.manager.data.db.paradise.ParadiseCharacter;
-import club.ss220.manager.data.db.paradise.ParadisePlayer;
+import club.ss220.manager.data.db.game.paradise.ParadiseBan;
+import club.ss220.manager.data.db.game.paradise.ParadiseCharacter;
+import club.ss220.manager.data.db.game.paradise.ParadisePlayer;
 import org.springframework.stereotype.Component;
 
 @Component
 public class Mappers {
-
-    private Mappers() {
-    }
 
     public club.ss220.manager.model.Player toPlayer(PlayerDto centralPlayer, ParadisePlayer paradisePlayer) {
         return club.ss220.manager.model.Player.builder()

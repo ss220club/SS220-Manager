@@ -3,6 +3,7 @@ package club.ss220.manager.app.command;
 import club.ss220.manager.app.util.Embeds;
 import club.ss220.manager.app.util.Senders;
 import io.github.freya022.botcommands.api.core.GlobalExceptionHandlerAdapter;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.Message;
@@ -38,19 +39,14 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
+@AllArgsConstructor
 public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
 
     public static final Duration DISPATCH_INTERVAL = Duration.ofMinutes(10);
 
     private final Senders senders;
     private final Embeds embeds;
-    private final Map<Pair<Class<? extends Event>, Class<? extends Throwable>>, Long> exceptionDispatches;
-
-    public ExceptionHandler(Senders senders, Embeds embeds) {
-        this.senders = senders;
-        this.embeds = embeds;
-        exceptionDispatches = new HashMap<>();
-    }
+    private final Map<Pair<Class<? extends Event>, Class<? extends Throwable>>, Long> timeouts = new HashMap<>();
 
     @Override
     public void handle(@NotNull MessageReceivedEvent event, @NotNull Throwable throwable) {
@@ -174,12 +170,12 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
     private boolean shouldDispatch(Event event, Throwable throwable) {
         Pair<Class<? extends Event>, Class<? extends Throwable>> key = Pair.of(event.getClass(), throwable.getClass());
         long now = System.currentTimeMillis();
-        long nextDispatch = exceptionDispatches.getOrDefault(key, 0L);
+        long nextDispatch = timeouts.getOrDefault(key, 0L);
         if (now < nextDispatch) {
             return false;
         }
 
-        exceptionDispatches.put(key, now + DISPATCH_INTERVAL.toMillis());
+        timeouts.put(key, now + DISPATCH_INTERVAL.toMillis());
         return true;
     }
 

@@ -17,35 +17,35 @@ import javax.sql.DataSource;
 
 @Configuration
 @EnableTransactionManagement
-@EnableJpaRepositories(basePackages = ParadiseDataSourceConfig.PACKAGE,
-                       entityManagerFactoryRef = ParadiseDataSourceConfig.EMF_REF,
-                       transactionManagerRef = ParadiseDataSourceConfig.TX_MANAGER_REF)
-public class ParadiseDataSourceConfig {
+@EnableJpaRepositories(basePackages = BandastationDataSourceConfig.PACKAGE,
+                       entityManagerFactoryRef = BandastationDataSourceConfig.EMF_REF,
+                       transactionManagerRef = BandastationDataSourceConfig.TX_MANAGER_REF)
+public class BandastationDataSourceConfig {
 
-    public static final String UNIT_NAME = "paradise";
+    public static final String UNIT_NAME = "bandastation";
     public static final String PROPERTIES_PREFIX = "spring.datasource." + UNIT_NAME;
     public static final String EMF_REF = UNIT_NAME + "EMF";
     public static final String TX_MANAGER_REF = UNIT_NAME + "TxManager";
-    public static final String PACKAGE = "club.ss220.manager.data.db.game.paradise";
+    public static final String PACKAGE = "club.ss220.manager.data.db." + UNIT_NAME;
 
     @Bean
     @ConfigurationProperties(PROPERTIES_PREFIX)
-    public DataSourceProperties paradiseDataSourceProperties() {
+    public DataSourceProperties bandastationDataSourceProperties() {
         return new DataSourceProperties();
     }
 
     @Bean
-    public DataSource paradiseDataSource() {
-        return paradiseDataSourceProperties().initializeDataSourceBuilder().build();
+    public DataSource bandastationDataSource() {
+        return bandastationDataSourceProperties().initializeDataSourceBuilder().build();
     }
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean paradiseEMF(EntityManagerFactoryBuilder builder) {
-        return builder.dataSource(paradiseDataSource()).packages(PACKAGE).build();
+    public LocalContainerEntityManagerFactoryBean bandastationEMF(EntityManagerFactoryBuilder builder) {
+        return builder.dataSource(bandastationDataSource()).packages(PACKAGE).build();
     }
 
     @Bean
-    public PlatformTransactionManager paradiseTxManager(@Qualifier(EMF_REF) EntityManagerFactory emf) {
+    public PlatformTransactionManager bandastationTxManager(@Qualifier(EMF_REF) EntityManagerFactory emf) {
         return new JpaTransactionManager(emf);
     }
 }
