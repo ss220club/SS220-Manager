@@ -8,8 +8,10 @@ import club.ss220.manager.model.GameServer;
 import club.ss220.manager.model.GameServerStatus;
 import club.ss220.manager.model.OnlineAdminStatus;
 import club.ss220.manager.model.Player;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import dev.freya02.jda.emojis.unicode.Emojis;
-import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
@@ -29,7 +31,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Component
-@AllArgsConstructor
 public class Embeds {
 
     public static final Color COLOR_ERROR = new Color(220, 53, 69);
@@ -39,6 +40,13 @@ public class Embeds {
     public static final String SPACE_FILLER = "\u3164    ";
 
     private final Formatters formatters;
+    private final ObjectMapper objectMapper;
+
+    public Embeds(Formatters formatters) {
+        this.formatters = formatters;
+        objectMapper = new ObjectMapper();
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT, SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS);
+    }
 
     public MessageEmbed error(String message) {
         EmbedBuilder embed = new EmbedBuilder();
@@ -104,6 +112,21 @@ public class Embeds {
 
     private String applicationStatusLine(Emoji statusEmoji, String label, Object value) {
         return "%s %s: %s\n".formatted(statusEmoji.getFormatted(), label, value);
+    }
+
+    public MessageEmbed serverStatus(GameServer server, GameServerStatus serverStatus) {
+        return new EmbedBuilder().setTitle("Статус сервера " + server.getFullName())
+                .setDescription(serverStatusBlock(serverStatus))
+                .setColor(COLOR_INFO)
+                .build();
+    }
+
+    private String serverStatusBlock(GameServerStatus serverStatus) {
+        try {
+            return "```json\n" + objectMapper.writeValueAsString(serverStatus.getRawData()) + "\n```";
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public MessageEmbed playerInfo(Player player) {

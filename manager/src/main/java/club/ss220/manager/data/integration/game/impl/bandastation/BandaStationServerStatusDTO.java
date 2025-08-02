@@ -4,6 +4,8 @@ import club.ss220.manager.data.integration.game.impl.ServerResponse;
 import club.ss220.manager.model.GameServerStatus;
 
 import java.time.Duration;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Optional;
 
 public class BandaStationServerStatusDTO extends ServerResponse implements GameServerStatus {
@@ -31,5 +33,10 @@ public class BandaStationServerStatusDTO extends ServerResponse implements GameS
                 .map(Integer::parseInt)
                 .map(Duration::ofSeconds)
                 .orElseThrow();
+    }
+
+    @Override
+    public Map<String, Object> getRawData() {
+        return Collections.unmodifiableMap(data);
     }
 }

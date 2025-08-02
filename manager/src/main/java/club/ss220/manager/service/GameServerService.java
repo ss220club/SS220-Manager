@@ -14,7 +14,6 @@ import reactor.core.publisher.Mono;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 
 @Slf4j
 @Service
@@ -24,8 +23,7 @@ public class GameServerService {
     private final GameConfig gameConfig;
     private final GameBuildStrategyService strategyService;
 
-    public GameServerStatus getServerStatus(String serverName) {
-        GameServer gameServer = getServerByName(serverName);
+    public GameServerStatus getServerStatus(GameServer gameServer) {
         return getGameApiClient(gameServer).getServerStatus(gameServer).block();
     }
 
@@ -48,8 +46,7 @@ public class GameServerService {
                 .block();
     }
 
-    public List<String> getPlayersList(String serverName) {
-        GameServer gameServer = getServerByName(serverName);
+    public List<String> getPlayersList(GameServer gameServer) {
         return getGameApiClient(gameServer).getPlayersList(gameServer).block();
     }
 
@@ -74,21 +71,14 @@ public class GameServerService {
                 .orElseGet(Collections::emptyMap);
     }
 
-    public boolean sendHostAnnounce(String serverName, String message) {
-        GameServer gameServer = getServerByName(serverName);
+    public boolean sendHostAnnounce(GameServer gameServer, String message) {
         GameApiClient gameApiClient = getGameApiClient(gameServer);
         return Boolean.TRUE.equals(gameApiClient.sendHostAnnounce(gameServer, message).block());
     }
 
-    public boolean sendAdminMessage(String serverName, String ckey, String message, String adminName) {
-        GameServer gameServer = getServerByName(serverName);
+    public boolean sendAdminMessage(GameServer gameServer, String ckey, String message, String adminName) {
         GameApiClient gameApiClient = getGameApiClient(gameServer);
         return Boolean.TRUE.equals(gameApiClient.sendAdminMessage(gameServer, ckey, message, adminName).block());
-    }
-
-    private GameServer getServerByName(String serverName) {
-        return gameConfig.getServerByName(serverName)
-                .orElseThrow(() -> new NoSuchElementException("Unknown server: " + serverName));
     }
 
     private GameApiClient getGameApiClient(GameServer gameServer) {
