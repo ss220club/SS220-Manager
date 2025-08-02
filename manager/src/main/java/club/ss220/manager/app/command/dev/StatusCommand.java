@@ -8,6 +8,7 @@ import io.github.freya022.botcommands.api.commands.annotations.Command;
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand;
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent;
 import io.github.freya022.botcommands.api.commands.application.slash.annotations.JDASlashCommand;
+import io.github.freya022.botcommands.api.commands.application.slash.annotations.TopLevelSlashCommandData;
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 
@@ -20,6 +21,7 @@ public class StatusCommand extends ApplicationCommand {
     private final Senders senders;
 
     @JDASlashCommand(name = "status", description = "Показать статус бота.")
+    @TopLevelSlashCommandData(defaultLocked = true)
     public void onSlashInteraction(GuildSlashEvent event) {
         event.deferReply().queue();
 
