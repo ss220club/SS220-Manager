@@ -25,7 +25,7 @@ public class OnlineCommand extends ApplicationCommand {
     private final Embeds embeds;
     private final Senders senders;
 
-    @JDASlashCommand(name = "online", description = "Показать текущий онлайн")
+    @JDASlashCommand(name = "online", description = "Показать текущий онлайн.")
     public void onSlashInteraction(GuildSlashEvent event) {
         event.deferReply().queue();
 

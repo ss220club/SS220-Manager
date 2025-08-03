@@ -25,9 +25,10 @@ public class WhoCommand extends ApplicationCommand {
     private final Embeds embeds;
     private final Senders senders;
 
-    @JDASlashCommand(name = "who", description = "Показать список игроков на сервере")
+    @JDASlashCommand(name = "who", description = "Показать список игроков на сервере.")
     public void onSlashInteraction(GuildSlashEvent event,
-                                   @SlashOption(usePredefinedChoices = true) GameServer server) {
+                                   @SlashOption(description = "Игровой сервер.", usePredefinedChoices = true)
+                                   GameServer server) {
         event.deferReply().queue();
 
         Consumer<MessageEmbed> onSuccess = senders.sendEmbed(event.getHook());

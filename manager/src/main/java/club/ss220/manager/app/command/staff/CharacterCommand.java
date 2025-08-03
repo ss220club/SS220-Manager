@@ -27,11 +27,11 @@ public class CharacterCommand extends ApplicationCommand {
     private final Embeds embeds;
     private final Senders senders;
 
-    @JDASlashCommand(name = "character", description = "Узнать владельца персонажа")
+    @JDASlashCommand(name = "character", description = "Узнать владельца персонажа.")
     @TopLevelSlashCommandData(defaultLocked = true)
     public void onSlashInteraction(GuildSlashEvent event,
                                    @SlashOption(usePredefinedChoices = true) GameBuild build,
-                                   @SlashOption(description = "Имя персонажа или его часть") String name) {
+                                   @SlashOption(description = "Имя персонажа или его часть.") String name) {
         event.deferReply().queue();
 
         Consumer<MessageEmbed> onSuccess = senders.sendEmbed(event.getHook());

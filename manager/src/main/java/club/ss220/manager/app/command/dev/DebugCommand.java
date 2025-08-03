@@ -25,7 +25,8 @@ public class DebugCommand extends ApplicationCommand {
     @JDASlashCommand(name = "debug", description = "Отладочные данные от игрового сервера.")
     @TopLevelSlashCommandData(defaultLocked = true)
     public void onSlashInteraction(GuildSlashEvent event,
-                                   @SlashOption(usePredefinedChoices = true) GameServer server) {
+                                   @SlashOption(description = "Игровой сервер.", usePredefinedChoices = true)
+                                   GameServer server) {
         event.deferReply().queue();
 
         InteractionHook hook = event.getHook();

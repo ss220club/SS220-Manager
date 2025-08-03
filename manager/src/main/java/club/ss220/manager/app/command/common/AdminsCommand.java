@@ -26,7 +26,7 @@ public class AdminsCommand extends ApplicationCommand {
     private final Embeds embeds;
     private final Senders senders;
 
-    @JDASlashCommand(name = "admins", description = "Показать админов онлайн")
+    @JDASlashCommand(name = "admins", description = "Показать админов онлайн.")
     public void onSlashInteraction(GuildSlashEvent event) {
         event.deferReply().queue();
 
