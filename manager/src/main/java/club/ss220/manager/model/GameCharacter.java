@@ -14,9 +14,24 @@ public class GameCharacter {
     private final String ckey;
     private final Integer slot;
     private final String realName;
-    private final String gender;
+    private final Gender gender;
     private final Short age;
     private final Species species;
+
+    public enum Gender {
+        MALE,
+        FEMALE,
+        PLURAL,
+        OTHER;
+
+        public static Gender fromValue(String value) {
+            try {
+                return Gender.valueOf(value.toUpperCase());
+            } catch (IllegalArgumentException e) {
+                return OTHER;
+            }
+        }
+    }
 
     @Getter
     public enum Species {

@@ -1,0 +1,118 @@
+bandastation:
+  roles:
+    LIVING:
+      - Living
+    GHOST:
+      - Ghost
+      - Ghost Role
+      - Space Bartender
+    ADMIN:
+      - Admin
+    CREW:
+      - Crew
+    IGNORE:
+      - Unassigned Crewmember
+      - Unknown
+      - NOPE
+    COMMAND:
+      - Chief Engineer
+      - Captain
+      - Research Director
+      - Chief Medical Officer
+      - Head of Security
+        - Head of Personnel
+      - Quartermaster
+      - Bridge Assistant
+      - Veteran Security Advisor
+    NT_REPRESENTATION:
+      - Blueshield
+      - Nanotrasen Representative
+    SECURITY:
+      - Security Officer
+      - Detective
+      - Warden
+    ENGINEERING:
+      - Station Engineer
+      - Atmospheric Technician
+    SCIENCE:
+      - Scientist
+      - Roboticist
+      - Geneticist
+    MEDICAL:
+      - Medical Doctor
+      - Paramedic
+      - Chemist
+      - Coroner
+      - Psychologist
+    SUPPLY:
+      - Shaft Miner
+      - Cargo Technician
+      - Bitrunner
+      - Explorer
+    SERVICE:
+      - Cook
+      - Botanist
+      - Janitor
+      - Bartender
+      - Clown
+      - Chaplain
+      - Mime
+      - Curator
+    JUSTICE:
+      - Lawyer
+      - Magistrate
+    MISC:
+      - Assistant
+      - Prisoner
+    SILICON:
+      - Cyborg
+      - AI
+      - Big Brother
+    ANTAGONIST:
+      - Traitor
+      - Blood Brother
+      - Changeling
+      - Heretic
+      - Cultist
+      - Space Pirate
+      - Xenomorph
+      - Spy
+      - Lavaland Syndicate
+      - Obsessed
+      - Malf AI
+      - Space Ninja
+      - Abductor
+      - Operative
+      - Nuclear Operative
+      - Space Syndicate
+      - Fugitive Hunter
+      - Glitch
+      - Revolutionary
+      - Paradox Clone
+      - Fugitive
+      - Changeling (Midround)
+      - Abductor Scientist
+      - Abductor Agent
+      - Revenant
+      - Nightmare
+      - Space Dragon
+      - Voidwalker
+      - Wizard
+      - Heretic Smuggler
+      - Pyroclastic Anomaly Slime
+      - Slaughter Demon
+      - Lone Operative
+      - Stowaway Changeling
+      - Syndicate Monkey Agent
+      - Operative (Midround)
+      - Head Revolutionary
+      - Blob Infection
+      - Operative Overwatch Agent
+      - survivalist
+      - Abductor Solo
+      - Syndicate Medical Cyborg
+      - Wizard (Midround)
+      - imposter
+      - Clown Operative
+      - Morph
+    SPECIAL:

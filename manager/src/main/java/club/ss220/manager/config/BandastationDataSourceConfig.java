@@ -26,7 +26,7 @@ public class BandastationDataSourceConfig {
     public static final String PROPERTIES_PREFIX = "spring.datasource." + UNIT_NAME;
     public static final String EMF_REF = UNIT_NAME + "EMF";
     public static final String TX_MANAGER_REF = UNIT_NAME + "TxManager";
-    public static final String PACKAGE = "club.ss220.manager.data.db." + UNIT_NAME;
+    public static final String PACKAGE = "club.ss220.manager.data.db.game." + UNIT_NAME;
 
     @Bean
     @ConfigurationProperties(PROPERTIES_PREFIX)

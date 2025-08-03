@@ -3,7 +3,9 @@ spring:
     name: ss220-manager
     revision: snapshot
   config:
-    import: optional:classpath:/application-dev.yml
+    import:
+      - classpath:bandastation/roles.yml
+      - optional:classpath:/application-dev.yml
   datasource:
     persistence:
       url: jdbc:h2:./app-database;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
@@ -11,6 +13,10 @@ spring:
       password:
     paradise:
       url: jdbc:mariadb://localhost:3306/paradise
+      username: root
+      password: password
+    bandastation:
+      url: jdbc:mariadb://localhost:3307/bandastation
       username: root
       password: password
   jpa:

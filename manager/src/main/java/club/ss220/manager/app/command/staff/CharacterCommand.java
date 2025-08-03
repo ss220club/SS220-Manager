@@ -40,7 +40,7 @@ public class CharacterCommand extends ApplicationCommand {
         try {
             getCharactersInfoByName(build, name, onSuccess, onFail);
         } catch (UnsupportedOperationException e) {
-            // TODO: 01.08.2025 Remove this when bandastation will store game characters in a database.
+            // TODO: Remove this when bandastation will store game characters in a database.
             onFail.accept(build.getName() + " пока не поддерживает поиск персонажей.");
         }
     }

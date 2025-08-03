@@ -36,7 +36,27 @@ public class Senders {
     }
 
     public void sendEmbed(InteractionHook hook, MessageEmbed messageEmbed) {
-        hook.sendMessageEmbeds(messageEmbed).queue();
+        hook.sendMessageEmbeds(messageEmbed).setAllowedMentions(Collections.emptyList()).queue();
+    }
+
+    public Consumer<MessageEmbed> sendEmbedEphemeral(InteractionHook hook) {
+        return messageEmbed -> sendEmbedEphemeral(hook, messageEmbed);
+    }
+
+    public void sendEmbedEphemeral(InteractionHook hook, MessageEmbed messageEmbed) {
+        hook.setEphemeral(true).sendMessageEmbeds(messageEmbed).queue();
+    }
+
+    public Consumer<MessageEmbed> sendEmbedMentions(InteractionHook hook) {
+        return messageEmbed -> sendEmbedMentions(hook, messageEmbed);
+    }
+
+    public void sendEmbedMentions(InteractionHook hook, MessageEmbed messageEmbed) {
+        hook.sendMessageEmbeds(messageEmbed).setAllowedMentions(List.of(
+                Message.MentionType.ROLE,
+                Message.MentionType.CHANNEL,
+                Message.MentionType.USER
+        )).queue();
     }
 
     public Consumer<String> sendMessage(InteractionHook hook) {
@@ -45,6 +65,14 @@ public class Senders {
 
     public void sendMessage(InteractionHook hook, String message) {
         hook.sendMessage(message).setAllowedMentions(Collections.emptyList()).queue();
+    }
+
+    public Consumer<String> sendMessageEphemeral(InteractionHook hook) {
+        return message -> sendMessageEphemeral(hook, message);
+    }
+
+    public void sendMessageEphemeral(InteractionHook hook, String message) {
+        hook.setEphemeral(true).sendMessage(message).queue();
     }
 
     public Consumer<String> sendMessageMentions(InteractionHook hook) {

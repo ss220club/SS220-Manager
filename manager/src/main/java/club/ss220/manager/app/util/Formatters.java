@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -17,6 +18,10 @@ public class Formatters {
     public static final Locale LOCALE = Locale.of("ru");
 
     private final FormatConfig formatConfig;
+
+    public String formatDate(LocalDate date) {
+        return date.format(DateTimeFormatter.ofPattern(formatConfig.getDateFormat()));
+    }
 
     public String formatDateTime(LocalDateTime localDateTime) {
         return localDateTime.format(DateTimeFormatter.ofPattern(formatConfig.getDateTimeFormat()));

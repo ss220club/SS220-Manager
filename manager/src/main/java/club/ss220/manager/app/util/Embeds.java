@@ -8,25 +8,29 @@ import club.ss220.manager.model.GameServer;
 import club.ss220.manager.model.GameServerStatus;
 import club.ss220.manager.model.OnlineAdminStatus;
 import club.ss220.manager.model.Player;
+import club.ss220.manager.model.RoleCategory;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.ibm.icu.text.MessageFormat;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
+import net.dv8tion.jda.api.entities.User;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.entities.emoji.UnicodeEmoji;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.util.unit.DataSize;
 
 import java.awt.Color;
-import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -129,20 +133,88 @@ public class Embeds {
         }
     }
 
-    public MessageEmbed playerInfo(Player player) {
-        EmbedBuilder embed = new EmbedBuilder();
-        embed.setTitle("Информация о игроке " + player.getCkey());
+    public MessageEmbed userInfo(club.ss220.manager.model.User user) {
+        return userInfo(user, false);
+    }
 
-        if (player.getFirstSeen() != null) {
-            LocalDateTime firstSeen = player.getFirstSeen();
-            embed.addField("Первый вход", formatters.formatDateTime(firstSeen), true);
-        }
-        if (player.getLastSeen() != null) {
-            LocalDateTime lastSeen = player.getLastSeen();
-            embed.addField("Последний вход", formatters.formatDateTime(lastSeen), true);
+    public MessageEmbed userInfo(club.ss220.manager.model.User user, boolean isConfidential) {
+        Player player = user.getGameInfo().firstEntry().getValue();
+        String description = "**Discord:** " + User.fromId(user.getDiscordId()).getAsMention() + "\n"
+                             + "**CKEY:** " + user.getCkey() + "\n\n"
+                             + playerInfoBlock(player, isConfidential);
+        List<MessageEmbed.Field> fields = List.of(playerExpField(player),
+                                                  playerCharactersField(player.getCharacters()));
+
+        EmbedBuilder embed = new EmbedBuilder();
+        embed.setTitle("Информация о пользователе " + user.getId());
+        embed.setDescription(description);
+        embed.getFields().addAll(fields);
+        if (isConfidential) {
+            embed.setFooter("Осторожно, сообщение содержит конфиденциальные данные.");
         }
         embed.setColor(COLOR_INFO);
         return embed.build();
+    }
+
+    private String playerInfoBlock(Player player, boolean isConfidential) {
+        String info = "**Ранг:** " + player.getLastAdminRank() + "\n"
+                      + "**Стаж:** " + player.getKnownFor().toDays() + " дн.\n"
+                      + "**BYOND создан:** " + formatters.formatDate(player.getByondJoinDate()) + "\n"
+                      + "**Первый вход:** " + formatters.formatDateTime(player.getFirstSeenDateTime()) + "\n"
+                      + "**Последний вход:** " + formatters.formatDateTime(player.getLastSeenDateTime()) + "\n";
+        if (isConfidential) {
+            info += "**IP:** ||" + player.getIp().getHostAddress() + "||\n"
+                    + "**CID:** ||" + player.getComputerId() + "||\n";
+        }
+        return info;
+    }
+
+    private MessageEmbed.Field playerExpField(Player player) {
+        Duration livingExp = player.getExp().get(RoleCategory.LIVING);
+        Duration ghostExp = player.getExp().get(RoleCategory.GHOST);
+        Duration totalExp = livingExp.plus(ghostExp);
+
+        String title = "Время в игре: " + totalExp.toHours() + " ч.";
+        String value = player.getExp().entrySet().stream()
+                .filter(e -> !e.getKey().equals(RoleCategory.IGNORE))
+                .map(e -> playerExpLine(e.getKey(), e.getValue()))
+                .collect(Collectors.joining("\n"));
+        return new MessageEmbed.Field(title, value, true);
+    }
+
+    private String playerExpLine(RoleCategory category, Duration exp) {
+        return SPACE_FILLER.repeat(category.getLevel()) + category.getFormattedName() + ": " + exp.toHours() + " ч.";
+    }
+
+    private MessageEmbed.Field playerCharactersField(@Nullable List<GameCharacter> characters) {
+        if (characters == null) {
+            String value = Emojis.WARNING.getFormatted() + " Информация о персонажах недоступна.";
+            return new MessageEmbed.Field("Персонажи: 0", value, true);
+        }
+
+        String title = "Персонажи: " + characters.size();
+        String value = characters.stream()
+                .map(this::playerCharacterLine)
+                .collect(Collectors.joining("\n"));
+        return new MessageEmbed.Field(title, value, true);
+    }
+
+    private String playerCharacterLine(GameCharacter character) {
+        String ageFormat = "{0, plural, one{# год} few{# года} many{# лет} other{# лет}}.";
+        return "`%02d` %s\n%s %s %s".formatted(
+                character.getSlot(), character.getRealName(),
+                genderEmoji(character.getGender()).getFormatted(),
+                character.getSpecies().getName(),
+                MessageFormat.format(ageFormat, character.getAge()));
+    }
+
+    private Emoji genderEmoji(GameCharacter.Gender gender) {
+        return switch (gender) {
+            case MALE -> Emojis.MALE_SIGN;
+            case FEMALE -> Emojis.FEMALE_SIGN;
+            case PLURAL -> Emojis.PARKING;
+            case OTHER -> Emojis.HELICOPTER;
+        };
     }
 
     public MessageEmbed charactersInfo(List<GameCharacter> characters) {
@@ -154,10 +226,10 @@ public class Embeds {
         embed.getFields().addAll(fields);
         if (characters.size() > fields.size()) {
             String format = "Еще {0, plural,"
-                    + " one{# персонаж не отображен}"
-                    + " few{# персонажа не отображено}"
-                    + " many{# персонажей не отображено}"
-                    + " other{# персонажей не отображено}}.";
+                            + " one{# персонаж не отображен}"
+                            + " few{# персонажа не отображено}"
+                            + " many{# персонажей не отображено}"
+                            + " other{# персонажей не отображено}}.";
             embed.setFooter(formatters.formatPlural(format, characters.size() - fields.size()));
         }
         embed.setColor(COLOR_INFO);
@@ -184,10 +256,9 @@ public class Embeds {
     private <V> Map<GameBuildStyle, Map<GameServer, V>> groupByBuildStyle(Map<GameServer, V> map) {
         Function<GameServer, GameBuildStyle> serverToStyle = e -> GameBuildStyle.fromName(e.getBuild().getName());
         return map.entrySet().stream()
-                .sorted(Comparator.comparing(e -> serverToStyle.apply(e.getKey())))
                 .collect(Collectors.groupingBy(
                         e -> serverToStyle.apply(e.getKey()),
-                        LinkedHashMap::new,
+                        TreeMap::new,
                         Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)
                 ));
     }
@@ -238,7 +309,7 @@ public class Embeds {
     }
 
     private String serverOnlineBlock(GameServer server, GameServerStatus status) {
-        return "**%s**: %d (%d) - %s".formatted(
+        return "**%s:** %d (%d) - %s".formatted(
                 server.getName(),
                 status.getPlayers(),
                 status.getAdmins(),
