@@ -8,6 +8,7 @@ public enum RoleCategory {
     GHOST(0, "Призрак"),
     LIVING(0, "Живой"),
     SPECIAL(1, "Специальные"),
+    IGNORE(0, "[NT REDACTED]"),
     ANTAGONIST(1, "Антагонист"),
     CREW(1, "Экипаж"),
     COMMAND(2, "Командование"),
@@ -20,8 +21,7 @@ public enum RoleCategory {
     SERVICE(2, "Сервис"),
     JUSTICE(2, "Правосудие"),
     MISC(2, "Разное"),
-    SILICON(2, "Роботы"),
-    IGNORE(0, "[NT REDACTED]");
+    SILICON(2, "Роботы");
 
     private final int level;
     private final String formattedName;

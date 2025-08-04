@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 @Data
 @Builder
-public class User {
+public class Member {
     
     @NotNull
     private final Integer id;
@@ -22,8 +22,8 @@ public class User {
     @NotNull
     private final TreeMap<GameBuild, Player> gameInfo;
 
-    public User(@NotNull Integer id, @NotNull String ckey, @NotNull Long discordId,
-                @NotNull TreeMap<GameBuild, Player> gameInfo) {
+    public Member(@NotNull Integer id, @NotNull String ckey, @NotNull Long discordId,
+                  @NotNull TreeMap<GameBuild, Player> gameInfo) {
         this.id = id;
         this.ckey = ckey;
         this.discordId = discordId;

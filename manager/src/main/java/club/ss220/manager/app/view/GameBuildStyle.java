@@ -1,6 +1,5 @@
-package club.ss220.manager.app.util;
+package club.ss220.manager.app.view;
 
-import club.ss220.manager.app.emojis.AppEmojis;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import lombok.Getter;
 import net.dv8tion.jda.api.entities.emoji.Emoji;

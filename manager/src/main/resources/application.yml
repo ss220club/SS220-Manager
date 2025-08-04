@@ -56,4 +56,6 @@ logging:
       file-name-pattern: ./log/archive/manager-%d{yyyy-MM-dd}.%i.log
   level:
     root: INFO
-  errorDispatchChannelId: 0
+  discord:
+    dispatchChannelId: 0
+    dispatchInterval: 10

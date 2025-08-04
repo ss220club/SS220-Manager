@@ -10,7 +10,6 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.TreeMap;
 
 @Data
 @Builder
@@ -33,7 +32,7 @@ public class Player {
     @NotNull
     private final String lastAdminRank;
     @NotNull
-    private final TreeMap<RoleCategory, Duration> exp;
+    private final PlayerExperience exp;
     @Nullable // TODO: Update this when bandastation will store game characters in a database.
     private final List<GameCharacter> characters;
 

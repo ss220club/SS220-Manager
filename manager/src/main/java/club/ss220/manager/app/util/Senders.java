@@ -7,6 +7,7 @@ import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.interactions.InteractionHook;
 import net.dv8tion.jda.api.utils.FileUpload;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -20,15 +21,16 @@ import java.util.function.Consumer;
 @Component
 public class Senders {
 
-    private final Long errorDispatchChannelId;
+    @Nullable
+    private final Long dispatchChannelId;
 
     @Autowired(required = false)
-    public Senders(@Value("${logging.errorDispatchChannelId}") Long errorDispatchChannelId) {
-        this.errorDispatchChannelId = errorDispatchChannelId;
+    public Senders(@Nullable @Value("${logging.discord.dispatchChannelId}") Long dispatchChannelId) {
+        this.dispatchChannelId = dispatchChannelId;
     }
 
     public Senders() {
-        this.errorDispatchChannelId = null;
+        this.dispatchChannelId = null;
     }
 
     public Consumer<MessageEmbed> sendEmbed(InteractionHook hook) {
@@ -88,12 +90,12 @@ public class Senders {
     }
 
     public void sendUncaughtExceptionReport(JDA jda, MessageEmbed messageEmbed, String stacktrace) {
-        if (errorDispatchChannelId == null) {
+        if (dispatchChannelId == null) {
             log.warn("Error dispatch channel is not configured! Error report will not be sent");
             return;
         }
 
-        TextChannel textChannelById = jda.getTextChannelById(errorDispatchChannelId);
+        TextChannel textChannelById = jda.getTextChannelById(dispatchChannelId);
         if (textChannelById == null) {
             log.error("Error dispatch channel is not found! Error report will not be sent");
             return;

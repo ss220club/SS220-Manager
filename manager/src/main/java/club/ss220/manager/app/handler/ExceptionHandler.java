@@ -1,9 +1,8 @@
-package club.ss220.manager.app.command;
+package club.ss220.manager.app.handler;
 
 import club.ss220.manager.app.util.Embeds;
 import club.ss220.manager.app.util.Senders;
 import io.github.freya022.botcommands.api.core.GlobalExceptionHandlerAdapter;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.IMentionable;
 import net.dv8tion.jda.api.entities.Message;
@@ -25,6 +24,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.PrintWriter;
@@ -39,14 +39,20 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Component
-@AllArgsConstructor
 public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
 
-    public static final Duration DISPATCH_INTERVAL = Duration.ofMinutes(10);
-
+    public final Duration dispatchInterval;
     private final Senders senders;
     private final Embeds embeds;
-    private final Map<Pair<Class<? extends Event>, Class<? extends Throwable>>, Long> timeouts = new HashMap<>();
+    private final Map<Pair<Class<? extends Event>, Class<? extends Throwable>>, Long> timeouts;
+
+    public ExceptionHandler(@Value("${logging.discord.dispatchInterval}") Integer dispatchIntervalMinutes,
+                            Senders senders, Embeds embeds) {
+        this.dispatchInterval = Duration.ofMinutes(dispatchIntervalMinutes);
+        this.senders = senders;
+        this.embeds = embeds;
+        timeouts = new HashMap<>();
+    }
 
     @Override
     public void handle(@NotNull MessageReceivedEvent event, @NotNull Throwable throwable) {
@@ -175,7 +181,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
             return false;
         }
 
-        timeouts.put(key, now + DISPATCH_INTERVAL.toMillis());
+        timeouts.put(key, now + dispatchInterval.toMillis());
         return true;
     }
 

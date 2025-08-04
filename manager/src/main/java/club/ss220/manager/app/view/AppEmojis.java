@@ -1,4 +1,4 @@
-package club.ss220.manager.app.emojis;
+package club.ss220.manager.app.view;
 
 import io.github.freya022.botcommands.api.emojis.AppEmojisRegistry;
 import io.github.freya022.botcommands.api.emojis.annotations.AppEmoji;

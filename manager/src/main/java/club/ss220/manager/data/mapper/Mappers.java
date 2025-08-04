@@ -3,14 +3,18 @@ package club.ss220.manager.data.mapper;
 import club.ss220.manager.config.BandaStationConfig;
 import club.ss220.manager.data.api.UserDto;
 import club.ss220.manager.data.db.game.bandastation.BandaStationPlayer;
+import club.ss220.manager.data.db.game.bandastation.BandaStationPlayerExperience;
 import club.ss220.manager.data.db.game.paradise.ParadiseBan;
 import club.ss220.manager.data.db.game.paradise.ParadiseCharacter;
 import club.ss220.manager.data.db.game.paradise.ParadisePlayer;
+import club.ss220.manager.data.db.game.paradise.ParadisePlayerExperience;
+import club.ss220.manager.model.Ban;
 import club.ss220.manager.model.GameBuild;
 import club.ss220.manager.model.GameCharacter;
+import club.ss220.manager.model.Member;
 import club.ss220.manager.model.Player;
+import club.ss220.manager.model.PlayerExperience;
 import club.ss220.manager.model.RoleCategory;
-import club.ss220.manager.model.User;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +23,6 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -34,8 +37,8 @@ public class Mappers {
         this.roleCategoryMapping = roleCategoryMapping;
     }
 
-    public User toUser(UserDto centralPlayer, List<Player> players) {
-        return User.builder()
+    public Member toUser(UserDto centralPlayer, List<Player> players) {
+        return Member.builder()
                 .id(centralPlayer.getId())
                 .discordId(centralPlayer.getDiscordId())
                 .ckey(centralPlayer.getCkey())
@@ -85,7 +88,7 @@ public class Mappers {
                 .build();
     }
 
-    public club.ss220.manager.model.GameCharacter toGameCharacter(ParadiseCharacter paradiseCharacter) {
+    public GameCharacter toGameCharacter(ParadiseCharacter paradiseCharacter) {
         return club.ss220.manager.model.GameCharacter.builder()
                 .ckey(paradiseCharacter.getCkey())
                 .slot(paradiseCharacter.getSlot())
@@ -96,8 +99,8 @@ public class Mappers {
                 .build();
     }
 
-    public club.ss220.manager.model.Ban toBan(ParadiseBan ban) {
-        return club.ss220.manager.model.Ban.builder()
+    public Ban toBan(ParadiseBan ban) {
+        return Ban.builder()
                 .id(ban.getId())
                 .ckey(ban.getCkey())
                 .adminCkey(ban.getAdminCkey())
@@ -138,22 +141,27 @@ public class Mappers {
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         }
 
-        public TreeMap<RoleCategory, Duration> getBandastationExp(Map<String, Long> roleTime) {
-            return roleTime.entrySet().stream()
+        public PlayerExperience getBandastationExp(Map<String, Long> roleTime) {
+            TreeMap<RoleCategory, Duration> playerExp = roleTime.entrySet().stream()
                     .collect(Collectors.toMap(
                             entry -> getRoleCategory(entry.getKey()),
                             entry -> Duration.ofMinutes(entry.getValue()),
                             Duration::plus,
                             TreeMap::new
                     ));
+            return new BandaStationPlayerExperience(playerExp);
         }
 
-        public TreeMap<RoleCategory, Duration> getParadiseExp(String exp) {
-            TreeMap<RoleCategory, Duration> result = new TreeMap<>(new EnumMap<>(RoleCategory.class));
-            Arrays.stream(exp.split("&"))
+        public PlayerExperience getParadiseExp(String exp) {
+            TreeMap<RoleCategory, Duration> playerExp = Arrays.stream(exp.split("&"))
                     .map(v -> v.split("="))
-                    .forEach(v -> result.put(RoleCategory.fromValue(v[0]), Duration.ofMinutes(Integer.parseInt(v[1]))));
-            return result;
+                    .collect(Collectors.toMap(
+                            v -> RoleCategory.fromValue(v[0]),
+                            v -> Duration.ofMinutes(Integer.parseInt(v[1])),
+                            Duration::plus,
+                            TreeMap::new
+                    ));
+            return new ParadisePlayerExperience(playerExp);
         }
 
         public RoleCategory getRoleCategory(String role) {
