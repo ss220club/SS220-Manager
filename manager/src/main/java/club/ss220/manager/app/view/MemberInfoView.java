@@ -8,6 +8,7 @@ import club.ss220.manager.model.GameBuild;
 import club.ss220.manager.model.GameCharacter;
 import club.ss220.manager.model.Member;
 import club.ss220.manager.model.Player;
+import club.ss220.manager.model.MemberTarget;
 import club.ss220.manager.model.RoleCategory;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import io.github.freya022.botcommands.api.components.SelectMenus;
@@ -51,28 +52,28 @@ public class MemberInfoView {
         this.controller = controller;
     }
 
-    public void renderMemberInfo(InteractionHook hook, User user, MemberInfoContext context) {
-        MessageCreateData message = buildMessageData(user, context);
+    public void renderMemberInfo(InteractionHook hook, User viewer, MemberInfoContext context) {
+        MessageCreateData message = buildMessageData(viewer, context);
         hook.setEphemeral(true).sendMessage(message).queue();
     }
 
-    public void updateUserInfo(InteractionHook hook, User user, MemberInfoContext context) {
-        MessageEditData message = MessageEditData.fromCreateData(buildMessageData(user, context));
+    public void updateMemberInfo(InteractionHook hook, User viewer, MemberInfoContext context) {
+        MessageEditData message = MessageEditData.fromCreateData(buildMessageData(viewer, context));
         hook.editOriginal(message).queue();
     }
 
-    public void renderUserNotFound(InteractionHook hook, User user) {
-        senders.sendEmbedEphemeral(hook, embeds.error("Пользователь " + user.getAsMention() + " не найден."));
+    public void renderMemberNotFound(InteractionHook hook, MemberTarget target) {
+        senders.sendEmbedEphemeral(hook, embeds.error("Пользователь " + target.getDisplayString() + " не найден."));
     }
 
-    private MessageCreateData buildMessageData(User user, MemberInfoContext context) {
-        MessageEmbed embed = createUserInfoEmbed(context);
-        ActionRow buildSelectMenu = createBuildSelectMenu(user, context);
+    private MessageCreateData buildMessageData(User viewer, MemberInfoContext context) {
+        MessageEmbed embed = createMemberInfoEmbed(context);
+        ActionRow buildSelectMenu = createBuildSelectMenu(viewer, context);
 
         return new MessageCreateBuilder().setEmbeds(embed).setComponents(buildSelectMenu).build();
     }
 
-    private ActionRow createBuildSelectMenu(User discordUser, MemberInfoContext context) {
+    private ActionRow createBuildSelectMenu(User viewer, MemberInfoContext context) {
         Set<GameBuild> availableBuilds = context.getMember().getGameInfo().keySet();
         GameBuild selectedBuild = context.getSelectedBuild();
 
@@ -85,7 +86,7 @@ public class MemberInfoView {
 
         StringSelectMenu selectMenu = selectMenus.stringSelectMenu()
                 .ephemeral()
-                .constraints(constraints -> constraints.addUsers(discordUser))
+                .constraints(constraints -> constraints.addUsers(viewer))
                 .bindTo(selectEvent -> {
                     String selectedValue = selectEvent.getValues().getFirst();
                     controller.handleBuildSelection(selectEvent, context, selectedValue);
@@ -98,7 +99,7 @@ public class MemberInfoView {
         return ActionRow.of(selectMenu);
     }
 
-    private MessageEmbed createUserInfoEmbed(MemberInfoContext context) {
+    private MessageEmbed createMemberInfoEmbed(MemberInfoContext context) {
         Member member = context.getMember();
         GameBuild selectedBuild = context.getSelectedBuild();
         boolean isConfidential = context.isConfidential();
@@ -122,15 +123,6 @@ public class MemberInfoView {
         }
         embed.setColor(UiConstants.COLOR_INFO);
         return embed.build();
-    }
-
-    public MessageEmbed getView(Member member, GameBuild selectedBuild, boolean isConfidential) {
-        MemberInfoContext context = MemberInfoContext.builder()
-                .member(member)
-                .selectedBuild(selectedBuild)
-                .confidential(isConfidential)
-                .build();
-        return createUserInfoEmbed(context);
     }
 
     private String createPlayerInfoBlock(Player player, boolean isConfidential) {

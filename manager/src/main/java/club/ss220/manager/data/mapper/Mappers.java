@@ -1,7 +1,7 @@
 package club.ss220.manager.data.mapper;
 
 import club.ss220.manager.config.BandaStationConfig;
-import club.ss220.manager.data.api.UserDto;
+import club.ss220.manager.data.api.MemberDto;
 import club.ss220.manager.data.db.game.bandastation.BandaStationPlayer;
 import club.ss220.manager.data.db.game.bandastation.BandaStationPlayerExperience;
 import club.ss220.manager.data.db.game.paradise.ParadiseBan;
@@ -37,7 +37,7 @@ public class Mappers {
         this.roleCategoryMapping = roleCategoryMapping;
     }
 
-    public Member toUser(UserDto centralPlayer, List<Player> players) {
+    public Member toMember(MemberDto centralPlayer, List<Player> players) {
         return Member.builder()
                 .id(centralPlayer.getId())
                 .discordId(centralPlayer.getDiscordId())

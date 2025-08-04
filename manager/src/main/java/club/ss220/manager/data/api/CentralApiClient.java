@@ -4,7 +4,7 @@ import reactor.core.publisher.Mono;
 
 public interface CentralApiClient {
 
-    Mono<UserDto> getUserByCkey(String ckey);
+    Mono<MemberDto> getMemberByCkey(String ckey);
 
-    Mono<UserDto> getUserByDiscordId(long discordId);
+    Mono<MemberDto> getMemberByDiscordId(long discordId);
 }

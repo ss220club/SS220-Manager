@@ -1,6 +1,5 @@
 package club.ss220.manager.data.db.game.bandastation;
 
-import club.ss220.manager.data.db.game.bandastation.converter.UnsignedIntConverter;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -26,8 +25,7 @@ public class BandaStationPlayer {
     @Column(name = "lastseen")
     private LocalDateTime lastSeen;
 
-    @Column(name = "ip")
-    @Convert(converter = UnsignedIntConverter.class)
+    @Column(name = "ip", columnDefinition = "INT UNSIGNED")
     private long ip;
 
     @Column(name = "computerid")
@@ -39,7 +37,6 @@ public class BandaStationPlayer {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "role_time", joinColumns = @JoinColumn(name = "ckey"))
     @MapKeyColumn(name = "job")
-    @Column(name = "minutes")
-    @Convert(attributeName = "value", converter = UnsignedIntConverter.class)
+    @Column(name = "minutes", columnDefinition = "INT UNSIGNED")
     private Map<String, Long> roleTime;
 }
