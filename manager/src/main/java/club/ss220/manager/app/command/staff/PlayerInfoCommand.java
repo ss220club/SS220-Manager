@@ -25,12 +25,13 @@ public class PlayerInfoCommand extends ApplicationCommand {
     @JDASlashCommand(name = "player", description = "Получить информацию об игроке.")
     @TopLevelSlashCommandData(defaultLocked = true)
     public void onSlashInteraction(GuildSlashEvent event,
-                                   @SlashOption(description = "Пользователь Discord/Discord ID/CKEY.") String target) {
+                                   @SlashOption(description = "Пользователь Discord/Discord ID/CKEY.")
+                                   MemberTarget target) {
         log.debug("Executing /player command, target: {}", target);
         event.deferReply(true).queue();
 
         User user = event.getUser();
-        memberInfoController.showMemberInfo(event.getHook(), user, MemberTarget.fromQuery(target));
+        memberInfoController.showMemberInfo(event.getHook(), user, target);
     }
 
     @JDAUserCommand(name = "Информация об игроке", scope = CommandScope.GUILD)
