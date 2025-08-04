@@ -24,24 +24,39 @@ public class MemberInfoController {
     private final UserService memberService;
 
     public void showMemberInfo(InteractionHook hook, User user) {
-        Optional<Member> memberOptional = memberService.getMemberByDiscordId(user.getIdLong());
-        if (memberOptional.isEmpty()) {
-            view.renderUserNotFound(hook, user);
-            return;
-        }
+        try {
+            Optional<Member> memberOptional = memberService.getMemberByDiscordId(user.getIdLong());
+            if (memberOptional.isEmpty()) {
+                view.renderUserNotFound(hook, user);
+                log.debug("User {} ({}) not found", user.getAsTag(), user.getIdLong());
+                return;
+            }
 
-        Member member = memberOptional.get();
-        GameBuild defaultBuild = member.getGameInfo().firstKey();
-        MemberInfoContext context = MemberInfoContext.publicInfo(member, defaultBuild);
-        view.renderMemberInfo(hook, user, context);
+            Member member = memberOptional.get();
+            GameBuild defaultBuild = member.getGameInfo().firstKey();
+            MemberInfoContext context = MemberInfoContext.publicInfo(member, defaultBuild);
+            view.renderMemberInfo(hook, user, context);
+
+            log.debug("Displayed member info for user {} ({})", user.getAsTag(), user.getIdLong());
+        } catch (Exception e) {
+            log.error("Error rendering member info for user {} ({})", user.getAsTag(), user.getIdLong(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     public void handleBuildSelection(StringSelectEvent selectEvent, MemberInfoContext context, String selectedValue) {
-        selectEvent.deferEdit().queue();
+        User user = selectEvent.getUser();
+        try {
+            selectEvent.deferEdit().queue();
 
-        GameBuild selectedBuild = GameBuild.valueOf(selectedValue);
-        MemberInfoContext newContext = context.withBuild(selectedBuild);
-        view.updateUserInfo(selectEvent.getHook(), selectEvent.getUser(), newContext);
+            GameBuild selectedBuild = GameBuild.valueOf(selectedValue);
+            MemberInfoContext newContext = context.withBuild(selectedBuild);
+            view.updateUserInfo(selectEvent.getHook(), user, newContext);
+            log.debug("Displayed updated member info for user {} ({})", user.getAsTag(), user.getIdLong());
+        } catch (Exception e) {
+            log.error("Error handling build selection for user {} ({})", user.getAsTag(), user.getIdLong(), e);
+            throw new RuntimeException(e);
+        }
     }
 
     @Value

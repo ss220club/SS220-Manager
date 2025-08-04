@@ -20,15 +20,15 @@ public class GameBuildStrategyService {
 
     public GameApiClient getGameApiClient(GameBuild gameBuild) {
         return Optional.ofNullable(gameApiClients.get(gameBuild))
-                .orElseThrow(() -> unsupported("Game API client not available for build: " + gameBuild.getName()));
+                .orElseThrow(() -> throwError("Game API client not available for build: " + gameBuild.getName()));
     }
 
     public CharacterRepositoryAdapter getCharacterRepository(GameBuild gameBuild) {
         return Optional.ofNullable(characterRepositories.get(gameBuild))
-                .orElseThrow(() -> unsupported("Character repository not available for build: " + gameBuild.getName()));
+                .orElseThrow(() -> throwError("Character repository not available for build: " + gameBuild.getName()));
     }
 
-    private RuntimeException unsupported(String message) {
+    private RuntimeException throwError(String message) {
         return new UnsupportedOperationException(message);
     }
 }

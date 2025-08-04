@@ -107,6 +107,8 @@ public class Senders {
                     .addFiles(stacktraceFile)
                     .setAllowedMentions(Collections.emptyList())
                     .queue();
+
+            log.debug("Sent error report");
         } catch (Exception e) {
             log.error("Error sending error report", e);
         }

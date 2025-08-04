@@ -9,7 +9,6 @@ import club.ss220.manager.model.GameCharacter;
 import club.ss220.manager.model.Member;
 import club.ss220.manager.model.Player;
 import club.ss220.manager.model.RoleCategory;
-import com.ibm.icu.text.MessageFormat;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import io.github.freya022.botcommands.api.components.SelectMenus;
 import lombok.RequiredArgsConstructor;
@@ -184,7 +183,7 @@ public class MemberInfoView {
                 character.getSlot(), character.getRealName(),
                 getGenderEmoji(character.getGender()).getFormatted(),
                 character.getSpecies().getName(),
-                MessageFormat.format(ageFormat, character.getAge()));
+                formatters.formatPlural(ageFormat, character.getAge()));
     }
 
     private Emoji getGenderEmoji(GameCharacter.Gender gender) {
