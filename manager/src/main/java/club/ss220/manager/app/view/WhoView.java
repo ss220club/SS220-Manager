@@ -18,12 +18,8 @@ public class WhoView {
     private final Senders senders;
 
     public void renderPlayersOnline(InteractionHook hook, GameServer gameServer, List<String> playersOnline) {
-        renderPlayersOnlineForServer(hook, gameServer, playersOnline);
-    }
-
-    public void renderPlayersOnlineForServer(InteractionHook hook, GameServer gameServer, List<String> playersOnline) {
         MessageEmbed embed = createPlayersOnlineForServerEmbed(gameServer, playersOnline);
-        senders.sendEmbed(hook, embed);
+        senders.sendEmbedEphemeral(hook, embed);
     }
 
     private MessageEmbed createPlayersOnlineForServerEmbed(GameServer gameServer, List<String> playersOnline) {

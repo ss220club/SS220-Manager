@@ -24,7 +24,7 @@ public class AdminsView {
 
     public void renderOnlineAdmins(InteractionHook hook, Map<GameServer, List<OnlineAdminStatus>> onlineAdmins) {
         MessageEmbed embed = createOnlineAdminsEmbed(onlineAdmins);
-        senders.sendEmbed(hook, embed);
+        senders.sendEmbedEphemeral(hook, embed);
     }
 
     private MessageEmbed createOnlineAdminsEmbed(Map<GameServer, List<OnlineAdminStatus>> serversAdmins) {

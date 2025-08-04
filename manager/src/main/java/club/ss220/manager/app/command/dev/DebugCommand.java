@@ -24,7 +24,7 @@ public class DebugCommand extends ApplicationCommand {
                                    @SlashOption(description = "Игровой сервер.", usePredefinedChoices = true)
                                    GameServer server) {
         log.debug("Executing /debug command, server: {}", server.getFullName());
-        event.deferReply().queue();
+        event.deferReply(true).queue();
 
         debugController.showServerDebugInfo(event.getHook(), server);
     }

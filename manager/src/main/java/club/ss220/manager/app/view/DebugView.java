@@ -25,7 +25,7 @@ public class DebugView {
 
     public void renderServerStatus(InteractionHook hook, GameServer server, GameServerStatus serverStatus) {
         MessageEmbed embed = createServerStatusEmbed(server, serverStatus);
-        senders.sendEmbed(hook, embed);
+        senders.sendEmbedEphemeral(hook, embed);
     }
 
     private MessageEmbed createServerStatusEmbed(GameServer server, GameServerStatus serverStatus) {

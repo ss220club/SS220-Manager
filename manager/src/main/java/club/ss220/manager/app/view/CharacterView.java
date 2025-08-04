@@ -23,17 +23,17 @@ public class CharacterView {
 
     public void renderCharactersInfo(InteractionHook hook, List<GameCharacter> characters) {
         MessageEmbed embed = createCharactersInfoEmbed(characters);
-        senders.sendEmbed(hook, embed);
+        senders.sendEmbedEphemeral(hook, embed);
     }
 
     public void renderNoCharactersFound(InteractionHook hook, String query) {
         MessageEmbed embed = embeds.error("Персонажи по запросу '" + query + "' не найдены.");
-        senders.sendEmbed(hook, embed);
+        senders.sendEmbedEphemeral(hook, embed);
     }
 
     public void renderUnsupportedBuild(InteractionHook hook, GameBuild build) {
         MessageEmbed embed = embeds.error(build.getName() + " пока не поддерживает поиск персонажей.");
-        senders.sendEmbed(hook, embed);
+        senders.sendEmbedEphemeral(hook, embed);
     }
 
     private MessageEmbed createCharactersInfoEmbed(List<GameCharacter> characters) {
