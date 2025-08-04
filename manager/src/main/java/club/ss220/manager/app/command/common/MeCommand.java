@@ -18,6 +18,7 @@ public class MeCommand extends ApplicationCommand {
 
     @JDASlashCommand(name = "me", description = "Показать информацию о себе.")
     public void onSlashInteraction(GuildSlashEvent event) {
+        log.debug("Executing /me command");
         event.deferReply(true).queue();
 
         User discordUser = event.getUser();

@@ -47,7 +47,7 @@ public abstract class AbstractGameApiClient implements GameApiClient {
 
     protected <T> T executeCommand(GameServer gameServer, String command, TypeReference<T> typeRef) throws IOException {
         String fullCommand = buildCommand(gameServer, command);
-        log.debug("Executing command '{}' on {}:{}", fullCommand, gameServer.getHost(), gameServer.getPort());
+        log.debug("Executing topic '{}' on {}:{}", fullCommand, gameServer.getHost(), gameServer.getPort());
 
         byte[] responseBytes = sendReceiveData(gameServer, fullCommand);
         Object raw = decodeByondResponse(responseBytes).get("data");

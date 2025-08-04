@@ -21,7 +21,9 @@ public class WhoCommand extends ApplicationCommand {
     public void onSlashInteraction(GuildSlashEvent event,
                                    @SlashOption(description = "Игровой сервер.", usePredefinedChoices = true)
                                    GameServer server) {
+        log.debug("Executing /who command, server: {}", server.getFullName());
         event.deferReply().queue();
+
         whoController.showPlayersOnServer(event.getHook(), server);
     }
 }
