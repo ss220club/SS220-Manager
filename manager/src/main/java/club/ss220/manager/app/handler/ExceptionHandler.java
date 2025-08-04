@@ -2,6 +2,7 @@ package club.ss220.manager.app.handler;
 
 import club.ss220.manager.app.util.Embeds;
 import club.ss220.manager.app.util.Senders;
+import com.google.common.collect.ImmutableMap;
 import io.github.freya022.botcommands.api.core.GlobalExceptionHandlerAdapter;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.entities.IMentionable;
@@ -57,7 +58,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
     @Override
     public void handle(@NotNull MessageReceivedEvent event, @NotNull Throwable throwable) {
         String message = "Произошла ошибка при обработке сообщения.";
-        Map<String, Object> context = Map.of(
+        Map<String, Object> context = ImmutableMap.of(
                 "channel", event.getChannel().getAsMention(),
                 "message", event.getMessage().getJumpUrl()
         );
@@ -69,7 +70,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
         String message = "Произошла ошибка при выполнении команды.";
         Map<String, String> options = event.getInteraction().getOptions().stream()
                 .collect(Collectors.toMap(OptionMapping::getName, OptionMapping::getAsString));
-        Map<String, Object> context = Map.of(
+        Map<String, Object> context = ImmutableMap.of(
                 "channel", event.getChannel().getAsMention(),
                 "command", event.getName(),
                 "parameters", StringUtils.join(options)
@@ -80,7 +81,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
     @Override
     public void handle(@NotNull MessageContextInteractionEvent event, @NotNull Throwable throwable) {
         String message = "Произошла ошибка при взаимодействии с сообщением через контекстное меню.";
-        Map<String, Object> context = Map.of(
+        Map<String, Object> context = ImmutableMap.of(
                 "channel", Optional.ofNullable(event.getChannel()).map(Channel::getAsMention).orElse("null"),
                 "message", event.getTarget().getJumpUrl(),
                 "command", event.getInteraction().getName()
@@ -91,7 +92,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
     @Override
     public void handle(@NotNull UserContextInteractionEvent event, @NotNull Throwable throwable) {
         String message = "Произошла ошибка при взаимодействии с пользователем через контекстное меню.";
-        Map<String, Object> context = Map.of(
+        Map<String, Object> context = ImmutableMap.of(
                 "channel", Optional.ofNullable(event.getChannel()).map(Channel::getAsMention).orElse("null"),
                 "user", event.getTarget().getAsMention(),
                 "command", event.getInteraction().getName()
@@ -106,7 +107,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
         if (event.getButton().getEmoji() != null) {
             button = event.getButton().getEmoji().getFormatted() + " " + button;
         }
-        Map<String, Object> context = Map.of(
+        Map<String, Object> context = ImmutableMap.of(
                 "channel", event.getChannel().getAsMention(),
                 "button", button
         );
@@ -120,7 +121,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
                 .collect(Collectors.toMap(SelectOption::getLabel, SelectOption::getValue));
         Map<String, String> selectedOptions = event.getSelectedOptions().stream()
                 .collect(Collectors.toMap(SelectOption::getLabel, SelectOption::getValue));
-        Map<String, Object> context = Map.of(
+        Map<String, Object> context = ImmutableMap.of(
                 "channel", event.getChannel().getAsMention(),
                 "placeholder", String.valueOf(event.getSelectMenu().getPlaceholder()),
                 "options", StringUtils.join(options),
@@ -133,7 +134,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
     public void handle(@NotNull EntitySelectInteractionEvent event, @NotNull Throwable throwable) {
         String message = "Произошла ошибка при взаимодействии с выпадающим списком сущностей.";
         List<String> options = event.getValues().stream().map(IMentionable::getAsMention).toList();
-        Map<String, Object> context = Map.of(
+        Map<String, Object> context = ImmutableMap.of(
                 "channel", event.getChannel().getAsMention(),
                 "placeholder", String.valueOf(event.getSelectMenu().getPlaceholder()),
                 "options", StringUtils.join(options)
@@ -146,7 +147,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
         String message = "Произошла ошибка при взаимодействии с модальным окном.";
         Map<String, String> values = event.getValues().stream()
                 .collect(Collectors.toMap(ModalMapping::getId, ModalMapping::getAsString));
-        Map<String, Object> context = Map.of(
+        Map<String, Object> context = ImmutableMap.of(
                 "channel", event.getChannel().getAsMention(),
                 "message", Optional.ofNullable(event.getMessage()).map(Message::getJumpUrl).orElse("null"),
                 "modalId", event.getModalId(),
@@ -158,7 +159,7 @@ public class ExceptionHandler extends GlobalExceptionHandlerAdapter {
     @Override
     public void handle(@Nullable Event event, @NotNull Throwable throwable) {
         String message = "Произошла неизвестная ошибка.";
-        Map<String, Object> context = Map.of();
+        Map<String, Object> context = ImmutableMap.of();
         handleError(event, throwable, message, context);
     }
 
