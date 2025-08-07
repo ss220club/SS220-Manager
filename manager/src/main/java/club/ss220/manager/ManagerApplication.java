@@ -32,7 +32,7 @@ import java.util.Set;
 @Service
 @EnableScheduling
 @SpringBootApplication(scanBasePackages = "club.ss220")
-public class Application extends JDAService {
+public class ManagerApplication extends JDAService {
 
     private final ResourceLoader resourceLoader;
     private final JDAConfiguration jdaConfig;
@@ -40,10 +40,10 @@ public class Application extends JDAService {
     private final String profileName;
     private final Icon profileAvatar;
 
-    public Application(ResourceLoader resourceLoader, JDAConfiguration jdaConfig,
-                       @Value("${application.token}") String token,
-                       @Value("${application.profile.name}") String profileName,
-                       @Value("${application.profile.avatar}") String profileAvatarUri) {
+    public ManagerApplication(ResourceLoader resourceLoader, JDAConfiguration jdaConfig,
+                              @Value("${application.token}") String token,
+                              @Value("${application.profile.name}") String profileName,
+                              @Value("${application.profile.avatar}") String profileAvatarUri) {
         this.resourceLoader = resourceLoader;
         this.jdaConfig = jdaConfig;
         this.token = token;
@@ -80,7 +80,7 @@ public class Application extends JDAService {
     }
 
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(ManagerApplication.class, args);
     }
 
     private class OnReadyListener extends ListenerAdapter {

@@ -16,6 +16,7 @@
 
     <modules>
         <module>core</module>
+        <module>central-api</module>
         <module>manager</module>
     </modules>
 
@@ -24,7 +25,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jda.version>5.6.1</jda.version>
         <bc.version>3.0.0-beta.2</bc.version>
-        <flyway-core.version>11.10.4</flyway-core.version>
         <commons-text.version>1.14.0</commons-text.version>
         <icu4j.version>77.1</icu4j.version>
         <guava.version>33.4.8-jre</guava.version>
@@ -45,7 +45,12 @@
             <dependency>
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-core</artifactId>
-                <version>${flyway-core.version}</version>
+                <version>${flyway.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.flywaydb</groupId>
+                <artifactId>flyway-mysql</artifactId>
+                <version>${flyway.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.google.guava</groupId>
