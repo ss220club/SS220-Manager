@@ -1,7 +1,7 @@
 package club.ss220.manager.app.command.staff;
 
+import club.ss220.core.model.GameBuild;
 import club.ss220.manager.app.controller.CharacterController;
-import club.ss220.manager.model.GameBuild;
 import io.github.freya022.botcommands.api.commands.annotations.Command;
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand;
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent;

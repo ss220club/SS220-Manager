@@ -1,7 +1,7 @@
 package club.ss220.manager.app.command.dev;
 
+import club.ss220.core.model.GameServer;
 import club.ss220.manager.app.controller.DebugController;
-import club.ss220.manager.model.GameServer;
 import io.github.freya022.botcommands.api.commands.annotations.Command;
 import io.github.freya022.botcommands.api.commands.application.ApplicationCommand;
 import io.github.freya022.botcommands.api.commands.application.slash.GuildSlashEvent;

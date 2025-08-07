@@ -1,7 +1,7 @@
 package club.ss220.manager.app.view;
 
+import club.ss220.core.model.GameServer;
 import club.ss220.manager.app.util.Senders;
-import club.ss220.manager.model.GameServer;
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;

@@ -1,8 +1,8 @@
 package club.ss220.manager.app.controller;
 
+import club.ss220.core.model.GameBuild;
+import club.ss220.core.model.Member;
 import club.ss220.manager.app.view.MemberInfoView;
-import club.ss220.manager.model.GameBuild;
-import club.ss220.manager.model.Member;
 import club.ss220.manager.model.MemberTarget;
 import club.ss220.manager.service.MemberTargetService;
 import io.github.freya022.botcommands.api.components.event.StringSelectEvent;

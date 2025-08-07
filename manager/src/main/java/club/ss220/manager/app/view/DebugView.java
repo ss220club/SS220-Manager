@@ -1,8 +1,8 @@
 package club.ss220.manager.app.view;
 
+import club.ss220.core.model.GameServer;
+import club.ss220.core.model.GameServerStatus;
 import club.ss220.manager.app.util.Senders;
-import club.ss220.manager.model.GameServer;
-import club.ss220.manager.model.GameServerStatus;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;

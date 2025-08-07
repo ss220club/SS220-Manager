@@ -1,9 +1,9 @@
 package club.ss220.manager.app.controller;
 
+import club.ss220.core.model.GameServer;
+import club.ss220.core.model.GameServerStatus;
+import club.ss220.core.service.GameServerService;
 import club.ss220.manager.app.view.OnlineView;
-import club.ss220.manager.model.GameServer;
-import club.ss220.manager.model.GameServerStatus;
-import club.ss220.manager.service.GameServerService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.interactions.InteractionHook;

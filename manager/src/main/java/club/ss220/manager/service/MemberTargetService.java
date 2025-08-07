@@ -1,6 +1,7 @@
 package club.ss220.manager.service;
 
-import club.ss220.manager.model.Member;
+import club.ss220.core.model.Member;
+import club.ss220.core.service.MemberService;
 import club.ss220.manager.model.MemberTarget;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

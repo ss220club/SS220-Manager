@@ -1,6 +1,6 @@
 package club.ss220.manager.app.util;
 
-import club.ss220.manager.config.FormatConfig;
+import club.ss220.core.config.FormatConfig;
 import com.ibm.icu.text.MessageFormat;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Component;

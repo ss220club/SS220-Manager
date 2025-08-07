@@ -1,6 +1,6 @@
 package club.ss220.manager.app.pagination;
 
-import club.ss220.manager.service.PaginatedQuery;
+import club.ss220.core.service.PaginatedQuery;
 import lombok.Builder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
 import net.dv8tion.jda.api.interactions.components.selections.SelectOption;

@@ -1,9 +1,9 @@
 package club.ss220.manager.app.controller;
 
+import club.ss220.core.model.GameBuild;
+import club.ss220.core.model.GameCharacter;
+import club.ss220.core.service.GameCharacterService;
 import club.ss220.manager.app.view.CharacterView;
-import club.ss220.manager.model.GameBuild;
-import club.ss220.manager.model.GameCharacter;
-import club.ss220.manager.service.GameCharacterService;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.dv8tion.jda.api.interactions.InteractionHook;

@@ -1,7 +1,7 @@
 package club.ss220.manager.app.pagination;
 
+import club.ss220.core.service.PaginatedQuery;
 import club.ss220.manager.app.util.Embeds;
-import club.ss220.manager.service.PaginatedQuery;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import io.github.freya022.botcommands.api.ReceiverConsumer;
 import io.github.freya022.botcommands.api.components.Button;

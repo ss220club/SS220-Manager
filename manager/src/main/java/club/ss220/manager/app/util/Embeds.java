@@ -1,8 +1,8 @@
 package club.ss220.manager.app.util;
 
+import club.ss220.core.model.Ban;
 import club.ss220.manager.app.pagination.PaginationData;
 import club.ss220.manager.app.view.UiConstants;
-import club.ss220.manager.model.Ban;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;

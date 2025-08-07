@@ -15,12 +15,13 @@
     <description>SS220 Infrastructure POM</description>
 
     <modules>
+        <module>core</module>
         <module>manager</module>
     </modules>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <java.version>24</java.version>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <jda.version>5.6.1</jda.version>
         <bc.version>3.0.0-beta.2</bc.version>
         <flyway-core.version>11.10.4</flyway-core.version>

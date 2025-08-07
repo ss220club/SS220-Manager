@@ -1,15 +1,15 @@
 package club.ss220.manager.app.view;
 
+import club.ss220.core.model.GameBuild;
+import club.ss220.core.model.GameCharacter;
+import club.ss220.core.model.Member;
+import club.ss220.core.model.Player;
+import club.ss220.core.model.RoleCategory;
 import club.ss220.manager.app.controller.MemberInfoController;
 import club.ss220.manager.app.util.Embeds;
 import club.ss220.manager.app.util.Formatters;
 import club.ss220.manager.app.util.Senders;
-import club.ss220.manager.model.GameBuild;
-import club.ss220.manager.model.GameCharacter;
-import club.ss220.manager.model.Member;
-import club.ss220.manager.model.Player;
 import club.ss220.manager.model.MemberTarget;
-import club.ss220.manager.model.RoleCategory;
 import dev.freya02.jda.emojis.unicode.Emojis;
 import io.github.freya022.botcommands.api.components.SelectMenus;
 import lombok.RequiredArgsConstructor;

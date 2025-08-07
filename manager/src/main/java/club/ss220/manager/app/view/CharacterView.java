@@ -1,10 +1,10 @@
 package club.ss220.manager.app.view;
 
+import club.ss220.core.model.GameBuild;
+import club.ss220.core.model.GameCharacter;
 import club.ss220.manager.app.util.Embeds;
 import club.ss220.manager.app.util.Formatters;
 import club.ss220.manager.app.util.Senders;
-import club.ss220.manager.model.GameBuild;
-import club.ss220.manager.model.GameCharacter;
 import lombok.AllArgsConstructor;
 import net.dv8tion.jda.api.EmbedBuilder;
 import net.dv8tion.jda.api.entities.MessageEmbed;
