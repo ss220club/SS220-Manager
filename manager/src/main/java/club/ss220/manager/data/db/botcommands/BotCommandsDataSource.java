@@ -10,11 +10,14 @@ import org.springframework.stereotype.Repository;
 import javax.sql.DataSource;
 
 @Repository
-public class PersistenceSource implements HikariSourceSupplier {
+public class BotCommandsDataSource implements HikariSourceSupplier {
+
+    private static final String SCHEMA = "bc";
+    private static final String MIGRATION_DIRECTORY = "bc_database_scripts";
 
     private final HikariDataSource source;
 
-    public PersistenceSource(@Qualifier("persistenceDataSource") DataSource persistenceDataSource) {
+    public BotCommandsDataSource(@Qualifier("bcDataSource") DataSource persistenceDataSource) {
         if (!(persistenceDataSource instanceof HikariDataSource)) {
             throw new IllegalArgumentException("Expected HikariDataSource for persistence");
         }
@@ -26,8 +29,8 @@ public class PersistenceSource implements HikariSourceSupplier {
     private void applyMigration() {
         Flyway.configure()
                 .dataSource(source)
-                .schemas("bc")
-                .locations("bc_database_scripts")
+                .schemas(SCHEMA)
+                .locations(MIGRATION_DIRECTORY)
                 .validateMigrationNaming(true)
                 .loggers("slf4j")
                 .load()

@@ -1,10 +1,10 @@
 package club.ss220.manager.model;
 
 import club.ss220.manager.config.GameConfig;
+import club.ss220.manager.model.exception.UnknownGameBuildException;
 import lombok.Getter;
 
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 
 @Getter
 public enum GameBuild {
@@ -23,6 +23,6 @@ public enum GameBuild {
         return Arrays.stream(GameBuild.values())
                      .filter(build -> build.name.equalsIgnoreCase(name))
                      .findFirst()
-                     .orElseThrow(() -> new NoSuchElementException("Unknown game build: " + name));
+                     .orElseThrow(() -> new UnknownGameBuildException(name));
     }
 }

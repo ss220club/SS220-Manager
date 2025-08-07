@@ -1,6 +1,6 @@
 package club.ss220.manager.service;
 
-import club.ss220.manager.data.api.impl.CentralApiClientImpl;
+import club.ss220.manager.data.api.CentralApiClient;
 import club.ss220.manager.data.api.MemberDto;
 import club.ss220.manager.data.db.game.PlayerRepositoryAdapter;
 import club.ss220.manager.data.mapper.Mappers;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @AllArgsConstructor
 public class MemberService {
 
-    private final CentralApiClientImpl centralApiClient;
+    private final CentralApiClient centralApiClient;
     private final List<PlayerRepositoryAdapter> playerRepositories;
     private final Mappers mappers;
 
@@ -36,6 +36,7 @@ public class MemberService {
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .toList();
+
         return mappers.toMember(memberDto, players);
     }
 }

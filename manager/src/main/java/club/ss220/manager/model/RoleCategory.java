@@ -1,5 +1,6 @@
 package club.ss220.manager.model;
 
+import club.ss220.manager.model.exception.UnknownRoleCategoryException;
 import lombok.Getter;
 
 @Getter
@@ -32,6 +33,10 @@ public enum RoleCategory {
     }
 
     public static RoleCategory fromValue(String value) {
-        return RoleCategory.valueOf(value.toUpperCase());
+        try {
+            return RoleCategory.valueOf(value.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new UnknownRoleCategoryException(value);
+        }
     }
 }

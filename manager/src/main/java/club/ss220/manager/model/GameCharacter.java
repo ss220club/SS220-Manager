@@ -1,11 +1,11 @@
 package club.ss220.manager.model;
 
+import club.ss220.manager.model.exception.UnknownCharacterSpeciesException;
 import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 
 import java.util.Arrays;
-import java.util.NoSuchElementException;
 
 @Data
 @Builder
@@ -61,7 +61,7 @@ public class GameCharacter {
             return Arrays.stream(Species.values())
                     .filter(species -> species.getName().equalsIgnoreCase(name))
                     .findFirst()
-                    .orElseThrow(() -> new NoSuchElementException("Unknown species: " + name));
+                    .orElseThrow(() -> new UnknownCharacterSpeciesException(name));
         }
     }
 }

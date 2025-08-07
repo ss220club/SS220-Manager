@@ -24,8 +24,7 @@ public class StatusController {
 
             log.debug("Displayed application status for guild {}", guild.getId());
         } catch (Exception e) {
-            log.error("Error displaying application status", e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error displaying application status for guild " + guild, e);
         }
     }
 }

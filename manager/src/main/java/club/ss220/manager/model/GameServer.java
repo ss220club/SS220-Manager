@@ -1,16 +1,27 @@
 package club.ss220.manager.model;
 
 import lombok.Builder;
-import lombok.Data;
+import lombok.ToString;
+import lombok.Value;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-@Data
+@Value
 @Builder
 public class GameServer {
-    private final String name;
-    private final GameBuild build;
-    private final String host;
-    private final int port;
-    private final String key;
+
+    @NotNull
+    String name;
+    @NotNull
+    GameBuild build;
+    @NotNull
+    @ToString.Exclude
+    String host;
+    @ToString.Exclude
+    int port;
+    @ToString.Exclude
+    @Nullable
+    String key;
 
     public String getFullName() {
         return build.getName() + " " + name;

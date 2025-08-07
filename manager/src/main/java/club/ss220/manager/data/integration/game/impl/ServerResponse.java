@@ -5,6 +5,7 @@ import com.fasterxml.jackson.annotation.JsonAnySetter;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NoSuchElementException;
 
 public class ServerResponse {
 
@@ -22,5 +23,9 @@ public class ServerResponse {
     @JsonAnySetter
     public void setData(String key, Object value) {
         data.put(key, value);
+    }
+
+    protected static RuntimeException propertyNotFound(String property) {
+        return new NoSuchElementException("Property '" + property + "' was not found in the server response");
     }
 }

@@ -27,7 +27,6 @@ public class CharacterController {
                 log.debug("Found 0 characters for query '{}', build {}", name, build.getName());
                 return;
             }
-            
             view.renderCharactersInfo(hook, characters);
 
             log.debug("Displayed {} characters for query '{}', build {}", characters.size(), name, build.getName());
@@ -35,8 +34,7 @@ public class CharacterController {
             log.warn("Character search not supported for build {}", build.getName());
             view.renderUnsupportedBuild(hook, build);
         } catch (Exception e) {
-            log.error("Error searching characters for query '{}', build {}", name, build.getName(), e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error displaying characters for query '" + name + "'", e);
         }
     }
 }

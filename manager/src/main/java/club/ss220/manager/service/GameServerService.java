@@ -30,14 +30,11 @@ public class GameServerService {
     public Map<GameServer, GameServerStatus> getAllServersStatus() {
         return Flux.fromIterable(gameConfig.getServers())
                 .flatMap(server -> Mono.fromCallable(() -> getGameApiClient(server))
-                        .onErrorResume(e -> {
-                            log.error(e.getMessage(), e);
-                            return Mono.empty();
-                        })
                         .flatMap(client -> client.getServerStatus(server)
                                 .map(status -> Map.entry(server, status))
                         )
                         .onErrorResume(e -> {
+                            // We don't want one server to ruin the whole process so we just skip it with an error log.
                             log.error("Error getting status for server: {}", server.getFullName(), e);
                             return Mono.empty();
                         })
@@ -53,14 +50,10 @@ public class GameServerService {
     public Map<GameServer, List<OnlineAdminStatus>> getAllAdminsList() {
         return Flux.fromIterable(gameConfig.getServers())
                 .flatMap(server -> Mono.fromCallable(() -> getGameApiClient(server))
-                        .onErrorResume(e -> {
-                            log.error(e.getMessage(), e);
-                            return Mono.empty();
-                        })
                         .flatMap(client -> client.getAdminsList(server)
                                 .onErrorResume(e -> {
-                                    log.error("Failed to get admins from server: {}", server.getName(),
-                                              e);
+                                    // We don't want one server to ruin the whole process so we just skip it with an error log.
+                                    log.error("Failed to get admins from server: {}", server.getFullName(), e);
                                     return Mono.empty();
                                 })
                                 .map(list -> Map.entry(server, list))

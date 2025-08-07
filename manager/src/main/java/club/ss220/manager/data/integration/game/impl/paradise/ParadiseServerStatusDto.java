@@ -2,6 +2,7 @@ package club.ss220.manager.data.integration.game.impl.paradise;
 
 import club.ss220.manager.data.integration.game.impl.ServerResponse;
 import club.ss220.manager.model.GameServerStatus;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.util.Collections;
@@ -10,30 +11,37 @@ import java.util.Optional;
 
 public class ParadiseServerStatusDto extends ServerResponse implements GameServerStatus {
 
+    @NotNull
     @Override
     public Integer getPlayers() {
-        return Optional.ofNullable(data.get("players"))
+        String property = "players";
+        return Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
                 .map(Integer::parseInt)
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
     }
 
+    @NotNull
     @Override
     public Integer getAdmins() {
-        return Optional.ofNullable(data.get("admins"))
+        String property = "admins";
+        return Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
                 .map(Integer::parseInt)
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
     }
 
+    @NotNull
     @Override
     public Duration getRoundDuration() {
-        return Optional.ofNullable(data.get("roundtime"))
+        String property = "roundtime";
+        return Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
                 .map(ParadiseServerStatusDto::parseDuration)
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
     }
 
+    @NotNull
     @Override
     public Map<String, Object> getRawData() {
         return Collections.unmodifiableMap(data);

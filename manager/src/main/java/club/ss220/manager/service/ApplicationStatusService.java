@@ -1,14 +1,13 @@
 package club.ss220.manager.service;
 
-import club.ss220.manager.data.db.botcommands.PersistenceSource;
 import club.ss220.manager.model.ApplicationStatus;
-import com.zaxxer.hikari.HikariDataSource;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
+import javax.sql.DataSource;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.ThreadMXBean;
@@ -21,15 +20,15 @@ import java.util.List;
 public class ApplicationStatusService {
 
     private final Environment environment;
-    private final PersistenceSource persistenceSource;
+    private final DataSource bcDataSource;
     private final String revision;
 
     private final Instant startTime = Instant.now();
 
-    public ApplicationStatusService(Environment environment, PersistenceSource persistenceSource,
+    public ApplicationStatusService(Environment environment, DataSource bcDataSource,
                                     @Value("${spring.application.revision}") String revision) {
         this.environment = environment;
-        this.persistenceSource = persistenceSource;
+        this.bcDataSource = bcDataSource;
         this.revision = revision;
     }
 
@@ -65,8 +64,7 @@ public class ApplicationStatusService {
     }
 
     private boolean getPersistenceStatus() {
-        HikariDataSource dataSource = persistenceSource.getSource();
-        try (Connection connection = dataSource.getConnection()) {
+        try (Connection connection = bcDataSource.getConnection()) {
             int timeout = 5;
             return connection.isValid(timeout);
         } catch (Exception e) {

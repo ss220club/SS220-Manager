@@ -18,8 +18,9 @@ public class OnlineCommand extends ApplicationCommand {
     @JDASlashCommand(name = "online", description = "Показать текущий онлайн.")
     public void onSlashInteraction(GuildSlashEvent event) {
         log.debug("Executing /online command");
-        event.deferReply(true).queue();
 
+        boolean ephemeral = true;
+        event.deferReply(ephemeral).queue();
         onlineController.showPlayersOnline(event.getHook());
     }
 }

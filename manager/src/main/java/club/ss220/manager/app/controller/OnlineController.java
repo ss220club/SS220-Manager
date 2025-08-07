@@ -26,8 +26,7 @@ public class OnlineController {
 
             log.debug("Displayed online players for {} servers", serversStatuses.size());
         } catch (Exception e) {
-            log.error("Error displaying players online", e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error displaying online players", e);
         }
     }
 }

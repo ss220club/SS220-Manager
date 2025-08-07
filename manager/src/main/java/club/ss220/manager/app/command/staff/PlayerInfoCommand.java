@@ -38,8 +38,9 @@ public class PlayerInfoCommand extends ApplicationCommand {
     public void onUserInteraction(GuildUserEvent event) {
         User target = event.getTarget();
         log.debug("Executing user interaction 'Информация об игроке', target: {}", target);
-        event.deferReply(true).queue();
 
+        boolean ephemeral = true;
+        event.deferReply(ephemeral).queue();
         User user = event.getUser();
         memberInfoController.showMemberInfo(event.getHook(), user, target);
     }

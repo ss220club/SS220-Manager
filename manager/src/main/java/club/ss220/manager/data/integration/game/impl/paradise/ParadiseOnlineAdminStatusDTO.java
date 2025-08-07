@@ -11,40 +11,46 @@ public class ParadiseOnlineAdminStatusDTO extends ServerResponse implements Onli
 
     @Override
     public String getCkey() {
-        return Optional.ofNullable(data.get("ckey"))
+        String property = "ckey";
+        return Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
     }
 
     @Override
     public String getKey() {
-        return Optional.ofNullable(data.get("key"))
+        String property = "key";
+        return Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
     }
 
     @Override
     public List<String> getRanks() {
-        String rank = Optional.ofNullable(data.get("rank"))
+        String property = "rank";
+        String rank = Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
         return List.of(rank);
     }
 
     @Override
     public Duration getAfkDuration() {
-        return Optional.ofNullable(data.get("afk"))
+        String property = "afk";
+        return Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
                 .map(Integer::parseInt)
                 .map(deciseconds -> Duration.ofMillis(deciseconds * 100))
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
     }
 
     @Override
     public StealthMode getStealthMode() {
-        String value = Optional.ofNullable(data.get("stealth_mode"))
+        String property = "stealth_mode";
+        String value = Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
+
         String valueLower = value.toLowerCase();
         if (valueLower.contains("stealth")) {
             return StealthMode.STEALTH;
@@ -57,11 +63,13 @@ public class ParadiseOnlineAdminStatusDTO extends ServerResponse implements Onli
 
     @Override
     public String getStealthKey() {
-        if (getStealthMode() == StealthMode.STEALTH) {
+        if (getStealthMode() == StealthMode.NONE) {
             return null;
         }
-        return Optional.ofNullable(data.get("skey"))
+
+        String property = "skey";
+        return Optional.ofNullable(data.get(property))
                 .map(String::valueOf)
-                .orElseThrow();
+                .orElseThrow(() -> propertyNotFound(property));
     }
 }

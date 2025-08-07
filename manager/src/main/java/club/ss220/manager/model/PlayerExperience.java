@@ -1,10 +1,6 @@
 package club.ss220.manager.model;
 
-import lombok.Data;
-import lombok.Getter;
-
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -19,7 +15,7 @@ public abstract class PlayerExperience {
         this.exp = fillExp(exp);
     }
 
-    public abstract List<RoleCategory> getRoles();
+    public abstract List<RoleCategory> getRelevantRoles();
 
     public Optional<Duration> getForRole(RoleCategory role) {
         return Optional.ofNullable(exp.get(role));
@@ -30,7 +26,7 @@ public abstract class PlayerExperience {
     }
 
     private TreeMap<RoleCategory, Duration> fillExp(Map<RoleCategory, Duration> exp) {
-        return getRoles().stream()
+        return getRelevantRoles().stream()
                 .map(role -> Map.entry(role, exp.getOrDefault(role, Duration.ZERO)))
                 .collect(Collectors.toMap(
                         Map.Entry::getKey,

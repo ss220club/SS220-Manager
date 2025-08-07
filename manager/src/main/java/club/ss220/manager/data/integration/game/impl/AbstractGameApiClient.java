@@ -1,7 +1,9 @@
 package club.ss220.manager.data.integration.game.impl;
 
 import club.ss220.manager.data.integration.game.GameApiClient;
+import club.ss220.manager.data.integration.game.exception.GameApiException;
 import club.ss220.manager.model.GameServer;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,9 +23,13 @@ import java.util.Map;
 @Slf4j
 public abstract class AbstractGameApiClient implements GameApiClient {
 
-    public static final int TIMEOUT_MS = 5000;
-
     protected final ObjectMapper objectMapper = new ObjectMapper();
+
+    private static final int TIMEOUT_MS = 5000;
+    private static final int HEADER_BYTES = 4;
+    private static final int HOLDER_BYTES = 6;
+    private static final int MAX_MESSAGE_LENGTH = Short.MAX_VALUE;
+    private static final String DATA_PROPERTY = "data";
 
     @Override
     public Mono<List<String>> getPlayersList(GameServer gameServer) {
@@ -45,13 +51,25 @@ public abstract class AbstractGameApiClient implements GameApiClient {
         return Mono.fromCallable(() -> executeCommand(gameServer, command, typeRef));
     }
 
-    protected <T> T executeCommand(GameServer gameServer, String command, TypeReference<T> typeRef) throws IOException {
+    protected <T> T executeCommand(GameServer gameServer, String command, TypeReference<T> typeRef) {
         String fullCommand = buildCommand(gameServer, command);
         log.debug("Executing topic '{}' on {}:{}", fullCommand, gameServer.getHost(), gameServer.getPort());
 
-        byte[] responseBytes = sendReceiveData(gameServer, fullCommand);
-        Object raw = decodeByondResponse(responseBytes).get("data");
-        return objectMapper.convertValue(raw, typeRef);
+        try {
+            byte[] responseBytes = sendReceiveData(gameServer, fullCommand);
+            Object raw = decodeByondResponse(responseBytes).get(DATA_PROPERTY);
+            return objectMapper.convertValue(raw, typeRef);
+
+        } catch (JsonProcessingException e) {
+            String message = "Error decoding response for command '" + fullCommand + "'";
+            throw new GameApiException(gameServer, message, e);
+        } catch (IOException e) {
+            String message = "Error executing command '" + fullCommand + "'";
+            throw new GameApiException(gameServer, message, e);
+        } catch (IllegalArgumentException e) {
+            String message = "Error converting response to " + typeRef + ", command '" + fullCommand + "'";
+            throw new GameApiException(gameServer, message, e);
+        }
     }
 
     protected String buildCommand(GameServer server, String command) {
@@ -72,7 +90,7 @@ public abstract class AbstractGameApiClient implements GameApiClient {
             socket.getOutputStream().write(packet);
             socket.getOutputStream().flush();
 
-            byte[] buffer = new byte[16384];
+            byte[] buffer = new byte[MAX_MESSAGE_LENGTH];
             int bytesRead = socket.getInputStream().read(buffer);
 
             if (bytesRead <= 0) {
@@ -82,29 +100,33 @@ public abstract class AbstractGameApiClient implements GameApiClient {
             return Arrays.copyOf(buffer, bytesRead);
 
         } catch (SocketTimeoutException e) {
-            log.error("Timeout connecting to server {}:{}", server.getHost(), server.getPort());
-            throw new IOException("Connection timeout", e);
+            throw new GameApiException(server, "Server " + server.getFullName() + " is unavailable", e);
         }
     }
 
     protected byte[] preparePacket(String data) {
         byte[] dataBytes = data.getBytes(StandardCharsets.UTF_8);
-        ByteBuffer buffer = ByteBuffer.allocate(dataBytes.length + 10);
+        int messageLength = dataBytes.length + HOLDER_BYTES;
+        if (messageLength > MAX_MESSAGE_LENGTH) {
+            throw new IllegalArgumentException("Message '" + data + "' exceeds maximum length:" + MAX_MESSAGE_LENGTH);
+        }
+
+        ByteBuffer buffer = ByteBuffer.allocate(dataBytes.length + HEADER_BYTES + HOLDER_BYTES);
         buffer.put((byte) 0x00);
         buffer.put((byte) 0x83);
-        buffer.putShort((short) (dataBytes.length + 6));
+        buffer.putShort((short) (dataBytes.length + HOLDER_BYTES));
         buffer.put(new byte[]{0x00, 0x00, 0x00, 0x00, 0x00});
         buffer.put(dataBytes);
         buffer.put((byte) 0x00);
         return buffer.array();
     }
 
-    protected Map<String, Object> decodeByondResponse(byte[] data) throws IOException {
-        if (data.length <= 6) {
+    protected Map<String, Object> decodeByondResponse(byte[] data) throws JsonProcessingException {
+        if (data.length <= HOLDER_BYTES) {
             return Map.of();
         }
 
-        byte[] jsonBytes = Arrays.copyOfRange(data, 5, data.length - 1);
+        byte[] jsonBytes = Arrays.copyOfRange(data, HOLDER_BYTES - 1, data.length - 1);
         String jsonString = new String(jsonBytes, StandardCharsets.UTF_8);
         if (jsonString.isEmpty()) {
             return Map.of();
@@ -112,11 +134,11 @@ public abstract class AbstractGameApiClient implements GameApiClient {
 
         JsonNode node = objectMapper.readTree(jsonString);
         if (node.isArray()) {
-            return Map.of("data", objectMapper.convertValue(node, List.class));
+            return Map.of(DATA_PROPERTY, objectMapper.convertValue(node, List.class));
         } else if (node.isObject()) {
-            return Map.of("data", objectMapper.convertValue(node, Map.class));
+            return Map.of(DATA_PROPERTY, objectMapper.convertValue(node, Map.class));
         }
 
-        return Map.of("data", new Object());
+        return Map.of(DATA_PROPERTY, new Object());
     }
 }

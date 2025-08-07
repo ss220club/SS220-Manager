@@ -19,12 +19,12 @@ import javax.sql.DataSource;
 
 @Configuration
 @EnableTransactionManagement
-@EnableJpaRepositories(basePackages = PersistenceDataSourceConfig.PACKAGE,
-                       entityManagerFactoryRef = PersistenceDataSourceConfig.EMF_REF,
-                       transactionManagerRef = PersistenceDataSourceConfig.TX_MANAGER_REF)
-public class PersistenceDataSourceConfig {
+@EnableJpaRepositories(basePackages = BotCommandsDataSourceConfig.PACKAGE,
+                       entityManagerFactoryRef = BotCommandsDataSourceConfig.EMF_REF,
+                       transactionManagerRef = BotCommandsDataSourceConfig.TX_MANAGER_REF)
+public class BotCommandsDataSourceConfig {
 
-    public static final String UNIT_NAME = "persistence";
+    public static final String UNIT_NAME = "bc";
     public static final String PROPERTIES_PREFIX = "spring.datasource." + UNIT_NAME;
     public static final String EMF_REF = UNIT_NAME + "EMF";
     public static final String TX_MANAGER_REF = UNIT_NAME + "TxManager";
@@ -32,24 +32,24 @@ public class PersistenceDataSourceConfig {
 
     @Bean
     @ConfigurationProperties(PROPERTIES_PREFIX)
-    public DataSourceProperties persistenceDataSourceProperties() {
+    public DataSourceProperties bcDataSourceProperties() {
         return new DataSourceProperties();
     }
 
     @Bean
     @Primary
     @FlywayDataSource
-    public DataSource persistenceDataSource() {
-        return persistenceDataSourceProperties().initializeDataSourceBuilder().build();
+    public DataSource bcDataSource() {
+        return bcDataSourceProperties().initializeDataSourceBuilder().build();
     }
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean persistenceEMF(EntityManagerFactoryBuilder builder) {
-        return builder.dataSource(persistenceDataSource()).packages(PACKAGE).build();
+    public LocalContainerEntityManagerFactoryBean bcEMF(EntityManagerFactoryBuilder builder) {
+        return builder.dataSource(bcDataSource()).packages(PACKAGE).build();
     }
 
     @Bean
-    public PlatformTransactionManager persistenceTxManager(@Qualifier(EMF_REF) EntityManagerFactory emf) {
+    public PlatformTransactionManager bcTxManager(@Qualifier(EMF_REF) EntityManagerFactory emf) {
         return new JpaTransactionManager(emf);
     }
 }

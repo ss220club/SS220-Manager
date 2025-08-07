@@ -14,7 +14,7 @@ public class ParadisePlayerExperience extends PlayerExperience {
     }
 
     @Override
-    public List<RoleCategory> getRoles() {
+    public List<RoleCategory> getRelevantRoles() {
         return List.of(
                 RoleCategory.GHOST,
                 RoleCategory.LIVING,

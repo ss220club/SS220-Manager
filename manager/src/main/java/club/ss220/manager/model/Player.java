@@ -2,6 +2,7 @@ package club.ss220.manager.model;
 
 import lombok.Builder;
 import lombok.Data;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -26,8 +27,10 @@ public class Player {
     @NotNull
     private final LocalDateTime lastSeenDateTime;
     @NotNull
+    @ToString.Exclude
     private final InetAddress ip;
     @NotNull
+    @ToString.Exclude
     private final String computerId;
     @NotNull
     private final String lastAdminRank;

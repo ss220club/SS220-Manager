@@ -20,8 +20,9 @@ public class StatusCommand extends ApplicationCommand {
     @TopLevelSlashCommandData(defaultLocked = true)
     public void onSlashInteraction(GuildSlashEvent event) {
         log.debug("Executing /status command");
-        event.deferReply(true).queue();
 
+        boolean ephemeral = true;
+        event.deferReply(ephemeral).queue();
         statusController.showApplicationStatus(event.getHook(), event.getGuild());
     }
 }

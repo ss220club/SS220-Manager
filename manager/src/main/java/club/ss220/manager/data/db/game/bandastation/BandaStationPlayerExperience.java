@@ -14,7 +14,7 @@ public class BandaStationPlayerExperience extends PlayerExperience {
     }
 
     @Override
-    public List<RoleCategory> getRoles() {
+    public List<RoleCategory> getRelevantRoles() {
         return List.of(
                 RoleCategory.ADMIN,
                 RoleCategory.GHOST,

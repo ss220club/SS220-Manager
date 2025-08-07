@@ -24,8 +24,9 @@ public class CharacterCommand extends ApplicationCommand {
                                    @SlashOption(usePredefinedChoices = true) GameBuild build,
                                    @SlashOption(description = "Имя персонажа или его часть.") String name) {
         log.debug("Executing /character command, build: {}, name: '{}'", build.getName(), name);
-        event.deferReply(true).queue();
 
+        boolean ephemeral = true;
+        event.deferReply(ephemeral).queue();
         characterController.searchCharacters(event.getHook(), build, name);
     }
 }

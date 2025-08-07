@@ -3,6 +3,7 @@ package club.ss220.manager.service;
 import club.ss220.manager.data.db.game.CharacterRepositoryAdapter;
 import club.ss220.manager.data.integration.game.GameApiClient;
 import club.ss220.manager.model.GameBuild;
+import club.ss220.manager.model.exception.GameBuildOperationNotSupportedException;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -20,15 +21,16 @@ public class GameBuildStrategyService {
 
     public GameApiClient getGameApiClient(GameBuild gameBuild) {
         return Optional.ofNullable(gameApiClients.get(gameBuild))
-                .orElseThrow(() -> throwError("Game API client not available for build: " + gameBuild.getName()));
+                .orElseThrow(() -> operationNotSupported(gameBuild, "game API client"));
     }
 
     public CharacterRepositoryAdapter getCharacterRepository(GameBuild gameBuild) {
         return Optional.ofNullable(characterRepositories.get(gameBuild))
-                .orElseThrow(() -> throwError("Character repository not available for build: " + gameBuild.getName()));
+                .orElseThrow(() -> operationNotSupported(gameBuild, "character repository"));
     }
 
-    private RuntimeException throwError(String message) {
-        return new UnsupportedOperationException(message);
+    private RuntimeException operationNotSupported(GameBuild gameBuild, String operation) {
+        String message = operation + " is not available for build: " + gameBuild.getName();
+        return new GameBuildOperationNotSupportedException(gameBuild, message);
     }
 }

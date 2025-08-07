@@ -7,7 +7,7 @@ spring:
       - classpath:bandastation/roles.yml
       - optional:classpath:/application-dev.yml
   datasource:
-    persistence:
+    bc:
       url: jdbc:h2:./app-database;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH
       username:
       password:

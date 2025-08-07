@@ -18,7 +18,9 @@ public class AdminsCommand extends ApplicationCommand {
     @JDASlashCommand(name = "admins", description = "Показать админов онлайн.")
     public void onSlashInteraction(GuildSlashEvent event) {
         log.debug("Executing /admins command");
-        event.deferReply(true).queue();
+
+        boolean ephemeral = true;
+        event.deferReply(ephemeral).queue();
         adminsController.showOnlineAdmins(event.getHook());
     }
 }

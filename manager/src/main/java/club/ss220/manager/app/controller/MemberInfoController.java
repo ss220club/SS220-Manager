@@ -26,19 +26,22 @@ public class MemberInfoController {
 
     public void showMemberInfo(InteractionHook hook, User viewer) {
         MemberTarget target = MemberTarget.fromUser(viewer);
-        showMemberInfo(hook, viewer, target, false);
+        boolean isConfidential = false;
+        showMemberInfo(hook, viewer, target, isConfidential);
     }
 
     public void showMemberInfo(InteractionHook hook, User viewer, User target) {
         MemberTarget memberTarget = MemberTarget.fromUser(target);
-        showMemberInfo(hook, viewer, memberTarget, true);
+        boolean isConfidential = true;
+        showMemberInfo(hook, viewer, memberTarget, isConfidential);
     }
 
     public void showMemberInfo(InteractionHook hook, User viewer, MemberTarget target) {
-        showMemberInfo(hook, viewer, target, true);
+        boolean isConfidential = true;
+        showMemberInfo(hook, viewer, target, isConfidential);
     }
 
-    private void showMemberInfo(InteractionHook hook, User viewer, MemberTarget target, boolean isConfidential) {
+    public void showMemberInfo(InteractionHook hook, User viewer, MemberTarget target, boolean isConfidential) {
         try {
             Optional<Member> memberOptional = targetService.resolve(target);
             if (memberOptional.isEmpty()) {
@@ -57,23 +60,21 @@ public class MemberInfoController {
 
             log.debug("Displayed {} member info for target {}", isConfidential ? "confidential" : "public", target);
         } catch (Exception e) {
-            log.error("Error displaying member info for target {}", target, e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error displaying member info for target " + target, e);
         }
     }
 
-    public void handleBuildSelection(StringSelectEvent selectEvent, MemberInfoContext context, String selectedValue) {
+    public void handleBuildSelection(StringSelectEvent selectEvent, MemberInfoContext context,
+                                     GameBuild selectedBuild) {
         try {
             selectEvent.deferEdit().queue();
 
-            GameBuild selectedBuild = GameBuild.valueOf(selectedValue);
             MemberInfoContext newContext = context.withBuild(selectedBuild);
             view.updateMemberInfo(selectEvent.getHook(), selectEvent.getUser(), newContext);
 
             log.debug("Displayed updated info with build selection: {}", selectedBuild.getName());
         } catch (Exception e) {
-            log.error("Error handling build selection for build {}", selectedValue, e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error handling build selection for build " + selectedBuild, e);
         }
     }
 

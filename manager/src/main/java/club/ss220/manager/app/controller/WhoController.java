@@ -23,10 +23,9 @@ public class WhoController {
             List<String> playersOnline = gameServerService.getPlayersList(server);
             view.renderPlayersOnline(hook, server, playersOnline);
             
-            log.debug("Displayed {} players on server {}", playersOnline.size(), server.getName());
+            log.debug("Displayed {} players on server {}", playersOnline.size(), server.getFullName());
         } catch (Exception e) {
-            log.error("Error displaying players list for server {}", server.getName(), e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error displaying players list for server " + server, e);
         }
     }
 }

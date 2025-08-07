@@ -1,6 +1,7 @@
 package club.ss220.manager.data.api.impl;
 
 import club.ss220.manager.data.api.CentralApiClient;
+import club.ss220.manager.data.api.exception.CentralApiException;
 import club.ss220.manager.data.api.MemberDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -13,12 +14,12 @@ import reactor.core.publisher.Mono;
 
 @Slf4j
 @Component
-public class CentralApiClientImpl implements CentralApiClient {
+public class CentralApiClientV1 implements CentralApiClient {
 
     private final WebClient webClient;
 
-    public CentralApiClientImpl(@Value("${application.api.central.endpoint}") String baseUrl,
-                                @Value("${application.api.central.token}") String token) {
+    public CentralApiClientV1(@Value("${application.api.central.endpoint}") String baseUrl,
+                              @Value("${application.api.central.token}") String token) {
         this.webClient = WebClient.builder()
                 .baseUrl(baseUrl)
                 .defaultHeader(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
@@ -32,10 +33,12 @@ public class CentralApiClientImpl implements CentralApiClient {
                 .retrieve()
                 .bodyToMono(MemberDto.class)
                 .onErrorResume(WebClientResponseException.NotFound.class, _ -> {
-                    log.info("User with ckey {} not found", ckey);
+                    log.debug("User with ckey {} not found", ckey);
                     return Mono.empty();
                 })
-                .doOnError(e -> log.error("Error getting player by ckey: {}", ckey, e));
+                .onErrorResume(e -> Mono.error(
+                        new CentralApiException("Error getting player by ckey: " + ckey, e)
+                ));
     }
 
     public Mono<MemberDto> getMemberByDiscordId(long discordId) {
@@ -44,9 +47,11 @@ public class CentralApiClientImpl implements CentralApiClient {
                 .retrieve()
                 .bodyToMono(MemberDto.class)
                 .onErrorResume(WebClientResponseException.NotFound.class, _ -> {
-                    log.info("User with Discord ID {} not found", discordId);
+                    log.debug("User with Discord ID {} not found", discordId);
                     return Mono.empty();
                 })
-                .doOnError(e -> log.error("Error getting player by Discord ID: {}", discordId, e));
+                .onErrorResume(e -> Mono.error(
+                        new CentralApiException("Error getting player by Discord ID: " + discordId, e)
+                ));
     }
 }

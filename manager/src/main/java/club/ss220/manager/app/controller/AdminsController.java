@@ -27,8 +27,7 @@ public class AdminsController {
 
             log.debug("Displayed online admins for {} servers", onlineAdmins.size());
         } catch (Exception e) {
-            log.error("Error showing online admins", e);
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error displaying online admins", e);
         }
     }
 }

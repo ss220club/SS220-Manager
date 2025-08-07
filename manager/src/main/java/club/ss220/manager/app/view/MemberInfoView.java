@@ -89,7 +89,8 @@ public class MemberInfoView {
                 .constraints(constraints -> constraints.addUsers(viewer))
                 .bindTo(selectEvent -> {
                     String selectedValue = selectEvent.getValues().getFirst();
-                    controller.handleBuildSelection(selectEvent, context, selectedValue);
+                    GameBuild newSelectedBuild = GameBuild.valueOf(selectedValue);
+                    controller.handleBuildSelection(selectEvent, context, newSelectedBuild);
                 })
                 .setPlaceholder("Игровой билд")
                 .addOptions(options)
